@@ -1,0 +1,297 @@
+# `sheldon` configuration file
+# ----------------------------
+#
+# sheldon の設定ファイル
+# このファイルは直接編集するか、以下のコマンドで操作できます:
+#
+# - `sheldon add`    : 新しいプラグインを追加
+# - `sheldon edit`   : デフォルトエディタで設定ファイルを開く
+# - `sheldon remove` : プラグインを削除
+#
+# 詳しくは https://github.com/rossmacarthur/sheldon#readme を参照
+
+# 対象シェルをzshに指定
+# これによりファイルのマッチングパターンなどがzsh向けのデフォルトになる
+shell = "zsh"
+
+# =============================================================================
+# テンプレート定義
+# =============================================================================
+# テンプレートはプラグインの「適用方法」を定義する仕組み
+# デフォルトの "source" 以外に、独自のテンプレートを定義して apply で指定できる
+
+[templates]
+
+# defer テンプレート:
+# 通常の source の代わりに zsh-defer source を使い、プロンプト表示後に
+# バックグラウンドでプラグインを読み込む（起動速度の大幅改善）
+#
+# - {{ hooks?.pre | nl }}  : source 前に実行するフックコード（?で未定義時もエラーにしない）
+# - {% for file in files %} : プラグイン内のファイルをループで処理
+# - {{ hooks?.post | nl }} : source 後に実行するフックコード
+defer = """
+{{ hooks?.pre | nl }}
+{% for file in files %}
+zsh-defer source "{{ file }}"
+{% endfor %}
+{{ hooks?.post | nl }}
+"""
+
+# fzf-install テンプレート:
+# fzf のリポジトリに同梱されているインストールスクリプトを実行し、
+# バイナリのみインストール (--bin) した後、bin ディレクトリを PATH に追加する
+# - {{ dir }} はプラグインのクローン先ディレクトリに展開される
+# - (N-/) は「ディレクトリが存在する場合のみ追加」するzshのglobクオリファイア
+fzf-install = """
+{{ hooks?.pre | nl }}
+{{ dir }}/install --bin > /dev/null
+path=($path {{ dir }}/bin(N-/))
+{{ hooks?.post | nl }}
+"""
+
+# fzf-source テンプレート:
+# fzf --zsh が出力するキーバインドと補完設定を読み込む
+# <(...) はプロセス置換で、コマンドの出力をファイルのように扱うzshの機能
+fzf-source = "source <(fzf --zsh)"
+
+# =============================================================================
+# zsh-defer（遅延読み込みの基盤）
+# =============================================================================
+# 他のプラグインが defer テンプレートで使う zsh-defer コマンド自体をロード
+# zsh-defer 自身は遅延できないため apply = ['source'] で即座に読み込む
+# ※ sheldon はプラグインを定義順に処理するため、最初に定義する必要がある
+
+[plugins.zsh-defer]
+github = 'romkatv/zsh-defer'
+apply = ['source']
+
+# =============================================================================
+# 自動ロードと補完の初期化
+# =============================================================================
+
+# compinit: zsh の補完システムを初期化する
+# autoload -Uz で関数を登録し、zsh-defer で遅延実行する
+# 補完の初期化は重い処理なので、遅延させることで起動速度が向上する
+[plugins.compinit]
+inline = 'autoload -Uz compinit && zsh-defer compinit'
+
+# custom-commands: 自作コマンドを autoload で登録
+# これらは fpath 上に配置されたファイルで、初めて呼び出されたときに読み込まれる
+# （.zshrc で fpath に ~/.local/bin/common を追加しているため、そこに配置されている）
+[plugins.custom-commands]
+inline = 'autoload -Uz dev cdgwq cdw uv-format'
+
+# =============================================================================
+# fzf（ファジーファインダー）
+# =============================================================================
+# コマンド履歴検索 (Ctrl+R) やファイル検索 (Ctrl+T) を高速・対話的にするツール
+# fzf-install テンプレートでバイナリをインストールし、
+# hooks.post で表示を逆順（上から下へ選択肢が並ぶ）に設定
+
+[plugins.fzf]
+github = 'junegunn/fzf'
+apply = ['fzf-install']
+hooks.post = '''
+export FZF_DEFAULT_OPTS="--reverse"
+'''
+
+# =============================================================================
+# zsh 関連プラグイン群
+# =============================================================================
+# すべて apply = ['defer'] で遅延読み込みし、起動速度を最適化
+
+# zsh-autosuggestions:
+# 入力中に過去のコマンド履歴をグレーの文字で候補表示する
+# 右矢印キーで候補を受け入れられる（体感の改善が最も大きいプラグイン）
+[plugins.zsh-autosuggestions]
+github = 'zsh-users/zsh-autosuggestions'
+apply = ['defer']
+
+# zsh-completions:
+# zsh 標準では提供されていない追加の補完定義を大量に追加する
+# docker, curl など多くのコマンドの Tab 補完が強化される
+[plugins.zsh-completions]
+github = 'zsh-users/zsh-completions'
+apply = ['defer']
+
+# zsh-syntax-highlighting:
+# コマンド入力中にリアルタイムで構文をハイライトする
+# 存在するコマンドは緑、存在しないコマンドは赤で表示されるので
+# Enter を押す前にタイポに気付ける
+[plugins.zsh-syntax-highlighting]
+github = 'zsh-users/zsh-syntax-highlighting'
+apply = ['defer']
+
+# zsh-autopair:
+# 括弧やクォートを自動で閉じてくれる
+# ( を入力すると自動で ) が挿入される
+[plugins.zsh-autopair]
+github = 'hlissner/zsh-autopair'
+apply = ['defer']
+
+# zsh-history-on-success:
+# 成功したコマンドだけを履歴に保存する
+# タイポや失敗したコマンドが履歴を汚さなくなる
+# ※ apply の指定なし → デフォルトの source で即座に読み込み
+#   （履歴の記録方法に関わるため、遅延させると取りこぼしが生じる可能性がある）
+[plugins.zsh-history-on-success]
+github = 'nyoungstudios/zsh-history-on-success'
+
+# =============================================================================
+# Oh My Zsh の部分的利用
+# =============================================================================
+# Oh My Zsh を丸ごと使うのではなく、use で必要なファイルだけ抜き出して使う
+# フレームワーク全体のオーバーヘッドを避けつつ、便利な機能だけ利用できる
+
+[plugins.oh-my-zsh]
+github = "ohmyzsh/ohmyzsh"
+use = [
+    #
+    # まず基本的なユーティリティ関数を読み込む（他のライブラリの前提になる）
+    #
+    'lib/functions.zsh',
+    #
+    # 便利なライブラリを読み込む
+    #
+    'lib/completion.zsh',    # 補完の追加設定
+    'lib/history.zsh',       # 履歴の追加設定
+    'lib/termsupport.zsh',   # ターミナルのタイトルバーにカレントディレクトリ等を表示
+    #
+    # Oh My Zsh のプラグインから fzf 連携だけ使う
+    #
+    'plugins/fzf/fzf.plugin.zsh',
+]
+
+# zsh の履歴オプション設定
+# - INC_APPEND_HISTORY_TIME : コマンドの実行時間を履歴に記録
+# - INC_APPEND_HISTORY      : コマンド完了時に即座に履歴ファイルに追記
+#   （デフォルトではシェル終了時にまとめて書き込むため、
+#    複数ターミナルを使うと履歴が失われる場合がある）
+[plugins.zsh-history-shell-options]
+inline = '''
+setopt INC_APPEND_HISTORY_TIME
+setopt INC_APPEND_HISTORY
+'''
+
+# =============================================================================
+# mise（ランタイムバージョン管理）
+# =============================================================================
+# ディレクトリに .mise.toml や .tool-versions があると
+# 自動的に Python や Node.js のバージョンが切り替わるようになる
+
+[plugins.mise]
+inline = 'eval "$(~/.local/bin/mise activate zsh)"'
+
+# =============================================================================
+# 言語環境の設定
+# =============================================================================
+# 各言語の PATH 設定などを関数でラップし zsh-defer で遅延読み込みする
+# 起動時に即座に必要ではないが、使うときには設定されていてほしい設定群
+
+# ロケールを UTF-8 に設定
+[plugins.lang]
+inline = '''
+function _lang() {
+    export LANG='en_US.UTF-8'
+}
+zsh-defer _lang
+'''
+
+# Go 言語の環境設定
+# - GOPATH を ~/ghq に設定（ghq リポジトリ管理ツールとの連携）
+# - GOROOT を go env から動的に取得
+# - Go 関連の bin ディレクトリを PATH に追加
+# - typeset -gU path で重複除去、(N-/) で存在チェック
+[plugins.go]
+inline = '''
+function _go() {
+    export GOPATH="${HOME}/ghq"
+    export GOROOT=$(go env GOROOT)
+    typeset -gU path
+    path=(
+        $path
+        ${GOPATH}/bin(N-/)
+        ${HOME}/.go/bin(N-/)
+    )
+}
+zsh-defer _go
+'''
+
+# Rust の環境設定
+# cargo でインストールしたバイナリ (~/.cargo/bin) を PATH に追加
+[plugins.rust]
+inline = '''
+function _rust() {
+    typeset -gU path
+    path=(
+        $path
+        ${HOME}/.cargo/bin(N-/)
+    )
+}
+zsh-defer _rust
+'''
+
+# Bun（JavaScript ランタイム）の環境設定
+# - パス設定は即座に行う（コマンドをすぐ使えるように）
+# - 補完定義 (_bun) は重いので zsh-defer で遅延読み込み
+# - [ -s "..." ] はファイルが存在し中身があるかチェック
+[plugins.bun]
+inline = '''
+export BUN_INSTALL="$HOME/.bun"
+typeset -gU path
+path+=(
+    $BUN_INSTALL/bin(N-/)
+)
+# bun completions
+[ -s "$HOME/.bun/_bun" ] && zsh-defer "$HOME/.bun/_bun"
+'''
+
+# =============================================================================
+# エイリアス
+# =============================================================================
+
+# 共通エイリアス:
+# ローカルの ~/.config/alias/common.sh からエイリアス定義を読み込む
+# chezmoi で管理されたファイルを local ソースで参照している
+[plugins.common-alias]
+local = '~/.config/alias'
+use = ['common.sh']
+apply = ['source']
+
+# プライベートエイリアス（現在無効化中）:
+# 個人的・仕事関連のエイリアスを分離して管理するためのもの
+# [plugins.private-alias]
+# local = '~/.config/alias'
+# use = ['private.sh']
+# apply = ['source']
+
+# =============================================================================
+# GPG（暗号化・署名）
+# =============================================================================
+# GPG がパスフレーズを求めるとき、正しいターミナルを使うための設定
+# Git のコミット署名などで GPG を使う場合に必要
+
+[plugins.gpg]
+inline = '''
+export GPG_TTY=$(tty)
+'''
+
+# =============================================================================
+# プライベート/仕事関連の設定
+# =============================================================================
+# ~/.workrc が存在する場合にのみ読み込む
+# 仕事用の API キーや社内ツールのパス設定など、
+# 公開リポジトリにコミットできない設定をここで分離する
+# if [ -f ... ] で存在チェックしているので、
+# このファイルがないマシンでもエラーにならない
+
+[plugins.private-dotfiles]
+inline = '''
+function _private_dotfiles() {
+    local filepath="${HOME}/.workrc"
+    if [ -f "$filepath" ]; then
+        source "$filepath"
+    fi
+}
+zsh-defer _private_dotfiles
+'''
