@@ -250,6 +250,11 @@ path+=(
 # エイリアス
 # =============================================================================
 
+[plugins.zsh-you-should-use]
+github = "MichaelAquilina/zsh-you-should-use"
+apply = ['defer']
+
+
 # 共通エイリアス:
 # ローカルの ~/.config/alias/common.sh からエイリアス定義を読み込む
 # chezmoi で管理されたファイルを local ソースで参照している
