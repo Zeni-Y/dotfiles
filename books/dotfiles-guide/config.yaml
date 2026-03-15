@@ -5,15 +5,15 @@ published: false
 price: 0
 toc_depth: 2
 chapters:
-  - introduction
-  - what-is-dotfiles
-  - chezmoi-basics
-  - chezmoi-advanced
-  - zsh-and-sheldon
-  - mise-runtime-management
-  - modern-cli-tools
-  - fzf-and-search
-  - security-and-encryption
-  - cross-platform
-  - development-workflow
-  - reference
+  - 01-introduction
+  - 02-what-is-dotfiles
+  - 03-chezmoi-basics
+  - 04-chezmoi-advanced
+  - 05-zsh-and-sheldon
+  - 06-mise-runtime-management
+  - 07-modern-cli-tools
+  - 08-fzf-and-search
+  - 09-security-and-encryption
+  - 10-cross-platform
+  - 11-development-workflow
+  - 12-reference
