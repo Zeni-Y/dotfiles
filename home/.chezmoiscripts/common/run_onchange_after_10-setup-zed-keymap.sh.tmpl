@@ -1,0 +1,5 @@
+{{- /* keymap.json の内容が変わったら再実行する */ -}}
+{{- /* hash: {{ include "dot_config/zed/keymap.json" | sha256sum }} */ -}}
+{{ if .is_wsl -}}
+{{ include "../install/common/zed-keymap.sh" }}
+{{- end }}

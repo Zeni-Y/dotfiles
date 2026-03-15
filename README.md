@@ -17,12 +17,10 @@
 ### 新しいマシンへの初回セットアップ
 
 ```bash
-# chezmoi をインストール (mise 経由または公式スクリプト)
-sh -c "$(curl -fsLS get.chezmoi.io)"
-
-# dotfiles を取得して適用
-chezmoi init <github-username> --apply
+sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply zenimoto
 ```
+
+chezmoi のインストールから dotfiles の取得・適用まで、このワンライナーですべて完了する。
 
 初回実行時に以下の情報を対話的に聞かれる:
 - **Email address** — git 等で使用するメールアドレス

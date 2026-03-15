@@ -43,9 +43,14 @@ chezmoi init https://github.com/username/dotfiles.git
 
 # ローカルリポジトリで初期化
 chezmoi init
+
+# 既存の設定データを無視して再度プロンプトを表示
+chezmoi init --data=false
 ```
 
 `init` を実行すると、`~/.local/share/chezmoi` にソースディレクトリが作成されます。
+
+`--data=false` を指定すると、既存の設定データ（`chezmoi.yaml` に保存済みの値）を無視して、`.chezmoi.yaml.tmpl` 内の `promptString` 等による対話プロンプトが再度表示されます。メールアドレスやシステム種別などの設定値を変更したい場合に便利です。
 
 ### add — ファイルを管理対象に追加
 

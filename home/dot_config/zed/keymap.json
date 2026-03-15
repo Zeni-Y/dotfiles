@@ -1,0 +1,15 @@
+[
+  {
+    "context": "Editor",
+    "bindings": {
+      "ctrl-shift-k": "editor::DeleteLine",
+      "ctrl-shift-d": "editor::DuplicateLineDown"
+    }
+  },
+  {
+    "context": "Terminal",
+    "bindings": {
+      "ctrl-t": "workspace::NewTerminal"
+    }
+  }
+]

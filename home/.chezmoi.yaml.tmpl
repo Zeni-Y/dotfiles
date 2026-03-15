@@ -15,9 +15,16 @@
 {{-   $system = promptString "System (client or server)" -}}
 {{- end -}}
 
+{{- /* WSL 判定: /proc/version に "microsoft" が含まれるかで検出 */ -}}
+{{- $isWsl := false -}}
+{{- if eq .chezmoi.os "linux" -}}
+{{-   $isWsl = output "cat" "/proc/version" | lower | contains "microsoft" -}}
+{{- end -}}
+
 data:
     email: {{ $email | quote }}
     system: {{ $system | quote }}
+    is_wsl: {{ $isWsl }}
 
 {{ if ne (env "CI") "true" -}}
 encryption: "age"

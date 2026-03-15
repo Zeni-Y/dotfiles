@@ -16,12 +16,15 @@ title: "リファレンス"
 | `home/dot_config/sheldon/plugins.toml` | `~/.config/sheldon/plugins.toml` | プラグイン設定 |
 | `home/dot_config/mise/config.toml` | `~/.config/mise/config.toml` | ランタイム設定 |
 | `home/dot_config/alias/common.sh` | `~/.config/alias/common.sh` | エイリアス |
+| `home/dot_config/zed/settings.json` | `~/.config/zed/settings.json` | Zed エディタ設定 |
+| `home/dot_config/zed/keymap.json` | `~/.config/zed/keymap.json` (WSL: `%APPDATA%\Zed\keymap.json` にもコピー) | Zed キーバインド設定 |
 
 ### スクリプト
 
 | ファイル | 実行タイミング | 内容 |
 |---------|--------------|------|
 | `.chezmoiscripts/common/run_once_after_01-install-mise.sh.tmpl` | apply 後1回 | mise インストール |
+| `.chezmoiscripts/common/run_onchange_after_10-setup-zed-keymap.sh.tmpl` | keymap.json 変更時 | WSL → Windows に keymap.json を配置 |
 | `.chezmoiscripts/ubuntu/run_once_20-install-fd.sh.tmpl` | apply 後1回 | fd-find インストール (Ubuntu) |
 
 ### インストールスクリプト
@@ -29,6 +32,7 @@ title: "リファレンス"
 | ファイル | 内容 |
 |---------|------|
 | `install/common/mise.sh` | mise のインストールとツール展開 |
+| `install/common/zed-keymap.sh` | WSL 環境で keymap.json を Windows 側に配置 |
 | `install/ubuntu/common/fd.sh` | fd-find のインストールとシンボリックリンク作成 |
 
 ### その他
@@ -46,6 +50,7 @@ title: "リファレンス"
 
 ```bash
 chezmoi init <repo>        # リポジトリから初期化
+chezmoi init --data=false  # 既存データを無視して再度プロンプト表示
 chezmoi add <file>         # ファイルを管理対象に追加
 chezmoi add --encrypt <f>  # 暗号化して追加
 chezmoi edit <file>        # ソースファイルを編集
@@ -102,6 +107,63 @@ sheldon add <name> --github <repo>  # プラグインを追加
 sheldon remove <name>      # プラグインを削除
 ```
 
+## Zed コマンド・キーバインドチートシート
+
+### ファイル・ナビゲーション
+
+```
+Cmd/Ctrl + P              ファイルを素早く開く
+Cmd/Ctrl + Shift + P      コマンドパレット
+Cmd/Ctrl + G              指定行へジャンプ
+Cmd/Ctrl + Shift + O      シンボルへジャンプ
+Cmd/Ctrl + Tab            タブの切り替え
+```
+
+### 編集
+
+```
+Cmd/Ctrl + D              同じ単語を追加選択
+Cmd/Ctrl + Shift + L      同じ単語をすべて選択
+Cmd/Ctrl + Shift + K      行を削除
+Alt + Up/Down             行を移動
+Alt + Shift + Up/Down     行を複製
+Cmd/Ctrl + /              コメントトグル
+Cmd/Ctrl + Shift + [/]    コード折りたたみ / 展開
+```
+
+### パネル・表示
+
+```
+Cmd/Ctrl + B              サイドバートグル
+Cmd/Ctrl + J              ターミナルトグル
+Cmd/Ctrl + Shift + F      プロジェクト内検索
+Cmd/Ctrl + Shift + E      ファイルエクスプローラ
+Cmd/Ctrl + \              エディタを分割
+```
+
+### コード操作
+
+```
+F2                        シンボルのリネーム
+F12                       定義へジャンプ
+Shift + F12               参照を表示
+Cmd/Ctrl + .              コードアクション
+Cmd/Ctrl + Shift + Space  パラメータヒント
+```
+
+### AI アシスタント
+
+```
+Cmd/Ctrl + Enter          AI アシスタントパネルを開く
+Cmd/Ctrl + Shift + Enter  インラインアシスト
+```
+
+### WSL 連携
+
+```
+Ctrl + Shift + P → "projects: open in wsl"   WSL プロジェクトを開く
+```
+
 ## 参考リポジトリ
 
 | リポジトリ | 特徴 |
@@ -127,6 +189,7 @@ sheldon remove <name>      # プラグインを削除
 | yazi | https://github.com/sxyazi/yazi |
 | ghq | https://github.com/x-motemen/ghq |
 | bats | https://github.com/bats-core/bats-core |
+| Zed | https://zed.dev/ |
 | Zenn | https://zenn.dev/ |
 
 ## Zenn Book の仕様

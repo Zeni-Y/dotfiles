@@ -1,0 +1,110 @@
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default settings without changing your
+// custom settings, run `zed: open default settings` from the
+// command palette (cmd-shift-p / ctrl-shift-p)
+{
+    "agent": {
+        "default_model": {
+            "provider": "zed.dev",
+            "model": "claude-sonnet-4-6",
+            "enable_thinking": true,
+            "effort": "high"
+        },
+        "favorite_models": [],
+        "model_parameters": []
+    },
+    "wsl_connections": [
+        {
+            "distro_name": "Ubuntu-24.04",
+            "user": null,
+            "projects": [
+                {
+                    "paths": ["/home/zenimoto"]
+                },
+                {
+                    "paths": ["/home/zenimoto/work/sandbox"]
+                }
+            ]
+        }
+    ],
+    "ssh_connections": [
+        {
+            "host": "hnc",
+            "args": [],
+            "projects": [
+                {
+                    "paths": ["/home/zenimoto"]
+                },
+                {
+                    "paths": ["/home/zenimoto/.local/share/chezmoi"]
+                },
+                {
+                    "paths": ["/home/zenimoto/host"]
+                },
+                {
+                    "paths": ["/home/zenimoto/host/work/katari-value-c"]
+                },
+                {
+                    "paths": ["/mnt/nas2/home/zenimoto"]
+                }
+            ]
+        },
+        {
+            "host": "hgsnk_gpu_new",
+            "args": [],
+            "projects": []
+        }
+    ],
+    "telemetry": {
+        "diagnostics": true,
+        "metrics": false
+    },
+    "session": {
+        "trust_all_worktrees": true
+    },
+    "project_panel": {
+        "auto_reveal_entries": false,
+        "auto_fold_dirs": true,
+        "indent_size": 6
+    },
+    "tab_bar": {
+        "show": false
+    },
+    "minimap": {
+        "show": "never"
+    },
+    "current_line_highlight": "all",
+    "cursor_shape": "block",
+    "cursor_blink": true,
+    "autosave": {
+        "after_delay": {
+            "milliseconds": 1000
+        }
+    },
+    "buffer_font_fallbacks": ["Hack Nerd Font", "monospace"],
+    "buffer_font_family": "Consolas",
+    "colorize_brackets": true,
+    "show_edit_predictions": true,
+    "ensure_final_newline_on_save": true,
+    "icon_theme": {
+        "mode": "dark",
+        "light": "Zed (Default)",
+        "dark": "Zed (Default)"
+    },
+    "base_keymap": "VSCode",
+    "ui_font_size": 16,
+    "buffer_font_size": 15,
+    "theme": {
+        "mode": "dark",
+        "light": "One Light",
+        "dark": "One Dark"
+    },
+    "terminal": {
+        "font_family": "JetBrainsMono Nerd Font",
+        "line_height": "standard"
+    }
+}
