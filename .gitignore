@@ -11,3 +11,6 @@ Thumbs.db
 
 # age key (秘密鍵は絶対にコミットしない)
 key.txt
+
+# 旧学習メモ（books/ に移行済み）
+memo/

@@ -1,0 +1,19 @@
+title: "chezmoi で始めるモダン dotfiles 管理"
+summary: "chezmoi, sheldon, mise, starship などを活用したクロスプラットフォーム dotfiles 管理の実践ガイド"
+topics: ["chezmoi", "dotfiles", "zsh", "linux"]
+published: false
+price: 0
+toc_depth: 2
+chapters:
+  - introduction
+  - what-is-dotfiles
+  - chezmoi-basics
+  - chezmoi-advanced
+  - zsh-and-sheldon
+  - mise-runtime-management
+  - modern-cli-tools
+  - fzf-and-search
+  - security-and-encryption
+  - cross-platform
+  - development-workflow
+  - reference
