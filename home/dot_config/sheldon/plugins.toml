@@ -250,6 +250,9 @@ path+=(
 # エイリアス
 # =============================================================================
 
+# zsh-you-should-use:
+# コマンドを使用する前に、コマンドが存在するかどうかを確認する
+# 存在しないコマンドは赤で表示される
 [plugins.zsh-you-should-use]
 github = "MichaelAquilina/zsh-you-should-use"
 apply = ['defer']
