@@ -1,4 +1,9 @@
-{{ $fontsPath := ".local/share/fonts" -}}
+{{ $fontsPath := .chezmoi.os | replace "darwin" "Library/Fonts" | replace "linux" ".local/share/fonts" -}}
+"{{ $fontsPath }}/RobotoMono":
+  type: "archive"
+  url: {{ gitHubLatestReleaseAssetURL "ryanoasis/nerd-fonts" "RobotoMono.zip" | quote }}
+  refreshPeriod: "720h"
+
 "{{ $fontsPath }}/Hack":
   type: "archive"
   url: {{ gitHubLatestReleaseAssetURL "ryanoasis/nerd-fonts" "Hack.zip" | quote }}
