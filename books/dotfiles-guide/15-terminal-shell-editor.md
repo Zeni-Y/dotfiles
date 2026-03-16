@@ -40,6 +40,8 @@ MIT の「The Missing Semester of Your CS Education」[^2]では、シェルを�
 
 > 現在のコンピュータには GUI、音声、AR/VR などさまざまなインターフェースがある。これらは 80% のユースケースには便利だが、できることに根本的な制限がある。コンピュータが提供するツールをフルに活用するために、テキストベースのインターフェース、すなわち「シェル」を使う必要がある。
 
+ターミナルとシェルの関係は、**ブラウザと Web アプリの関係**に似ています[^4]。Chrome や Firefox（ブラウザ = ターミナル）を変えても、中で動く Gmail や YouTube（Web アプリ = シェル）は同じように使えます。逆に、同じブラウザで別の Web アプリを開けるように、同じターミナルで bash や zsh を切り替えられます。
+
 シェルの名前の由来は、OS の中核である「カーネル（核）」を包む「殻（シェル）」です[^3]。ユーザーの命令をカーネルが理解できる形に翻訳して伝える仲介役と考えると分かりやすいでしょう。
 
 ```
@@ -252,3 +254,5 @@ tmux の詳細は以下を参照してください:
 [^1]: Scott Hanselman, [What's the difference between a Console, a Terminal, and a Shell?](https://www.hanselman.com/blog/whats-the-difference-between-a-console-a-terminal-and-a-shell) — Microsoft の開発者がターミナル・シェル・コンソールの違いを明快に解説。Windows Terminal 公式ドキュメントからも参照されている記事
 [^2]: MIT, [The Missing Semester of Your CS Education — The Shell](https://missing.csail.mit.edu/2020/course-shell/)（[日本語訳](https://missing-semester-jp.github.io/2020/course-shell/)）— MIT の講義。シェルの基礎からコマンドライン環境まで体系的に学べる
 [^3]: codequoi, [The Difference Between a Terminal, a Console and a Shell](https://www.codequoi.com/en/difference-between-terminal-console-and-shell/) — 歴史的経緯を含む詳細な解説。「殻（シェル）と核（カーネル）」の比喩の出典
+[^4]: Zenn, [シェルとターミナルの違いを理解する](https://zenn.dev/k_log24/articles/582af625164d41) — ブラウザと Web アプリの関係に例えた日本語解説
+[^5]: Qiita, [シェル、ターミナル、コンソール、コマンドライン](https://qiita.com/tadsan/items/441dcd910537d3f408e5) — 4 つの用語を歴史的背景とともに整理した日本語記事
