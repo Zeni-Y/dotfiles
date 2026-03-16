@@ -19,3 +19,5 @@ chapters:
   - 12-development-workflow
   - 13-reference
   - 14-zed-editor
+  - 15-terminal-shell-editor
+  - 16-zellij
