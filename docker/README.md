@@ -27,7 +27,7 @@ chezmoi と連携し、コンテナ内でもホストと同じ開発環境を自
 #### 1. age 秘密鍵をパスフレーズで暗号化
 
 ```bash
-age -p -o ~/dotfiles/home/.key.txt.age ~/.config/age/key.txt
+age -p -o ~/.local/share/chezmoi/home/.key.txt.age ~/.config/age/key.txt
 ```
 
 パスフレーズを設定すると `.key.txt.age` が生成される。これをリポジトリにコミットする。
