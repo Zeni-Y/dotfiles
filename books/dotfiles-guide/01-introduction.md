@@ -8,15 +8,29 @@ title: "はじめに"
 
 この Book は、**chezmoi** を中心としたモダンな dotfiles 管理の実践ガイドです。
 
-「dotfiles、Git で管理したいけど何使えばいいんだろう」「新しいマシンのセットアップ毎回めんどくさいな...」そんな方に向けて、筆者が実際に運用している dotfiles リポジトリをベースに以下の内容を解説します。
+### 主要ツール
 
-- [chezmoi](https://www.chezmoi.io/) によるテンプレートベースの dotfiles 管理
-- [sheldon](https://sheldon.cli.rs/) + zsh-defer による高速なシェル環境
-- [mise](https://mise.jdx.dev/) による言語ランタイム・CLI ツールの一元管理
-- [eza](https://github.com/eza-community/eza), [bat](https://github.com/sharkdp/bat), [fd](https://github.com/sharkdp/fd), [ripgrep](https://github.com/BurntSushi/ripgrep) などのモダン CLI ツール
-- [age](https://github.com/FiloSottile/age) 暗号化によるセキュリティ
-- macOS / Ubuntu Desktop / Ubuntu Server のクロスプラットフォーム対応
-- [Zed](https://zed.dev/) エディタの設定と管理
+| 役割 | 採用ツール |
+|------|-----------|
+| dotfiles 管理 | [chezmoi](https://www.chezmoi.io/) |
+| Shell | Zsh |
+| Zsh プラグイン管理 | [sheldon](https://sheldon.cli.rs/) |
+| ランタイム・ツール管理 | [mise](https://mise.jdx.dev/) |
+| プロンプト | [starship](https://starship.rs/) |
+
+これ以外にも [eza](https://github.com/eza-community/eza)、[bat](https://github.com/sharkdp/bat)、[fd](https://github.com/sharkdp/fd)、[ripgrep](https://github.com/BurntSushi/ripgrep) などのモダン CLI ツールを活用していますが、それらについてはチャプターの中で触れていきます。
+
+## なぜこの Book を書いたのか
+
+筆者はこれまで、Shell やターミナルの設定をかなり適当にやってきました。マシンを移行するたびに設定をやり直す羽目になって、毎回「めんどくさいな...」と思っていたんですよね。
+
+そこで dotfiles 管理をしっかりやっている人のリポジトリを調べ始めました。[chezmoi の開発者](https://github.com/twpayne)や [shunk031 さん](https://github.com/shunk031/dotfiles)のリポジトリを参考にしたのですが、よくできていて学びが多い一方、**0 から学ぶにはラーニングコストが結構高い**と感じました。何のツールが何の役割なのか、どういう流れで使うのかが分かるまでに時間がかかるんですよね。
+
+そしてもう一つの問題が **「学んでも忘れる」** こと。一度理解しても、身につく前に忘れてしまい、結局使わなくなることが多い。
+
+この Book は、学んだ内容を **後から見返して、すぐ思い出して実行し直せるようにするための記録の基盤** として書いています。各ツールのチートシートやコマンドのライフサイクル（どの順番で何を実行するか）をまとめているので、忘れたときにサッと見返せることを意識しています。
+
+**ボトムアップ（具体的なコマンドや設定）** と **トップダウン（設計思想や全体像）** の両方から理解できる構成を目指しているので、わかりにくい箇所があればぜひフィードバックをください。
 
 筆者の技術選定の基本方針は **「必要十分でシンプル」** です。複雑な設定より覚えやすくて見返しやすいものを優先しています。この Book 自体もその考え方で書いているので、「とりあえずこれだけ押さえておけば大丈夫」というラインを意識しています。
 

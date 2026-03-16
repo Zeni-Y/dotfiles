@@ -32,9 +32,45 @@ mise は [asdf](https://asdf-vm.com/) の後継的な位置づけです。asdf �
 | CLI ツール管理 | △ | ○ |
 | npm パッケージ | × | ○ |
 
+## mise の仕組み
+
+config.toml の具体的な内容に入る前に、mise がどうやってツールのバージョンを切り替えているのかを理解しておきましょう。
+
+### activate 方式
+
+mise は shim ファイルではなく、**シェルの hook で PATH を動的に変更**する方式を採用しています。
+
+```bash
+# .zshrc で activate
+eval "$(mise activate zsh)"
+```
+
+`mise activate` はシェルの `chpwd` フック（ディレクトリ移動時に呼ばれる関数）を登録します。ディレクトリを移動するたびに、そのディレクトリの `.tool-versions` や `config.toml` を読み取り、PATH を更新します。
+
+```
+~/project-a/  (Node 18)  →  cd  →  ~/project-b/  (Node 20)
+      ↑ PATH に Node 18 を設定           ↑ PATH に Node 20 を設定
+```
+
+shim 方式と違ってコマンド実行時のオーバーヘッドがないので、体感的にも速いです。
+
+### trust モデル
+
+mise は設定ファイルを初めて検出したとき、**明示的な trust が必要**です。
+
+```bash
+mise trust
+```
+
+これは、設定ファイルに含まれる hooks やタスクが任意のコードを実行できるため、セキュリティ上の理由からです。意図しない設定ファイルが実行されるのを防ぎます。
+
+:::message
+信頼できるリポジトリでのみ `mise trust` を実行してください。グローバル設定（`~/.config/mise/config.toml`）は自動的に信頼されます。
+:::
+
 ## config.toml の構造
 
-mise の設定は `~/.config/mise/config.toml` に記述します。
+この仕組みを踏まえた上で、mise の設定ファイルを見ていきましょう。設定は `~/.config/mise/config.toml` に記述します。
 
 ### 言語ランタイム
 
@@ -112,40 +148,6 @@ idiomatic_version_file_enable_tools = ["python"]
 ```
 
 この設定により、Python は `.python-version` や `pyproject.toml` の `requires-python` からバージョンを読み取ることもできます。
-
-## mise の仕組み
-
-### activate 方式
-
-mise は shim ファイルではなく、**シェルの hook で PATH を動的に変更**する方式を採用しています。
-
-```bash
-# .zshrc で activate
-eval "$(mise activate zsh)"
-```
-
-`mise activate` はシェルの `chpwd` フック（ディレクトリ移動時に呼ばれる関数）を登録します。ディレクトリを移動するたびに、そのディレクトリの `.tool-versions` や `config.toml` を読み取り、PATH を更新します。
-
-```
-~/project-a/  (Node 18)  →  cd  →  ~/project-b/  (Node 20)
-      ↑ PATH に Node 18 を設定           ↑ PATH に Node 20 を設定
-```
-
-shim 方式と違ってコマンド実行時のオーバーヘッドがないので、体感的にも速いです。
-
-### trust モデル
-
-mise は設定ファイルを初めて検出したとき、**明示的な trust が必要**です。
-
-```bash
-mise trust
-```
-
-これは、設定ファイルに含まれる hooks やタスクが任意のコードを実行できるため、セキュリティ上の理由からです。意図しない設定ファイルが実行されるのを防ぎます。
-
-:::message
-信頼できるリポジトリでのみ `mise trust` を実行してください。グローバル設定（`~/.config/mise/config.toml`）は自動的に信頼されます。
-:::
 
 ## 基本コマンド
 
