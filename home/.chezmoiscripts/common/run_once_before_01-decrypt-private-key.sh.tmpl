@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# age 秘密鍵をパスフレーズで復号する
+
+{{ if ne (env "CI") "true" -}}
+
+set -euo pipefail
+
+AGE_KEY_DIR="${HOME}/.config/age"
+AGE_KEY_FILE="${AGE_KEY_DIR}/key.txt"
+AGE_KEY_ENCRYPTED="{{ .chezmoi.sourceDir }}/.key.txt.age"
+
+# 既に復号済みならスキップ
+if [ -f "${AGE_KEY_FILE}" ]; then
+    exit 0
+fi
+
+mkdir -p "${AGE_KEY_DIR}"
+
+# パスフレーズを入力して復号
+chezmoi age decrypt --output "${AGE_KEY_FILE}" --passphrase "${AGE_KEY_ENCRYPTED}"
+chmod 600 "${AGE_KEY_FILE}"
+
+{{ end -}}
