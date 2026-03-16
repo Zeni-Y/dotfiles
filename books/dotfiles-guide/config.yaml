@@ -6,18 +6,18 @@ price: 0
 toc_depth: 2
 chapters:
   - 01-introduction
-  - 02-what-is-dotfiles
-  - 03-chezmoi-basics
-  - 04-chezmoi-advanced
-  - 05-zsh-and-sheldon
-  - 06-mise-runtime-management
-  - 07-modern-cli-tools
-  - 08-fzf-and-search
-  - 09-security-and-encryption
-  - 10-git-signing
-  - 11-cross-platform
-  - 12-development-workflow
-  - 13-reference
-  - 14-zed-editor
-  - 15-terminal-shell-editor
-  - 16-zellij
+  - 02-terminal-shell-editor
+  - 03-what-is-dotfiles
+  - 04-chezmoi-basics
+  - 05-chezmoi-advanced
+  - 06-cross-platform
+  - 07-security-and-encryption
+  - 08-git-signing
+  - 09-zsh-and-sheldon
+  - 10-mise-runtime-management
+  - 11-modern-cli-tools
+  - 12-fzf-and-search
+  - 13-zed-editor
+  - 14-zellij
+  - 15-development-workflow
+  - 99-reference
