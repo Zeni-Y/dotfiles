@@ -6,22 +6,22 @@ title: "mise によるランタイム管理"
 
 ## mise とは
 
-mise（ミーズ）は、**言語ランタイムと CLI ツールを一元管理するツール**です。Rust 製で高速に動作します。
+[mise](https://mise.jdx.dev/)（ミーズ）は、**言語ランタイムと CLI ツールを一元管理するツール**です。Rust 製で高速に動作します。
 
 従来は言語ごとに専用のバージョンマネージャーを使う必要がありました:
 
 | 言語 | 従来のツール |
 |------|-------------|
-| Node.js | nvm, nodenv, volta |
-| Python | pyenv, virtualenv |
-| Ruby | rbenv, rvm |
-| Go | goenv |
+| Node.js | [nvm](https://github.com/nvm-sh/nvm), [nodenv](https://github.com/nodenv/nodenv), [volta](https://volta.sh/) |
+| Python | [pyenv](https://github.com/pyenv/pyenv) |
+| Ruby | [rbenv](https://github.com/rbenv/rbenv), rvm |
+| Go | [goenv](https://github.com/go-nv/goenv) |
 
-mise はこれらを**1つのツールで置き換え**ます。さらに、asdf と互換性のあるプラグインシステムを持ちつつ、Rust 製で高速に動作します。
+mise はこれらを**1つのツールで置き換え**ます。言語ごとにバージョンマネージャーを覚えるのはめんどくさいので、mise で一元管理できるのはめちゃめちゃ助かります。
 
 ### asdf との違い
 
-mise は asdf の後継的な位置づけです。
+mise は [asdf](https://asdf-vm.com/) の後継的な位置づけです。asdf も複数言語のバージョン管理を1つのツールで行えますが、Shell 製で動作が遅く、shim 方式のためコマンド実行時にオーバーヘッドがありました。
 
 | 特徴 | asdf | mise |
 |------|------|------|
@@ -52,7 +52,7 @@ python = "3.12"
 
 ### CLI ツール
 
-mise は言語ランタイムだけでなく、CLI ツールも管理できます。
+mise は言語ランタイムだけでなく、CLI ツールも管理できます。これが本当に便利で、`apt` や `brew` に頼らずにツールを管理できます。
 
 ```toml
 [tools]
@@ -75,7 +75,7 @@ shfmt = "latest"
 
 ツールのインストール元:
 - **デフォルト**: mise の内蔵バックエンド
-- **`aqua:`**: aqua レジストリからインストール（AWS CLI, gcloud 等）
+- **`aqua:`**: [aqua](https://aquaproj.github.io/) レジストリからインストール（AWS CLI, gcloud 等）
 - **`pipx:`**: Python パッケージとしてインストール
 - **`cargo:`**: Rust の cargo からビルド・インストール
 
@@ -130,6 +130,8 @@ eval "$(mise activate zsh)"
 ~/project-a/  (Node 18)  →  cd  →  ~/project-b/  (Node 20)
       ↑ PATH に Node 18 を設定           ↑ PATH に Node 20 を設定
 ```
+
+shim 方式と違ってコマンド実行時のオーバーヘッドがないので、体感的にも速いです。
 
 ### trust モデル
 
@@ -188,3 +190,5 @@ chezmoi apply の流れ:
 1. `run_once_after_01-install-mise.sh` で mise をインストール
 2. `mise install` で config.toml に記述された全ツールをインストール
 3. 以降の `run_once` スクリプトで mise 経由のツールが使える
+
+新しいマシンで `chezmoi apply` を叩くだけで、言語ランタイムから CLI ツールまで全部揃います。

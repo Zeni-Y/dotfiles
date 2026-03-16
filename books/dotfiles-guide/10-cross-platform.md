@@ -14,6 +14,8 @@ title: "クロスプラットフォーム対応"
 | Ubuntu Desktop | linux | client | 開発用デスクトップ |
 | Ubuntu Server | linux | server | リモートサーバー |
 
+「同じ dotfiles を複数マシンで使いたいけど、環境ごとに微妙に設定が違う」という問題を、chezmoi のテンプレート機能で解決しています。
+
 ## 3層の分岐モデル
 
 環境ごとの差異は3つのレベルで管理しています。
@@ -58,7 +60,7 @@ Linux ディストリビューション固有の差異（パッケージ名の�
 
 ## 分岐の配置ルール
 
-分岐の方法は対象によって異なります。
+分岐の方法は対象によって異なります。この辺の使い分けは最初は分かりにくいですが、慣れると「この変更はどこに書けばいいか」がすぐ判断できるようになります。
 
 ### スクリプト — ディレクトリで分離
 
@@ -104,7 +106,7 @@ home/dot_config/zsh-abbr/
 └── user-abbreviations      # 全環境共通の abbreviation 定義
 ```
 
-zsh-abbr を使い、fish シェル風の abbreviation でエイリアスを管理しています。入力時に自動展開されるため、履歴に実際のコマンドが残る利点があります。
+[zsh-abbr](https://github.com/olets/zsh-abbr) を使い、fish シェル風の abbreviation でエイリアスを管理しています。入力時に自動展開されるため、履歴に実際のコマンドが残る利点があります。
 
 ### テンプレート — `{{ if }}` で条件分岐
 
@@ -119,7 +121,7 @@ zsh-abbr を使い、fish シェル風の abbreviation でエイリアスを管�
 {{ end -}}
 ```
 
-## shunk031 パターン — sheldon plugins の OS 別分割
+## sheldon plugins の OS 別分割パターン
 
 [shunk031/dotfiles](https://github.com/shunk031/dotfiles) では、sheldon の plugins.toml を `.chezmoitemplates/` で OS 別に分割しています。
 
@@ -140,13 +142,13 @@ zsh-abbr を使い、fish シェル風の abbreviation でエイリアスを管�
 {{ end }}
 ```
 
-このリポジトリでは plugins.toml を分割していませんが、プラグイン数が増えた場合に検討する価値があるパターンです。
+このリポジトリでは plugins.toml を `plugin_sources/` で common/client/server に分割していますが、OS レベルでの分割が必要になった場合はこのパターンも参考になります。
 
 ## クロスプラットフォーム対応のコツ
 
 ### 1. 条件分岐は最小限に
 
-可能な限り OS に依存しない設定を書き、必要な箇所だけ分岐します。
+可能な限り OS に依存しない設定を書き、必要な箇所だけ分岐するのが鉄則です。
 
 ```bash
 # 良い例：コマンドの存在チェックで分岐
@@ -160,13 +162,15 @@ if [ "$(uname)" = "Darwin" ]; then
 fi
 ```
 
+`command -v` で存在チェックする方が汎用的で、将来の環境変更にも強いです。
+
 ### 2. mise で共通化
 
-言語ランタイムや CLI ツールは mise で管理すれば、OS に関係なく同じバージョンを使えます。
+言語ランタイムや CLI ツールは [mise](https://mise.jdx.dev/) で管理すれば、OS に関係なく同じバージョンを使えます。OS ごとのパッケージマネージャの差異を吸収してくれるのが大きいですね。
 
 ### 3. Ubuntu の罠に注意
 
-Ubuntu 固有の問題:
+Ubuntu 固有の問題は最初ハマりがちです:
 - `fd` が `fdfind` という名前でインストールされる → シンボリックリンクで対応
 - `bat` が `batcat` という名前の場合がある → 同様にシンボリックリンク
 - `apt` と `apt-get` の違い → スクリプトでは `apt-get` を使う（自動化向き）

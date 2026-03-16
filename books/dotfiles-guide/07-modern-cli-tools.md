@@ -6,9 +6,11 @@ title: "モダン CLI ツール群"
 
 従来の Unix コマンドを置き換える、Rust 製を中心としたモダン CLI ツールを紹介します。これらはすべて mise で管理しています。
 
-## eza — ls の代替
+「なんで標準コマンドでいいのにわざわざ？」と思うかもしれませんが、使ってみると戻れなくなります。カラー出力、スマートなデフォルト、高速な動作...体感的な快適さが全然違います。
 
-[eza](https://github.com/eza-community/eza) は `ls` の代替ツールです。カラー表示、アイコン、Git ステータスの表示に対応しています。
+## [eza](https://github.com/eza-community/eza) — ls の代替
+
+eza は `ls` の代替ツールです。カラー表示、アイコン、Git ステータスの表示に対応しています。
 
 ### エイリアス設定
 
@@ -34,13 +36,13 @@ abbr ll="eza -la --long --group --header --binary --time-style=long-iso --icons"
 ### ls との違い
 
 - **カラー表示**: ファイルタイプごとに色分け
-- **アイコン**: ファイル拡張子に応じたアイコン表示
+- **アイコン**: ファイル拡張子に応じたアイコン表示（Nerd Font が必要）
 - **Git 連携**: 変更・追加・無視ファイルのステータス表示
 - **ヘッダー**: 各列の意味が分かるヘッダー行
 
-## bat — cat の代替
+## [bat](https://github.com/sharkdp/bat) — cat の代替
 
-[bat](https://github.com/sharkdp/bat) は `cat` の代替ツールです。シンタックスハイライトと行番号を表示します。
+bat は `cat` の代替ツールです。シンタックスハイライトと行番号を表示します。
 
 ```bash
 # 通常の使い方
@@ -59,11 +61,11 @@ bat --plain file.txt
 - **行番号**: 自動表示
 - **Git 連携**: 変更行をマーキング
 - **ページャー**: 長いファイルは自動的にページャーで表示
-- **fzf との連携**: プレビュー表示に最適
+- **fzf との連携**: プレビュー表示に最適（fzf チャプターで詳しく解説します）
 
-## fd — find の代替
+## [fd](https://github.com/sharkdp/fd) — find の代替
 
-[fd](https://github.com/sharkdp/fd) は `find` の代替ツールです。シンプルな構文で高速にファイルを検索します。
+fd は `find` の代替ツールです。シンプルな構文で高速にファイルを検索します。
 
 ```bash
 # ファイル名で検索
@@ -89,7 +91,7 @@ find . -name "*.md" -not -path "./.git/*"
 fd -e md
 ```
 
-fd の利点:
+この差は歴然ですよね。fd の利点:
 - **直感的な構文**: `fd pattern` だけで検索開始
 - **高速**: 並列処理で高速検索
 - **スマートなデフォルト**: `.gitignore` を自動的に尊重、隠しファイルはデフォルトで除外
@@ -104,9 +106,9 @@ Ubuntu では `fd` ではなく `fdfind` という名前でインストールさ
 ln -s "$(which fdfind)" "${HOME}/.local/bin/fd"
 ```
 
-## ripgrep — grep の代替
+## [ripgrep (rg)](https://github.com/BurntSushi/ripgrep) — grep の代替
 
-[ripgrep (rg)](https://github.com/BurntSushi/ripgrep) は `grep` の代替ツールです。再帰検索がデフォルトで、非常に高速です。
+ripgrep は `grep` の代替ツールです。再帰検索がデフォルトで、非常に高速です。
 
 ```bash
 # カレントディレクトリ以下を再帰検索
@@ -129,9 +131,9 @@ rg -l "pattern"
 - **`.gitignore` 対応**: 無視ファイルを自動スキップ
 - **Unicode 対応**: デフォルトで UTF-8 をサポート
 
-## starship — プロンプトカスタマイズ
+## [starship](https://starship.rs/) — プロンプトカスタマイズ
 
-[starship](https://starship.rs/) は Rust 製のクロスシェルプロンプトです。bash, zsh, fish 等で共通の設定が使えます。
+starship は Rust 製のクロスシェルプロンプトです。bash, zsh, fish 等で共通の設定が使えます。
 
 ```bash
 # .zshrc での初期化
@@ -156,9 +158,11 @@ eval "$(starship init zsh)"
 - Git ブランチ名とステータス
 - Node.js / Python 等のバージョン（プロジェクトに応じて自動検出）
 
-## yazi — ターミナルファイルマネージャ
+設定を書かなくても最初からいい感じに表示してくれるのが starship の良いところです。
 
-[yazi](https://github.com/sxyazi/yazi) は Rust 製のターミナルファイルマネージャです。
+## [yazi](https://github.com/sxyazi/yazi) — ターミナルファイルマネージャ
+
+yazi は Rust 製のターミナルファイルマネージャです。
 
 ### 主な特徴
 
@@ -167,11 +171,11 @@ eval "$(starship init zsh)"
 - **Vim キーバインド**: hjkl での移動
 - **プラグインシステム**: Lua でカスタマイズ可能
 
-## ghq / gwq — リポジトリ管理
+## [ghq](https://github.com/x-motemen/ghq) / [gwq](https://github.com/d-kuro/gwq) — リポジトリ管理
 
 ### ghq
 
-[ghq](https://github.com/x-motemen/ghq) は Git リポジトリを一定のルールで管理するツールです。
+ghq は Git リポジトリを一定のルールで管理するツールです。
 
 ```bash
 # リポジトリをクローン（~/ghq/github.com/user/repo に配置）
@@ -194,6 +198,8 @@ ghq は `GOPATH` と同じ `~/ghq` ディレクトリにリポジトリを整理
 └── gitlab.com/
     └── user/repo-c/
 ```
+
+リポジトリの置き場所に悩まなくて済むのが良いですね。
 
 ### gwq
 
@@ -240,7 +246,7 @@ tilde_home = true
 
 #### gwq + Claude Code の連携
 
-gwq は Claude Code（AI コーディングアシスタント）と組み合わせて、**複数のタスクを並列実行**できます。
+gwq は [Claude Code](https://claude.ai/claude-code)（AI コーディングアシスタント）と組み合わせて、**複数のタスクを並列実行**できます。
 
 ```toml
 [claude]
@@ -278,4 +284,4 @@ cdw
 3. **人間に優しい出力**: アイコン、色、フォーマットが見やすい
 4. **mise で一括管理**: バージョン管理も容易
 
-既存のコマンドと共存できるので、エイリアスで置き換えて段階的に移行できます。
+既存のコマンドと共存できるので、abbreviation で置き換えて段階的に移行できます。一度使い始めると元に戻れなくなるので、騙されたと思って試してみてください。

@@ -4,6 +4,8 @@ title: "リファレンス"
 
 # リファレンス
 
+このチャプターはチートシート集です。複雑なコマンドやキーバインドは忘れやすいので、後から見返せるようにまとめています。
+
 ## このリポジトリのファイル一覧
 
 ### ソースファイルと配置先の対応
@@ -143,62 +145,69 @@ sheldon add <name> --github <repo>  # プラグインを追加
 sheldon remove <name>      # プラグインを削除
 ```
 
-## Zed コマンド・キーバインドチートシート
+## fzf キーバインドチートシート
+
+| キーバインド | 効果 |
+|------------|------|
+| `Ctrl+T` | ファイル検索（bat プレビュー付き） |
+| `Ctrl+R` | コマンド履歴検索 |
+| `Alt+C` | ディレクトリ検索 → cd |
+| `Ctrl+/` | プレビューの表示/非表示切り替え |
+
+## Zed キーバインドチートシート
 
 ### ファイル・ナビゲーション
 
-```
-Cmd/Ctrl + P              ファイルを素早く開く
-Cmd/Ctrl + Shift + P      コマンドパレット
-Cmd/Ctrl + G              指定行へジャンプ
-Cmd/Ctrl + Shift + O      シンボルへジャンプ
-Cmd/Ctrl + Tab            タブの切り替え
-```
+| キー | 動作 |
+|------|------|
+| `Ctrl + P` | ファイルを素早く開く |
+| `Ctrl + Shift + P` | コマンドパレット |
+| `Ctrl + G` | 指定行へジャンプ |
+| `Ctrl + Shift + O` | シンボルへジャンプ |
+| `Ctrl + Tab` | タブの切り替え |
 
 ### 編集
 
-```
-Cmd/Ctrl + D              同じ単語を追加選択
-Cmd/Ctrl + Shift + L      同じ単語をすべて選択
-Cmd/Ctrl + Shift + K      行を削除
-Alt + Up/Down             行を移動
-Alt + Shift + Up/Down     行を複製
-Cmd/Ctrl + /              コメントトグル
-Cmd/Ctrl + Shift + [/]    コード折りたたみ / 展開
-```
+| キー | 動作 |
+|------|------|
+| `Ctrl + D` | 同じ単語を追加選択 |
+| `Ctrl + Shift + L` | 同じ単語をすべて選択 |
+| `Ctrl + Shift + K` | 行を削除 |
+| `Alt + Up/Down` | 行を移動 |
+| `Alt + Shift + Up/Down` | 行を複製 |
+| `Ctrl + /` | コメントトグル |
 
 ### パネル・表示
 
-```
-Cmd/Ctrl + B              サイドバートグル
-Cmd/Ctrl + J              ターミナルトグル
-Cmd/Ctrl + Shift + F      プロジェクト内検索
-Cmd/Ctrl + Shift + E      ファイルエクスプローラ
-Cmd/Ctrl + \              エディタを分割
-```
+| キー | 動作 |
+|------|------|
+| `Ctrl + B` | サイドバートグル |
+| `Ctrl + J` | ターミナルトグル |
+| `Ctrl + Shift + F` | プロジェクト内検索 |
+| `Ctrl + Shift + E` | ファイルエクスプローラ |
+| `Ctrl + \` | エディタを分割 |
 
 ### コード操作
 
-```
-F2                        シンボルのリネーム
-F12                       定義へジャンプ
-Shift + F12               参照を表示
-Cmd/Ctrl + .              コードアクション
-Cmd/Ctrl + Shift + Space  パラメータヒント
-```
+| キー | 動作 |
+|------|------|
+| `F2` | シンボルのリネーム |
+| `F12` | 定義へジャンプ |
+| `Shift + F12` | 参照を表示 |
+| `Ctrl + .` | コードアクション |
 
 ### AI アシスタント
 
-```
-Cmd/Ctrl + Enter          AI アシスタントパネルを開く
-Cmd/Ctrl + Shift + Enter  インラインアシスト
-```
+| キー | 動作 |
+|------|------|
+| `Ctrl + Enter` | AI アシスタントパネルを開く |
+| `Ctrl + Shift + Enter` | インラインアシスト |
 
 ### WSL 連携
 
-```
-Ctrl + Shift + P → "projects: open in wsl"   WSL プロジェクトを開く
-```
+| キー | 動作 |
+|------|------|
+| `Ctrl + Shift + P` → `projects: open in wsl` | WSL プロジェクトを開く |
 
 ## 参考リポジトリ
 
@@ -212,23 +221,23 @@ Ctrl + Shift + P → "projects: open in wsl"   WSL プロジェクトを開く
 
 | ツール | URL |
 |--------|-----|
-| chezmoi | https://www.chezmoi.io/ |
-| sheldon | https://sheldon.cli.rs/ |
-| mise | https://mise.jdx.dev/ |
-| starship | https://starship.rs/ |
-| age | https://github.com/FiloSottile/age |
-| fzf | https://github.com/junegunn/fzf |
-| eza | https://github.com/eza-community/eza |
-| bat | https://github.com/sharkdp/bat |
-| fd | https://github.com/sharkdp/fd |
-| ripgrep | https://github.com/BurntSushi/ripgrep |
-| yazi | https://github.com/sxyazi/yazi |
-| ghq | https://github.com/x-motemen/ghq |
-| gwq | https://github.com/d-kuro/gwq |
-| zsh-abbr | https://github.com/olets/zsh-abbr |
-| bats | https://github.com/bats-core/bats-core |
-| Zed | https://zed.dev/ |
-| Zenn | https://zenn.dev/ |
+| [chezmoi](https://www.chezmoi.io/) | https://www.chezmoi.io/ |
+| [sheldon](https://sheldon.cli.rs/) | https://sheldon.cli.rs/ |
+| [mise](https://mise.jdx.dev/) | https://mise.jdx.dev/ |
+| [starship](https://starship.rs/) | https://starship.rs/ |
+| [age](https://github.com/FiloSottile/age) | https://github.com/FiloSottile/age |
+| [fzf](https://github.com/junegunn/fzf) | https://github.com/junegunn/fzf |
+| [eza](https://github.com/eza-community/eza) | https://github.com/eza-community/eza |
+| [bat](https://github.com/sharkdp/bat) | https://github.com/sharkdp/bat |
+| [fd](https://github.com/sharkdp/fd) | https://github.com/sharkdp/fd |
+| [ripgrep](https://github.com/BurntSushi/ripgrep) | https://github.com/BurntSushi/ripgrep |
+| [yazi](https://github.com/sxyazi/yazi) | https://github.com/sxyazi/yazi |
+| [ghq](https://github.com/x-motemen/ghq) | https://github.com/x-motemen/ghq |
+| [gwq](https://github.com/d-kuro/gwq) | https://github.com/d-kuro/gwq |
+| [zsh-abbr](https://github.com/olets/zsh-abbr) | https://github.com/olets/zsh-abbr |
+| [bats](https://github.com/bats-core/bats-core) | https://github.com/bats-core/bats-core |
+| [Zed](https://zed.dev/) | https://zed.dev/ |
+| [Zenn](https://zenn.dev/) | https://zenn.dev/ |
 
 ## Zenn Book の仕様
 

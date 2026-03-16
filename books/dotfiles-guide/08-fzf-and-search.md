@@ -16,7 +16,7 @@ ls | fzf
 vim $(fzf)
 ```
 
-「ファジー」の意味は、完全一致ではなく**部分一致や曖昧一致**で検索できることです。`readme` と入力するだけで `README.md` がヒットします。
+「ファジー」の意味は、完全一致ではなく**部分一致や曖昧一致**で検索できることです。`readme` と入力するだけで `README.md` がヒットします。正確なファイル名を覚えていなくても大丈夫です。
 
 ## 環境変数による設定
 
@@ -40,7 +40,7 @@ export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border'
 export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
 ```
 
-fzf がファイル一覧を取得する際のデフォルトコマンドです。`find` の代わりに `fd` を使うことで:
+fzf がファイル一覧を取得する際のデフォルトコマンドです。`find` の代わりに [fd](https://github.com/sharkdp/fd) を使うことで:
 - `.gitignore` に含まれるファイルを自動除外
 - 隠しファイルも検索対象に含める（`--hidden`）
 - シンボリックリンクをたどる（`--follow`）
@@ -52,7 +52,7 @@ fzf がファイル一覧を取得する際のデフォルトコマンドです�
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 ```
 
-`Ctrl+T` キーバインドで使用するコマンド。`FZF_DEFAULT_COMMAND` と同じ設定を共有しています。
+`Ctrl+T` キーバインドで使用するコマンドです。`FZF_DEFAULT_COMMAND` と同じ設定を共有しています。
 
 ### FZF_CTRL_T_OPTS
 
@@ -62,7 +62,7 @@ export FZF_CTRL_T_OPTS="--preview 'bat -n --color=always {}' --bind 'ctrl-/:chan
 
 | オプション | 効果 |
 |-----------|------|
-| `--preview 'bat -n ...'` | 選択中のファイルを bat でプレビュー表示 |
+| `--preview 'bat -n ...'` | 選択中のファイルを [bat](https://github.com/sharkdp/bat) でプレビュー表示 |
 | `--bind 'ctrl-/:...'` | `Ctrl+/` でプレビューの表示/非表示を切り替え |
 
 ### FZF_ALT_C_COMMAND
@@ -75,7 +75,7 @@ export FZF_ALT_C_COMMAND='fd --type d --hidden --follow --exclude .git'
 
 ## キーバインド
 
-fzf は Oh My Zsh の fzf プラグイン経由で以下のキーバインドを提供します。
+fzf は [Oh My Zsh](https://ohmyz.sh/) の fzf プラグイン経由で以下のキーバインドを提供します。
 
 ### Ctrl+T — ファイル検索
 
@@ -98,6 +98,8 @@ $ [Ctrl+R]
 # → 履歴から検索
 $ docker compose up -d  # 過去のコマンドが入力される
 ```
+
+個人的に一番使う fzf のキーバインドです。長いコマンドを覚えていなくても、断片的なキーワードで見つけられます。
 
 ### Alt+C — ディレクトリ移動
 
@@ -155,7 +157,7 @@ cd() {
 }
 ```
 
-`builtin cd` で zsh 組み込みの `cd` を呼び出し、成功したら `ls`（= eza エイリアス）を実行します。これによりディレクトリを移動するたびに内容が表示されます。
+`builtin cd` で zsh 組み込みの `cd` を呼び出し、成功したら `ls`（= eza abbreviation）を実行します。ディレクトリを移動するたびに内容が表示されるので、「今どこにいるか」がすぐ分かります。
 
 ## カスタム fzf スクリプト
 
@@ -163,7 +165,7 @@ cd() {
 
 ### dev — ghq + fzf でリポジトリ移動
 
-ghq で管理しているリポジトリを fzf で検索・選択して移動します。tmux 内で実行した場合、セッション名をリポジトリ名に自動リネームします。
+[ghq](https://github.com/x-motemen/ghq) で管理しているリポジトリを fzf で検索・選択して移動します。tmux 内で実行した場合、セッション名をリポジトリ名に自動リネームします。
 
 ```bash
 $ dev
@@ -209,7 +211,7 @@ function fgc() {
 
 ### cdgwq — gwq worktree を fzf で選択して移動
 
-gwq で管理している worktree を fzf で選択して移動します。
+[gwq](https://github.com/d-kuro/gwq) で管理している worktree を fzf で選択して移動します。
 
 ```bash
 $ cdgwq
@@ -242,3 +244,5 @@ fzf 単体でも便利ですが、fd や bat と組み合わせることで真�
 | bat + fzf | プレビュー付きファイル選択 |
 | ghq + fzf | リポジトリ間の高速移動 |
 | history + fzf | コマンド履歴のファジー検索 |
+
+fzf のキーバインドは最初は覚えるのが大変ですが、上の表をチートシートとして手元に置いておけばすぐ慣れます。`Ctrl+R`（履歴検索）と `Ctrl+T`（ファイル検索）だけでも覚えておけば、日常的に使うことになると思います。

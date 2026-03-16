@@ -12,6 +12,8 @@ dotfiles の変更は以下のサイクルで行います。
 edit → diff → apply → test → commit → push
 ```
 
+シンプルですが、`diff` を挟むのが大事です。テンプレートの展開結果が意図しないものになっていることがあるので、apply する前に必ず確認しましょう。
+
 ### 1. edit — ソースファイルを編集
 
 ```bash
@@ -97,7 +99,7 @@ lint:
 	shellcheck home/.chezmoiscripts/**/*.sh
 ```
 
-Makefile を使うことで、複数コマンドの実行やテストの自動化が容易になります。
+よく使うコマンドを Makefile にまとめておくと、後で「あのコマンド何だっけ」と悩まずに済みます。
 
 ## watchexec で変更監視
 
@@ -108,7 +110,7 @@ Makefile を使うことで、複数コマンドの実行やテストの自動�
 watchexec -w ~/.local/share/chezmoi/home -- chezmoi apply
 ```
 
-設定ファイルを試行錯誤する際に便利です。
+設定ファイルを試行錯誤する際に便利です。「編集 → apply → 確認」のサイクルが自動化されるので、テンポよく作業できます。
 
 ## Docker でクリーン環境テスト
 
@@ -136,11 +138,11 @@ docker build -t dotfiles-test .
 docker run -it dotfiles-test zsh
 ```
 
-クリーン環境での動作を確認することで、新しいマシンへの展開時のトラブルを事前に防げます。
+クリーン環境での動作を確認することで、新しいマシンへの展開時のトラブルを事前に防げます。「自分のマシンでは動くけど新しいマシンだとコケる」はよくあるパターンなので、定期的に検証しておくと安心です。
 
 ## bats によるシェルスクリプトテスト
 
-[bats](https://github.com/bats-core/bats-core) (Bash Automated Testing System) は、シェルスクリプト用のテストフレームワークです。mise で管理しています。
+[bats (Bash Automated Testing System)](https://github.com/bats-core/bats-core) は、シェルスクリプト用のテストフレームワークです。mise で管理しています。
 
 ```bash
 # tests/test_aliases.bats
@@ -177,7 +179,7 @@ for i in {1..10}; do time zsh -i -c exit; done 2>&1 | grep real
 zsh -i -c exit
 ```
 
-zsh-defer を使用している場合、起動時間は通常 **100ms 以下** になるはずです。
+zsh-defer を使用している場合、起動時間は通常 **100ms 以下** になるはずです。遅くなってきたら `zprof` でボトルネックを調べましょう。
 
 ## カスタム開発コマンド
 
@@ -256,7 +258,7 @@ git commit -m "feat: add bat preview to fzf Ctrl+T"
 
 ## CI/CD (GitHub Actions)
 
-GitHub Actions で dotfiles の CI を構築できます。
+[GitHub Actions](https://docs.github.com/ja/actions) で dotfiles の CI を構築できます。
 
 ```yaml
 # .github/workflows/test.yml
@@ -282,7 +284,7 @@ jobs:
 
 ## GitHub 連携と Zenn デプロイ
 
-このリポジトリは GitHub と Zenn を連携しており、`books/` ディレクトリの内容が自動的に Zenn に反映されます。
+このリポジトリは GitHub と [Zenn](https://zenn.dev/) を連携しており、`books/` ディレクトリの内容が自動的に Zenn に反映されます。
 
 ```
 dotfiles リポジトリ

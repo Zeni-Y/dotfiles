@@ -6,7 +6,7 @@ title: "chezmoi テンプレートと応用"
 
 ## Go template 基礎
 
-chezmoi は Go の `text/template` パッケージをテンプレートエンジンとして使用します。`.tmpl` サフィックスが付いたファイルはテンプレートとして処理されます。
+chezmoi は Go の [`text/template`](https://pkg.go.dev/text/template) パッケージをテンプレートエンジンとして使用します。`.tmpl` サフィックスが付いたファイルはテンプレートとして処理されます。
 
 ### 基本構文
 
@@ -27,7 +27,7 @@ Linux の設定
 {{- end }}
 ```
 
-これは chezmoi のテンプレートでは非常に重要です。空白制御を忘れると、出力ファイルに不要な空行が入ります。
+これは chezmoi のテンプレートでは非常に重要です。空白制御を忘れると、出力ファイルに不要な空行が入ってしまいます。最初のうちはハマりがちなポイントなので、`chezmoi cat <file>` でテンプレート展開後の結果を確認しながら書くのがおすすめです。
 
 ## .chezmoi.yaml.tmpl — データ定義
 
@@ -60,7 +60,7 @@ data:
 - macOS は自動的に `client` に設定される
 - `| quote` で YAML の値を安全にクォートする
 
-定義したデータはテンプレート内で `.email`, `.system` として参照できます。
+定義したデータはテンプレート内で `.email`, `.system` として参照できます。初回 `chezmoi init` で対話的に値を聞かれて、以降は保存された値が使われる仕組みです。
 
 ## テンプレート変数
 
@@ -80,9 +80,11 @@ chezmoi が自動的に提供するビルトイン変数:
 chezmoi data
 ```
 
+「テンプレートが展開されない」「条件分岐が意図通りにならない」というときは、まず `chezmoi data` で変数の値を確認するのが鉄板です。
+
 ## run_once スクリプト
 
-chezmoi では `.chezmoiscripts/` 以下にスクリプトを配置して、`chezmoi apply` 時に自動実行できます。
+chezmoi では `.chezmoiscripts/` 以下にスクリプトを配置して、`chezmoi apply` 時に自動実行できます。新しいマシンのセットアップを自動化するのに使わない手はないですね。
 
 ### スクリプトの種類
 
@@ -108,6 +110,8 @@ chezmoi では `.chezmoiscripts/` 以下にスクリプトを配置して、`che
 番号が小さいほど先に実行されます。このリポジトリでは:
 - `01` — mise のインストール（他のツールの前提）
 - `20` — fd-find のインストール（mise が必要）
+
+依存関係を番号で表現しているので、後から見返しても実行順序がすぐ分かります。
 
 ### 実際のスクリプト例
 
@@ -152,7 +156,7 @@ install/
 
 ### 冪等なインストールスクリプト
 
-インストールスクリプトは**何度実行しても同じ結果になる**ように設計します。
+インストールスクリプトは**何度実行しても同じ結果になる**ように設計します。これがすごく大事です。
 
 ```bash
 # install/ubuntu/common/fd.sh
@@ -193,7 +197,7 @@ Linux システムでも同じパターンが広く使われています:
 - `/etc/apt/sources.list.d/` — APT ソースの断片を格納
 - `/etc/sudoers.d/` — sudoers 設定の断片を格納
 
-chezmoi でもこの慣習に従い、1つの設定ファイル（`.chezmoiignore` や `.chezmoiexternal.yaml.tmpl`）の内容を**複数ファイルに分割**して管理しています。
+chezmoi でもこの慣習に従い、1つの設定ファイルの内容を**複数ファイルに分割**して管理しています。
 
 ### テンプレート構成パターン
 
@@ -252,7 +256,7 @@ OS と system の組み合わせで除外ファイルを切り替えています
 
 ### Nerd Font の自動インストール
 
-eza のアイコン表示など、Nerd Font が必要なツールのために、`chezmoi apply` 時に自動的にフォントをダウンロードします。
+[eza](https://github.com/eza-community/eza) のアイコン表示など、Nerd Font が必要なツールのために、`chezmoi apply` 時に自動的にフォントをダウンロードします。
 
 ```yaml
 # .chezmoitemplates/chezmoiexternal.d/common.yaml.tmpl
@@ -267,6 +271,8 @@ eza のアイコン表示など、Nerd Font が必要なツールのために、
 - `gitHubLatestReleaseAssetURL` で GitHub リリースの最新アセット URL を自動取得
 - `refreshPeriod: "720h"`（30日）で定期的に更新チェック
 - `type: "archive"` で ZIP を自動展開してフォントディレクトリに配置
+
+`chezmoi apply` するだけで Nerd Font がインストールされるのはめちゃめちゃ便利です。
 
 ### パイプラインでクロスプラットフォーム対応
 
