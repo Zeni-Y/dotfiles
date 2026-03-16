@@ -51,18 +51,62 @@ eval "$(/home/zenimoto/.local/bin/mise activate zsh)"
 
 たった3行の `eval` で、プロンプト・プラグイン・ランタイムがすべて初期化されます。設定の詳細は各ツールの設定ファイルに分離されています。
 
-## plugins.toml の構造
+## plugins.toml のテンプレート分割
 
-sheldon の設定ファイルは `~/.config/sheldon/plugins.toml` です。
+sheldon の設定ファイルは `~/.config/sheldon/plugins.toml` です。このリポジトリでは、chezmoi のテンプレート機能を使って **common / client / server に分割管理**しています。
+
+### 分割構成
+
+```
+dot_config/sheldon/
+├── plugins.toml.tmpl          # エントリポイント（テンプレート）
+└── plugin_sources/
+    ├── common.toml             # 全環境共通プラグイン
+    ├── client.toml             # デスクトップ / WSL 向け
+    └── server.toml             # リモートサーバー向け
+```
+
+`plugins.toml.tmpl` が `{{ include }}` で各ファイルを結合します。
+
+```go
+{{ include "dot_config/sheldon/plugin_sources/common.toml" }}
+{{- if eq .system "client" }}
+{{ include "dot_config/sheldon/plugin_sources/client.toml" }}
+{{- else if eq .system "server" }}
+{{ include "dot_config/sheldon/plugin_sources/server.toml" }}
+{{- else }}
+{{   fail (printf "Unknown system type: %s" .system) }}
+{{- end -}}
+```
+
+:::message
+`plugin_sources/` ディレクトリは chezmoi のビルド時にのみ使用されるため、`.chezmoiignore` で除外しています。ホームディレクトリには最終的な `plugins.toml` だけが配置されます。
+:::
+
+### 分割の効果
+
+| ファイル | 内容 |
+|---------|------|
+| `common.toml` | zsh-defer, fzf, 補完, 言語環境, zsh-abbr 等 |
+| `client.toml` | starship, chezmoi-notify, client 用 PATH |
+| `server.toml` | starship, chezmoi-notify, server 用 PATH |
+
+client と server で共通するプラグイン（starship, chezmoi-notify 等）は各ファイルに記述し、zsh 本体のプラグイン群は `common.toml` に集約しています。
 
 ### カスタムテンプレート
 
 ```toml
 [templates]
-defer = "{% for file in files %}zsh-defer source \"{{ file }}\"\n{% endfor %}"
+defer = """
+{{ hooks?.pre | nl }}
+{% for file in files %}
+zsh-defer source "{{ file }}"
+{% endfor %}
+{{ hooks?.post | nl }}
+"""
 ```
 
-この `defer` テンプレートが sheldon + zsh-defer の核心です。通常の `source` の代わりに `zsh-defer source` を使うことで、プラグインの読み込みをプロンプト表示**後**に遅延させます。
+この `defer` テンプレートが sheldon + zsh-defer の核心です。通常の `source` の代わりに `zsh-defer source` を使うことで、プラグインの読み込みをプロンプト表示**後**に遅延させます。`hooks` を使えば、プラグイン読み込みの前後にカスタム処理を追加できます。
 
 ### プラグインの定義
 
@@ -210,15 +254,145 @@ apply = ["defer"]
 ### エイリアスと非追跡設定
 
 ```toml
-[plugins.common-alias]
-local = "~/.config/alias"
-use = ["common.sh"]
-apply = ["defer"]
-
 [plugins.private-dotfiles]
-inline = '[[ -f ~/.workrc ]] && source ~/.workrc'
-apply = ["defer"]
+inline = '''
+function _private_dotfiles() {
+    local filepath="${HOME}/.workrc"
+    if [ -f "$filepath" ]; then
+        source "$filepath"
+    fi
+}
+zsh-defer _private_dotfiles
+'''
 ```
 
-- `common-alias`: `~/.config/alias/common.sh` からエイリアスを読み込み
-- `private-dotfiles`: `~/.workrc` が存在すれば読み込み（Git 管理外の個人設定用）
+`~/.workrc` が存在すれば読み込みます（Git 管理外の個人設定用）。
+
+## zsh-abbr — エイリアスの進化形
+
+### abbreviation とは
+
+[zsh-abbr](https://github.com/olets/zsh-abbr) は **fish shell 風の abbreviation（省略形）** を zsh に提供するプラグインです。
+
+エイリアスとの最大の違いは、**入力時にフルコマンドに展開される**点です。
+
+```
+# エイリアスの場合
+$ gs[Enter]  → git status が実行されるが、履歴には "gs" が残る
+
+# abbreviation の場合
+$ gs[Space]  → "git status" に展開される
+$ git status[Enter]  → 履歴にも "git status" が残る
+```
+
+### abbreviation のメリット
+
+| 比較項目 | エイリアス | abbreviation |
+|---------|-----------|--------------|
+| 履歴の可読性 | 省略形で残る | フルコマンドで残る |
+| 他の環境での再現 | エイリアス定義が必要 | 履歴をコピペすればそのまま動く |
+| コマンドの確認 | 実行するまで分からない | 展開されるので確認できる |
+
+### 設定ファイル
+
+abbreviation は `~/.config/zsh-abbr/user-abbreviations` に定義します。
+
+```bash
+abbr "cz"="chezmoi"
+abbr "gm"="git checkout $(git symbolic-ref refs/remotes/origin/HEAD | sed \"s@^refs/remotes/origin/@@\")"
+abbr "ls"="eza --long --group --header --binary --time-style=long-iso --icons"
+abbr "ll"="eza -la --long --group --header --binary --time-style=long-iso --icons"
+```
+
+sheldon での読み込み設定:
+
+```toml
+[plugins.zsh-abbr]
+github = "olets/zsh-abbr"
+apply = ['defer']
+```
+
+:::message
+`gm` は `git symbolic-ref` でリモートのデフォルトブランチ（main や master）を自動判定し、チェックアウトします。リポジトリごとにデフォルトブランチが異なる場合でも対応できます。
+:::
+
+## chezmoi-notify — dotfiles 更新通知
+
+### 概要
+
+`chezmoi-notify` は、dotfiles リポジトリのリモートに未適用の更新がないかを**バックグラウンドで定期チェック**し、starship プロンプトに通知を表示するカスタムプラグインです。
+
+### 仕組み
+
+```
+[precmd フック] → 1時間経過? → [バックグラウンドで git fetch]
+                                → 差分あり → キャッシュに件数を書き込み
+                                → 差分なし → キャッシュを削除
+
+[starship] → キャッシュを読み取り → プロンプト右側に表示
+```
+
+### プラグインのコード
+
+```zsh
+# ~/.config/zsh/plugins/chezmoi-notify/chezmoi-notify.plugin.zsh
+function _check_chezmoi_update_async() {
+    local check_interval=3600 # 1時間ごとにチェック
+    local cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/starship-chezmoi"
+    local status_file="$cache_dir/count"
+    local last_check_file="$cache_dir/last_check"
+
+    [[ -d "$cache_dir" ]] || mkdir -p "$cache_dir"
+
+    local current_time=$(date +%s)
+    local last_check=0
+    [[ -f "$last_check_file" ]] && last_check=$(cat "$last_check_file")
+
+    if ((current_time - last_check > check_interval)); then
+        echo "$current_time" >| "$last_check_file"
+        # バックグラウンドで実行（&| で切り離し）
+        (
+            if command -v chezmoi > /dev/null 2>&1; then
+                chezmoi git -- fetch -q
+                local count=$(chezmoi git -- rev-list --count HEAD..origin/main 2> /dev/null)
+                if [[ "$count" -gt 0 ]]; then
+                    echo "$count" >| "$status_file"
+                else
+                    rm -f "$status_file"
+                fi
+            fi
+        ) &|
+    fi
+}
+
+autoload -Uz add-zsh-hook
+add-zsh-hook precmd _check_chezmoi_update_async
+```
+
+### starship との連携
+
+`~/.config/starship.toml` にカスタムモジュールを定義して、キャッシュファイルの内容をプロンプトに表示します。
+
+```toml
+right_format = """
+${custom.chezmoi}
+"""
+
+[custom.chezmoi]
+command = "cat ${XDG_CACHE_HOME:-$HOME/.cache}/starship-chezmoi/count"
+when = "test -s ${XDG_CACHE_HOME:-$HOME/.cache}/starship-chezmoi/count"
+symbol = " dotfiles  ⇣"
+style = "bold red"
+format = "[$symbol$output]($style) "
+```
+
+未適用の更新がある場合、プロンプトの右側に `dotfiles ⇣3` のように表示されます。`chezmoi update` で更新を適用すると通知が消えます。
+
+### sheldon での読み込み
+
+client.toml と server.toml の両方に定義しています。
+
+```toml
+[plugins.chezmoi-notify]
+local = "~/.config/zsh/plugins/chezmoi-notify"
+```

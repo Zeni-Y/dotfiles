@@ -11,19 +11,44 @@ title: "リファレンス"
 | ソースファイル | 配置先 | 説明 |
 |--------------|--------|------|
 | `home/dot_zshrc` | `~/.zshrc` | zsh 設定 |
-| `home/dot_gitconfig` | `~/.gitconfig` | Git 設定 |
+| `home/dot_zprofile` | `~/.zprofile` | zsh ログインシェル設定（mise 初期化） |
+| `home/dot_vimrc` | `~/.vimrc` | Vim 基本設定 |
 | `home/.chezmoi.yaml.tmpl` | `~/.config/chezmoi/chezmoi.yaml` | chezmoi 設定 |
-| `home/dot_config/sheldon/plugins.toml` | `~/.config/sheldon/plugins.toml` | プラグイン設定 |
+| `home/.chezmoiignore` | — | chezmoi 管理対象の除外設定 |
+| `home/.chezmoiexternal.yaml.tmpl` | — | 外部依存管理（Nerd Font 等） |
+| `home/dot_config/git/config.tmpl` | `~/.config/git/config` | Git 設定（テンプレート） |
+| `home/dot_config/git/ignore` | `~/.config/git/ignore` | グローバル gitignore |
+| `home/dot_config/sheldon/plugins.toml.tmpl` | `~/.config/sheldon/plugins.toml` | プラグイン設定（テンプレート） |
+| `home/dot_config/sheldon/plugin_sources/common.toml` | — | sheldon 共通プラグイン（ビルド時結合） |
+| `home/dot_config/sheldon/plugin_sources/client.toml` | — | sheldon client 用プラグイン（ビルド時結合） |
+| `home/dot_config/sheldon/plugin_sources/server.toml` | — | sheldon server 用プラグイン（ビルド時結合） |
+| `home/dot_config/starship.toml` | `~/.config/starship.toml` | starship プロンプト設定 |
 | `home/dot_config/mise/config.toml` | `~/.config/mise/config.toml` | ランタイム設定 |
+| `home/dot_config/gwq/config.toml` | `~/.config/gwq/config.toml` | gwq 設定 |
 | `home/dot_config/alias/common.sh` | `~/.config/alias/common.sh` | エイリアス |
+| `home/dot_config/zsh-abbr/user-abbreviations` | `~/.config/zsh-abbr/user-abbreviations` | zsh-abbr 省略形定義 |
+| `home/dot_config/zsh/plugins/chezmoi-notify/chezmoi-notify.plugin.zsh` | `~/.config/zsh/plugins/chezmoi-notify/chezmoi-notify.plugin.zsh` | dotfiles 更新通知プラグイン |
 | `home/dot_config/zed/settings.json` | `~/.config/zed/settings.json` | Zed エディタ設定 |
 | `home/dot_config/zed/keymap.json` | `~/.config/zed/keymap.json` (WSL: `%APPDATA%\Zed\keymap.json` にもコピー) | Zed キーバインド設定 |
+
+### カスタムコマンド
+
+| ソースファイル | コマンド名 | 説明 |
+|--------------|-----------|------|
+| `home/dot_local/bin/common/executable_dev` | `dev` | ghq + fzf でリポジトリ移動 |
+| `home/dot_local/bin/common/executable_fgc` | `fgc` | fzf で git ブランチチェックアウト |
+| `home/dot_local/bin/common/executable_cdgwq` | `cdgwq` | gwq worktree を fzf で選択して移動 |
+| `home/dot_local/bin/common/executable_cdw` | `cdw` | 最新の gwq worktree に移動 |
+| `home/dot_local/bin/common/executable_chezmoi-cd` | `chezmoi-cd` | chezmoi ソースディレクトリに移動 |
+| `home/dot_local/bin/common/executable_git-delete-merged-branches` | `git-delete-merged-branches` | squash-merge 済みブランチを検出・削除 |
+| `home/dot_local/bin/common/executable_uv-format` | `uv-format` | ruff でフォーマット + リント |
 
 ### スクリプト
 
 | ファイル | 実行タイミング | 内容 |
 |---------|--------------|------|
 | `.chezmoiscripts/common/run_once_after_01-install-mise.sh.tmpl` | apply 後1回 | mise インストール |
+| `.chezmoiscripts/common/run_once_after_02-install-sheldon.sh.tmpl` | apply 後1回 | sheldon インストール |
 | `.chezmoiscripts/common/run_onchange_after_10-setup-zed-keymap.sh.tmpl` | keymap.json 変更時 | WSL → Windows に keymap.json を配置 |
 | `.chezmoiscripts/ubuntu/run_once_20-install-fd.sh.tmpl` | apply 後1回 | fd-find インストール (Ubuntu) |
 
@@ -32,8 +57,20 @@ title: "リファレンス"
 | ファイル | 内容 |
 |---------|------|
 | `install/common/mise.sh` | mise のインストールとツール展開 |
+| `install/common/sheldon.sh` | sheldon のインストール |
 | `install/common/zed-keymap.sh` | WSL 環境で keymap.json を Windows 側に配置 |
 | `install/ubuntu/common/fd.sh` | fd-find のインストールとシンボリックリンク作成 |
+
+### テンプレート部品
+
+| ファイル | 内容 |
+|---------|------|
+| `home/.chezmoitemplates/chezmoiignore.d/common` | 全環境共通の ignore 設定 |
+| `home/.chezmoitemplates/chezmoiignore.d/ubuntu/common` | Ubuntu 共通の ignore 設定 |
+| `home/.chezmoitemplates/chezmoiignore.d/ubuntu/client` | Ubuntu client の ignore 設定 |
+| `home/.chezmoitemplates/chezmoiignore.d/ubuntu/server` | Ubuntu server の ignore 設定 |
+| `home/.chezmoitemplates/chezmoiexternal.d/common.yaml.tmpl` | 全環境の外部依存（Nerd Font） |
+| `home/.chezmoitemplates/chezmoiexternal.d/ubuntu.yaml.tmpl` | Ubuntu 固有の外部依存 |
 
 ### その他
 
@@ -188,6 +225,8 @@ Ctrl + Shift + P → "projects: open in wsl"   WSL プロジェクトを開く
 | ripgrep | https://github.com/BurntSushi/ripgrep |
 | yazi | https://github.com/sxyazi/yazi |
 | ghq | https://github.com/x-motemen/ghq |
+| gwq | https://github.com/d-kuro/gwq |
+| zsh-abbr | https://github.com/olets/zsh-abbr |
 | bats | https://github.com/bats-core/bats-core |
 | Zed | https://zed.dev/ |
 | Zenn | https://zenn.dev/ |

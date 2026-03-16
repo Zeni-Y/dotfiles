@@ -1,0 +1,26 @@
+[user]
+	name = zenimoto
+	email = {{ .email | quote }}
+[color]
+	ui = auto
+[pager]
+	branch = cat
+	config = cat
+[ghq]
+	root = ~/ghq
+[pull]
+	rebase = true
+[core]
+	quotepath = false
+[rebase]
+	autoStash = true
+{{ if eq .chezmoi.os "linux" -}}
+[credential]
+	credentialStore = cache
+{{ end -}}
+[credential "https://github.com"]
+	helper =
+	helper = !gh auth git-credential
+[credential "https://gist.github.com"]
+	helper =
+	helper = !gh auth git-credential

@@ -180,6 +180,65 @@ zsh -i -c exit
 
 zsh-defer を使用している場合、起動時間は通常 **100ms 以下** になるはずです。
 
+## カスタム開発コマンド
+
+### git-delete-merged-branches — squash-merge 済みブランチの自動削除
+
+GitHub の Squash and Merge を使うと、マージ後もローカルブランチが残ります。通常の `git branch --merged` では squash-merge されたブランチを検出できません。
+
+`git-delete-merged-branches` は **squash-merge されたブランチも正しく検出して削除**します。
+
+```bash
+$ git-delete-merged-branches
+# → デフォルトブランチに自動チェックアウト
+# → squash-merge 済みブランチを検出して削除
+Deleted branch feature-a (was abc1234).
+Deleted branch feature-b (was def5678).
+```
+
+#### 仕組み
+
+```bash
+function git-delete-merged-branches() {
+    local default_branch
+    default_branch=$(get_default_branch)
+
+    git checkout -q "${default_branch}" &&
+        git for-each-ref refs/heads/ "--format=%(refname:short)" |
+        while read -r branch; do
+            merge_base=$(git merge-base "${default_branch}" "${branch}") &&
+                [[ $(git cherry "${default_branch}" \
+                    "$(git commit-tree "$(git rev-parse "$branch^{tree}")" \
+                    -p "${merge_base}" -m _)") == "-"* ]] &&
+                git branch -D "${branch}"
+        done
+}
+```
+
+ポイント:
+1. `git remote show origin` でデフォルトブランチを自動判定（main / master 対応）
+2. `git commit-tree` でブランチのツリーをデフォルトブランチ上に仮コミットし、`git cherry` で既にマージ済みか判定
+3. squash-merge でコミットハッシュが変わっていても、ツリーの内容で一致を検出
+
+### uv-format — Python コードフォーマット
+
+[uv](https://github.com/astral-sh/uv) + [ruff](https://github.com/astral-sh/ruff) でフォーマットとリントを一括実行します。
+
+```bash
+$ uv-format
+# → ruff format（コードフォーマット）
+# → ruff check --fix --extend-select I（リント + import ソート修正）
+```
+
+```bash
+function uv_format() {
+    uvx ruff format
+    uvx ruff check --fix --extend-select I
+}
+```
+
+`uvx` を使うことで、ruff をグローバルインストールせずに実行できます。`--extend-select I` で import の自動ソートも行います。
+
 ## Conventional Commits
 
 コミットメッセージは [Conventional Commits](https://www.conventionalcommits.org/) 形式を推奨します。

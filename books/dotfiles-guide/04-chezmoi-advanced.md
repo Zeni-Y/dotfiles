@@ -181,29 +181,53 @@ function install_fd() {
 
 ## .chezmoitemplates/ による分割管理
 
-:::message
-この機能はこのリポジトリでは未使用ですが、[shunk031/dotfiles](https://github.com/shunk031/dotfiles) などで活用されているパターンです。
-:::
+`.chezmoitemplates/` ディレクトリにテンプレートの部品を配置すると、`{{ template "name" . }}` で呼び出せます。[shunk031/dotfiles](https://github.com/shunk031/dotfiles) で活用されているパターンを参考に、このリポジトリでも `.chezmoiignore` と `.chezmoiexternal.yaml.tmpl` の分割管理に採用しています。
 
-`.chezmoitemplates/` ディレクトリにテンプレートの部品を配置すると、`{{ template "name" . }}` で呼び出せます。
+### テンプレート構成パターン
 
 ```
 home/
 ├── .chezmoitemplates/
-│   ├── sheldon-header.toml    # sheldon 共通ヘッダー
-│   └── sheldon-plugins.toml   # OS 共通プラグイン
-└── dot_config/
-    └── sheldon/
-        └── plugins.toml.tmpl
+│   ├── chezmoiignore.d/
+│   │   ├── common                   # 全環境で除外するファイル
+│   │   └── ubuntu/
+│   │       ├── common               # Ubuntu 共通で除外
+│   │       ├── client               # client 環境で除外
+│   │       └── server               # server 環境で除外
+│   └── chezmoiexternal.d/
+│       ├── common.yaml.tmpl         # 全環境の外部依存
+│       └── ubuntu.yaml.tmpl         # Ubuntu 固有の外部依存
+├── .chezmoiignore                   # テンプレートを結合
+└── .chezmoiexternal.yaml.tmpl       # テンプレートを結合
 ```
 
+### 呼び出し側の書き方
+
+`.chezmoiignore` では `{{ template }}` でテンプレートを結合します。
+
 ```go
-# plugins.toml.tmpl
-{{ template "sheldon-header.toml" . }}
-{{ template "sheldon-plugins.toml" . }}
-{{ if eq .chezmoi.os "darwin" }}
-{{ template "sheldon-macos.toml" . }}
-{{ end }}
+{{ template "chezmoiignore.d/common" . }}
+{{ if eq .chezmoi.os "linux" -}}
+{{   template "chezmoiignore.d/ubuntu/common" . }}
+{{   if eq .system "client" -}}
+{{     template "chezmoiignore.d/ubuntu/client" . }}
+{{   else if eq .system "server" -}}
+{{     template "chezmoiignore.d/ubuntu/server" . }}
+{{   end -}}
+{{ end -}}
+```
+
+OS と system の組み合わせで除外ファイルを切り替えています。各テンプレートには除外対象のパスだけを記述します。
+
+```
+# chezmoiignore.d/common
+.config/sheldon/plugin_sources
+
+# chezmoiignore.d/ubuntu/client
+.local/bin/server
+
+# chezmoiignore.d/ubuntu/server
+.local/bin/client
 ```
 
 `{{ include }}` との違い:
@@ -212,40 +236,65 @@ home/
 
 ## .chezmoiexternal.yaml.tmpl — 外部依存管理
 
-外部リポジトリやアーカイブを chezmoi で管理できます。
+外部リポジトリやアーカイブを chezmoi で管理できます。このリポジトリでは **Nerd Font の自動ダウンロード**に活用しています。
+
+### Nerd Font の自動インストール
+
+eza のアイコン表示など、Nerd Font が必要なツールのために、`chezmoi apply` 時に自動的にフォントをダウンロードします。
 
 ```yaml
-# .chezmoiexternal.yaml.tmpl
-".oh-my-zsh":
-    type: archive
-    url: "https://github.com/ohmyzsh/ohmyzsh/archive/master.tar.gz"
-    exact: true
-    stripComponents: 1
-    refreshPeriod: 168h
-
-".vim/pack/plugins/start/vim-sensible":
-    type: git-repo
-    url: "https://github.com/tpope/vim-sensible.git"
-    refreshPeriod: 168h
+# .chezmoitemplates/chezmoiexternal.d/common.yaml.tmpl
+{{ $fontsPath := ".local/share/fonts" -}}
+"{{ $fontsPath }}/Hack":
+  type: "archive"
+  url: {{ gitHubLatestReleaseAssetURL "ryanoasis/nerd-fonts" "Hack.zip" | quote }}
+  refreshPeriod: "720h"
 ```
 
-:::message
-このリポジトリでは外部依存は mise で管理しているため `.chezmoiexternal.yaml.tmpl` は使用していませんが、Oh My Zsh のプラグインやテーマを管理する場合に便利です。
-:::
+ポイント:
+- `gitHubLatestReleaseAssetURL` で GitHub リリースの最新アセット URL を自動取得
+- `refreshPeriod: "720h"`（30日）で定期的に更新チェック
+- `type: "archive"` で ZIP を自動展開してフォントディレクトリに配置
+
+### テンプレート分割による管理
+
+`.chezmoiexternal.yaml.tmpl` も `.chezmoitemplates/` で分割管理しています。
+
+```go
+# .chezmoiexternal.yaml.tmpl
+{{ template "chezmoiexternal.d/common.yaml.tmpl" . }}
+{{ if (and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.idLike "debian")) -}}
+{{   template "chezmoiexternal.d/ubuntu.yaml.tmpl" . }}
+{{ end -}}
+```
+
+OS ごとに必要な外部依存を分離し、条件分岐で結合しています。
 
 ## .chezmoiignore — OS 別 ignore
 
 `.chezmoiignore` で特定のファイルを chezmoi の管理対象から除外できます。テンプレートも使えるので、OS ごとに除外するファイルを変えられます。
 
-```
-# macOS でのみ使うファイルを Linux では無視
-{{ if ne .chezmoi.os "darwin" }}
-.Brewfile
-Library/
-{{ end }}
+このリポジトリでは `.chezmoitemplates/chezmoiignore.d/` に分割して管理しています（前述の `.chezmoitemplates/` パターン）。
 
-# Linux でのみ使うファイルを macOS では無視
-{{ if ne .chezmoi.os "linux" }}
-.local/share/applications/
-{{ end }}
+### 実用例: sheldon plugin_sources の除外
+
+sheldon の `plugin_sources/` ディレクトリはビルド時に `plugins.toml.tmpl` から `{{ include }}` で結合されるため、ホームディレクトリへの配置は不要です。`.chezmoiignore` で除外します。
+
 ```
+# chezmoiignore.d/common
+.config/sheldon/plugin_sources
+```
+
+### 実用例: system による bin ディレクトリの分離
+
+client 環境では server 用スクリプトを除外し、server 環境では client 用スクリプトを除外します。
+
+```
+# chezmoiignore.d/ubuntu/client
+.local/bin/server
+
+# chezmoiignore.d/ubuntu/server
+.local/bin/client
+```
+
+これにより、同じリポジトリで client/server 両方のスクリプトを管理しつつ、各環境に必要なファイルだけを配置できます。

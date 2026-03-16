@@ -157,16 +157,80 @@ cd() {
 
 `builtin cd` で zsh 組み込みの `cd` を呼び出し、成功したら `ls`（= eza エイリアス）を実行します。これによりディレクトリを移動するたびに内容が表示されます。
 
-## ghq + fzf でリポジトリ移動
+## カスタム fzf スクリプト
 
-sheldon の plugins.toml で定義されているカスタムコマンド `cdgwq` は、gwq/ghq で管理しているリポジトリを fzf で選択して移動する関数です。
+このリポジトリでは fzf を活用した**カスタムコマンド**を `~/.local/bin/common/` に配置しています。sheldon の `autoload` で必要な時だけ読み込まれます。
+
+### dev — ghq + fzf でリポジトリ移動
+
+ghq で管理しているリポジトリを fzf で検索・選択して移動します。tmux 内で実行した場合、セッション名をリポジトリ名に自動リネームします。
 
 ```bash
-# ghq + fzf の典型的なパターン
-cd $(ghq list --full-path | fzf)
+$ dev
+# → fzf が起動、リポジトリ一覧から選択
+# → 選択したリポジトリに cd
+# → tmux セッション名が "my-project" にリネーム
 ```
 
-このパターンを関数化することで、数十〜数百のリポジトリから瞬時に目的のリポジトリに移動できます。
+内部の実装:
+
+```bash
+function dev() {
+    local moveto
+    moveto=$(ghq list --full-path | fzf) || return 0
+    cd -- "$moveto" || exit 1
+
+    # tmux 内であればセッション名をリポジトリ名にリネーム
+    if [[ -n ${TMUX} ]]; then
+        local repo_name
+        repo_name="${moveto##*/}"
+        tmux rename-session "${repo_name//./-}"
+    fi
+}
+```
+
+### fgc — fzf で git ブランチチェックアウト
+
+ローカルブランチを fzf で一覧表示し、選択したブランチにチェックアウトします。
+
+```bash
+$ fgc
+# → ローカルブランチ一覧が fzf で表示
+# → 選択したブランチに git checkout
+```
+
+```bash
+function fgc() {
+    git checkout "$(git for-each-ref refs/heads/ --format='%(refname:short)' | fzf)"
+}
+```
+
+ブランチが多いリポジトリで、名前を正確に覚えていなくても素早く切り替えられます。
+
+### cdgwq — gwq worktree を fzf で選択して移動
+
+gwq で管理している worktree を fzf で選択して移動します。
+
+```bash
+$ cdgwq
+# → gwq worktree 一覧が fzf で表示
+# → 選択した worktree に cd
+```
+
+```bash
+function cdgwq() {
+    if ! git rev-parse --is-inside-work-tree &> /dev/null; then
+        echo "Not inside a git repository."
+        return 1
+    fi
+    moveto=$(gwq list --json | jq -r '.[].path' | fzf)
+    cd $moveto
+}
+```
+
+:::message
+`dev` は ghq 管理下の全リポジトリから選択、`cdgwq` は現在のリポジトリの worktree から選択、という使い分けです。
+:::
 
 ## まとめ
 

@@ -11,6 +11,7 @@
 | [sheldon](https://github.com/rossmacarthur/sheldon) | zsh プラグインマネージャ |
 | [starship](https://starship.rs/) | プロンプト |
 | [age](https://github.com/FiloSottile/age) | ファイル暗号化 |
+| [zsh-abbr](https://zsh-abbr.olets.dev/) | エイリアスの代替（abbreviation） |
 
 ## セットアップ
 
@@ -125,23 +126,50 @@ chezmoi apply --force
 
 ```
 .chezmoiroot              # source root を home/ に指定
+.editorconfig             # エディタ共通設定
 home/                     # chezmoi source directory
-├── .chezmoi.yaml.tmpl    # chezmoi 設定テンプレート
+├── .chezmoi.yaml.tmpl    # chezmoi 設定テンプレート (email, system, is_wsl)
+├── .chezmoiignore        # OS/system 別のファイル除外 (テンプレート合成)
+├── .chezmoiexternal.yaml.tmpl  # 外部リソース自動DL (Nerd Fonts 等)
+├── .chezmoitemplates/    # テンプレート分割用フラグメント
+│   ├── chezmoiignore.d/  # ignore ルールの分割
+│   └── chezmoiexternal.d/ # external ルールの分割
 ├── .chezmoiscripts/      # apply 時に実行されるスクリプト
-│   ├── common/           # 全 OS 共通
+│   ├── common/           # 全 OS 共通 (mise, sheldon, zed-keymap)
 │   └── ubuntu/           # Ubuntu 固有
-├── dot_zshrc             # → ~/.zshrc
-├── dot_gitconfig         # → ~/.gitconfig
+├── dot_zshrc             # → ~/.zshrc (PATH + sheldon source のみ)
+├── dot_zprofile          # → ~/.zprofile (mise 初期化)
+├── dot_vimrc             # → ~/.vimrc
 └── dot_config/
+    ├── git/
+    │   ├── config.tmpl   # Git 設定 (テンプレート化)
+    │   └── ignore        # グローバル gitignore
     ├── sheldon/
-    │   └── plugins.toml  # zsh プラグイン設定
-    ├── mise/
-    │   └── config.toml   # ランタイムバージョン管理
-    └── alias/
-        └── common.sh     # 共通エイリアス
+    │   ├── plugins.toml.tmpl  # テンプレート合成 (client/server 分岐)
+    │   └── plugin_sources/    # プラグイン定義の分割
+    │       ├── common.toml    # 共通プラグイン
+    │       ├── client.toml    # client 用
+    │       └── server.toml    # server 用
+    ├── starship.toml     # プロンプト設定
+    ├── mise/config.toml  # ランタイムバージョン管理
+    ├── zsh-abbr/user-abbreviations  # abbreviation 定義
+    ├── gwq/config.toml   # gwq worktree 管理
+    ├── zed/              # Zed エディタ設定
+    ├── zsh/plugins/chezmoi-notify/  # dotfiles 更新通知プラグイン
+    └── alias/common.sh   # エイリアス (後方互換)
+├── dot_local/bin/common/ # カスタムコマンド群
+│   ├── dev              # ghq + fzf リポジトリ移動
+│   ├── cdgwq            # gwq worktree 移動
+│   ├── cdw              # 最新 worktree 移動
+│   ├── fgc              # fzf git branch チェックアウト
+│   ├── chezmoi-cd       # chezmoi ソース移動
+│   ├── git-delete-merged-branches  # マージ済みブランチ削除
+│   └── uv-format        # ruff format + check
 install/                  # インストールスクリプト群
-├── common/               # mise インストール等
-└── ubuntu/common/        # fd-find インストール等
+├── common/               # mise, sheldon, zed-keymap
+└── ubuntu/common/        # fd-find 等
+books/                    # Zenn Book
+└── dotfiles-guide/       # chezmoi dotfiles 解説 Book
 ```
 
 ### chezmoi のファイル命名規則
@@ -152,8 +180,22 @@ install/                  # インストールスクリプト群
 | `private_` | パーミッション 0600 | `private_dot_ssh/` |
 | `encrypted_` | age で暗号化 | `encrypted_private_dot_env` |
 | `.tmpl` | Go テンプレートとして処理 | `.chezmoi.yaml.tmpl` |
+| `executable_` | 実行権限付き | `executable_dev` |
 | `run_once_` | 一度だけ実行するスクリプト | `run_once_install.sh` |
 | `run_once_after_` | apply 後に一度だけ実行 | `run_once_after_01-install-mise.sh.tmpl` |
+| `run_onchange_after_` | 内容変更時に実行 | `run_onchange_after_10-setup-zed-keymap.sh.tmpl` |
+
+## カスタムコマンド
+
+| コマンド | 機能 |
+|---------|------|
+| `dev` | ghq + fzf でリポジトリに移動、tmux セッション名をリネーム |
+| `cdgwq` | gwq worktree を fzf で選択して移動 |
+| `cdw` | 最新の gwq worktree に移動 |
+| `fgc` | fzf で git branch をチェックアウト |
+| `chezmoi-cd` | chezmoi ソースディレクトリに移動 |
+| `git-delete-merged-branches` | squash-merge 済みブランチを削除 |
+| `uv-format` | ruff format + ruff check を実行 |
 
 ## 管理ツール一覧
 

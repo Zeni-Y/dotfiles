@@ -197,7 +197,77 @@ ghq は `GOPATH` と同じ `~/ghq` ディレクトリにリポジトリを整理
 
 ### gwq
 
-[gwq](https://github.com/d-kuro/gwq) は ghq のワークスペース版です。プロジェクトごとにワークスペースを管理できます。
+[gwq](https://github.com/d-kuro/gwq) は **git worktree を ghq スタイルで管理**するツールです。ghq と同じディレクトリ構造で worktree を作成・管理できます。
+
+#### git worktree とは
+
+通常の git では1つのリポジトリに1つの作業ディレクトリですが、worktree を使うと**同じリポジトリの異なるブランチを複数のディレクトリで同時に開ける**ようになります。
+
+```bash
+# 通常: ブランチ切り替えが必要
+git checkout feature-a  # 作業中断
+git checkout feature-b  # 別の作業
+
+# worktree: 並行作業が可能
+~/ghq/.../repo=feature-a/   # feature-a で作業中
+~/ghq/.../repo=feature-b/   # 同時に feature-b で作業
+```
+
+#### gwq の設定
+
+```toml
+# ~/.config/gwq/config.toml
+[worktree]
+auto_mkdir = true
+basedir = '~/ghq'
+
+[naming]
+template = '{{.Host}}/{{.Owner}}/{{.Repository}}={{.Branch}}'
+
+[naming.sanitize_chars]
+'/' = '-'
+':' = '-'
+
+[finder]
+preview = true
+
+[ui]
+icons = true
+tilde_home = true
+```
+
+`naming.template` で worktree のディレクトリ命名規則を定義しています。`=` でリポジトリ名とブランチ名を区切る形式です。
+
+#### gwq + Claude Code の連携
+
+gwq は Claude Code（AI コーディングアシスタント）と組み合わせて、**複数のタスクを並列実行**できます。
+
+```toml
+[claude]
+config_dir = '~/.config/gwq/claude'
+executable = 'claude'
+max_development_tasks = 2
+max_parallel = 3
+
+[claude.worktree]
+auto_create_worktree = true
+```
+
+#### 基本的な使い方
+
+```bash
+# worktree の一覧
+gwq list
+
+# worktree の作成
+gwq create feature-branch
+
+# fzf で worktree を選択して移動（cdgwq コマンド）
+cdgwq
+
+# 最新の worktree に移動（cdw コマンド）
+cdw
+```
 
 ## なぜモダンツールを使うのか
 

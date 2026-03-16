@@ -1,0 +1,4 @@
+{{ template "chezmoiexternal.d/common.yaml.tmpl" . }}
+{{ if (and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.idLike "debian")) -}}
+{{   template "chezmoiexternal.d/ubuntu.yaml.tmpl" . }}
+{{ end -}}
