@@ -13,9 +13,9 @@ title: "モダン CLI ツール群"
 ### エイリアス設定
 
 ```bash
-# ~/.config/alias/common.sh
-alias ls="eza --long --group --header --binary --time-style=long-iso --icons"
-alias ll="eza -la --long --group --header --binary --time-style=long-iso --icons"
+# ~/.config/zsh-abbr/user-abbreviations
+abbr ls="eza --long --group --header --binary --time-style=long-iso --icons"
+abbr ll="eza -la --long --group --header --binary --time-style=long-iso --icons"
 ```
 
 ### 主なオプション

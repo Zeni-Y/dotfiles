@@ -23,7 +23,6 @@ home/                # chezmoi source directory (= chezmoiroot)
   dot_config/
     sheldon/plugins.toml  # zsh プラグインマネージャ設定
     mise/config.toml      # ランタイムバージョン管理 (Go, Node, Python, Rust, etc.)
-    alias/common.sh       # 共通エイリアス
 install/             # .chezmoiscripts から include されるインストールスクリプト
   common/            # mise インストール等
   ubuntu/common/     # fd-find インストール等
@@ -74,7 +73,7 @@ books/               # Zenn Book
 |------|----------|
 | スクリプト | `.chezmoiscripts/<os>/` ディレクトリで分離 |
 | インストール | `install/<os>/<system or common>/` で分離 |
-| エイリアス | `alias/common.sh`, `alias/client.sh` 等ファイルで分離 |
+| エイリアス | `zsh-abbr/user-abbreviations` で一元管理 |
 | テンプレート | `.tmpl` 内で `{{ if }}` 条件分岐 |
 
 ### Encryption

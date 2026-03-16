@@ -144,10 +144,9 @@ docker run -it dotfiles-test zsh
 
 ```bash
 # tests/test_aliases.bats
-@test "ls alias uses eza" {
-    source ~/.config/alias/common.sh
-    run type ls
-    [[ "$output" == *"eza"* ]]
+@test "ls abbreviation uses eza" {
+    run grep 'abbr.*ls=.*eza' ~/.config/zsh-abbr/user-abbreviations
+    [ "$status" -eq 0 ]
 }
 
 @test "fd command is available" {

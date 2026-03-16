@@ -25,7 +25,6 @@ title: "リファレンス"
 | `home/dot_config/starship.toml` | `~/.config/starship.toml` | starship プロンプト設定 |
 | `home/dot_config/mise/config.toml` | `~/.config/mise/config.toml` | ランタイム設定 |
 | `home/dot_config/gwq/config.toml` | `~/.config/gwq/config.toml` | gwq 設定 |
-| `home/dot_config/alias/common.sh` | `~/.config/alias/common.sh` | エイリアス |
 | `home/dot_config/zsh-abbr/user-abbreviations` | `~/.config/zsh-abbr/user-abbreviations` | zsh-abbr 省略形定義 |
 | `home/dot_config/zsh/plugins/chezmoi-notify/chezmoi-notify.plugin.zsh` | `~/.config/zsh/plugins/chezmoi-notify/chezmoi-notify.plugin.zsh` | dotfiles 更新通知プラグイン |
 | `home/dot_config/zed/settings.json` | `~/.config/zed/settings.json` | Zed エディタ設定 |

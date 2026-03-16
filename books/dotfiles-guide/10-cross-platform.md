@@ -97,14 +97,14 @@ install/
     └── server/             # Ubuntu サーバーのみ
 ```
 
-### エイリアス — ファイルで分離
+### エイリアス — zsh-abbr で一元管理
 
 ```
-home/dot_config/alias/
-└── common.sh               # 全環境共通のエイリアス
+home/dot_config/zsh-abbr/
+└── user-abbreviations      # 全環境共通の abbreviation 定義
 ```
 
-デスクトップのみで使うエイリアスは `client.sh`、サーバー専用は `server.sh` のように分離できます。
+zsh-abbr を使い、fish シェル風の abbreviation でエイリアスを管理しています。入力時に自動展開されるため、履歴に実際のコマンドが残る利点があります。
 
 ### テンプレート — `{{ if }}` で条件分岐
 

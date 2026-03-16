@@ -183,6 +183,18 @@ function install_fd() {
 
 `.chezmoitemplates/` ディレクトリにテンプレートの部品を配置すると、`{{ template "name" . }}` で呼び出せます。[shunk031/dotfiles](https://github.com/shunk031/dotfiles) で活用されているパターンを参考に、このリポジトリでも `.chezmoiignore` と `.chezmoiexternal.yaml.tmpl` の分割管理に採用しています。
 
+### `.d` ディレクトリの命名規則
+
+`chezmoiignore.d/` や `chezmoiexternal.d/` のように末尾に `.d` が付いたディレクトリ名は、**Linux/Unix の慣習的な命名パターン**です。`.d` は "directory" の略で、「このディレクトリ内のファイルを集めて、1つの設定として統合する」ことを意味します。
+
+Linux システムでも同じパターンが広く使われています:
+
+- `/etc/cron.d/` — cron 設定の断片を格納
+- `/etc/apt/sources.list.d/` — APT ソースの断片を格納
+- `/etc/sudoers.d/` — sudoers 設定の断片を格納
+
+chezmoi でもこの慣習に従い、1つの設定ファイル（`.chezmoiignore` や `.chezmoiexternal.yaml.tmpl`）の内容を**複数ファイルに分割**して管理しています。
+
 ### テンプレート構成パターン
 
 ```
@@ -255,6 +267,30 @@ eza のアイコン表示など、Nerd Font が必要なツールのために、
 - `gitHubLatestReleaseAssetURL` で GitHub リリースの最新アセット URL を自動取得
 - `refreshPeriod: "720h"`（30日）で定期的に更新チェック
 - `type: "archive"` で ZIP を自動展開してフォントディレクトリに配置
+
+### パイプラインでクロスプラットフォーム対応
+
+macOS と Linux の両方に対応する場合、**パイプライン構文で OS ごとのパスを切り替える**テクニックが便利です。
+
+```go
+{{ $fontsPath := .chezmoi.os | replace "darwin" "Library/Fonts" | replace "linux" ".local/share/fonts" -}}
+"{{ $fontsPath }}/Hack":
+  type: "archive"
+  url: {{ gitHubLatestReleaseAssetURL "ryanoasis/nerd-fonts" "Hack.zip" | quote }}
+  refreshPeriod: "720h"
+```
+
+処理の流れ:
+
+1. `.chezmoi.os` → OS 名を取得（`"darwin"` or `"linux"`）
+2. `| replace "darwin" "Library/Fonts"` → macOS なら `"Library/Fonts"` に置換
+3. `| replace "linux" ".local/share/fonts"` → Linux なら `".local/share/fonts"` に置換
+
+`|`（パイプ）は Unix のパイプと同じ発想で、前の出力を次の関数の**最後の引数**として渡します。`if/else` を使わずにワンライナーで OS 分岐できる便利なテクニックです。
+
+:::message
+このリポジトリでは Linux 専用なので `$fontsPath` を直接指定していますが、将来 macOS にも対応する場合はこのパターンが活用できます。
+:::
 
 ### テンプレート分割による管理
 

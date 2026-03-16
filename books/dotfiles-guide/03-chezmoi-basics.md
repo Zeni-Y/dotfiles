@@ -178,7 +178,7 @@ dot_zshrc.tmpl → テンプレート処理後に ~/.zshrc として配置
 | `home/dot_gitconfig` | `~/.gitconfig` |
 | `home/dot_config/sheldon/plugins.toml` | `~/.config/sheldon/plugins.toml` |
 | `home/dot_config/mise/config.toml` | `~/.config/mise/config.toml` |
-| `home/dot_config/alias/common.sh` | `~/.config/alias/common.sh` |
+| `home/dot_config/zsh-abbr/user-abbreviations` | `~/.config/zsh-abbr/user-abbreviations` |
 | `home/.chezmoi.yaml.tmpl` | `~/.config/chezmoi/chezmoi.yaml` |
 
 :::message

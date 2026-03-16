@@ -155,8 +155,7 @@ home/                     # chezmoi source directory
     ├── zsh-abbr/user-abbreviations  # abbreviation 定義
     ├── gwq/config.toml   # gwq worktree 管理
     ├── zed/              # Zed エディタ設定
-    ├── zsh/plugins/chezmoi-notify/  # dotfiles 更新通知プラグイン
-    └── alias/common.sh   # エイリアス (後方互換)
+    └── zsh/plugins/chezmoi-notify/  # dotfiles 更新通知プラグイン
 ├── dot_local/bin/common/ # カスタムコマンド群
 │   ├── dev              # ghq + fzf リポジトリ移動
 │   ├── cdgwq            # gwq worktree 移動
