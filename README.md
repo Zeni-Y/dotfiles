@@ -18,7 +18,7 @@
 ### 新しいマシンへの初回セットアップ
 
 ```bash
-sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply zenimoto
+sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply Zeni-Y
 ```
 
 chezmoi のインストールから dotfiles の取得・適用まで、このワンライナーですべて完了する。
