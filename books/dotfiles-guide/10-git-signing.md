@@ -90,6 +90,19 @@ chezmoi で管理している Git の設定ファイルに以下を追加しま�
 
 `commit.gpgsign = true` にしておくと、毎回 `git commit -S` を付けなくても自動で署名されるので楽です。
 
+:::message alert
+**`~/.gitconfig` が存在すると XDG ベースの設定が無視されます。** Git のグローバル設定ファイルは `~/.gitconfig` と `~/.config/git/config`（XDG ベース）の2箇所がありますが、`~/.gitconfig` が存在する場合、Git は XDG 側を読みません[^2]。chezmoi で `~/.config/git/config` に設定を管理している場合、`~/.gitconfig` が残っていると署名設定が丸ごと無視されてハマります。`~/.gitconfig` が残っていないか確認しましょう。
+
+```bash
+# ~/.gitconfig が存在するか確認
+ls ~/.gitconfig
+
+# 存在する場合、内容を確認して不要なら削除
+cat ~/.gitconfig
+rm ~/.gitconfig
+```
+:::
+
 ### GitHub に Signing Key を登録
 
 Git の設定だけでは、GitHub 上で "Verified" バッジは表示されません。GitHub に同じ公開鍵を **Signing Key** として登録する必要があります。
@@ -122,3 +135,4 @@ git log --show-signature -1
 ## 参考文献
 
 [^1]: [Git - git-config Documentation (gpg.format)](https://git-scm.com/docs/git-config#Documentation/git-config.txt-gpgformat) — SSH 署名の設定仕様
+[^2]: [Git - git-config Documentation (FILES)](https://git-scm.com/docs/git-config#FILES) — `~/.gitconfig` が存在する場合 `$XDG_CONFIG_HOME/git/config` は読み込まれない
