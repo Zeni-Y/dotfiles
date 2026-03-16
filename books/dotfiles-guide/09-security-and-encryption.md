@@ -157,7 +157,11 @@ encryption: "age"
 
 ## GPG_TTY の設定
 
-Git のコミット署名など GPG を使う操作には `GPG_TTY` 環境変数が必要です。sheldon の inline プラグインで設定しています。
+:::message
+この Book では Git のコミット署名に **SSH 署名**を採用しています（詳しくは次のチャプター「Git コミット署名」を参照）。SSH 署名では `GPG_TTY` は不要です。ここでは GPG を使う場合の参考情報として残しています。
+:::
+
+GPG を使う操作（GPG 署名でのコミット等）には `GPG_TTY` 環境変数が必要です。sheldon の inline プラグインで設定しています。
 
 ```toml
 # plugins.toml

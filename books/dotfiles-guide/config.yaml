@@ -14,7 +14,8 @@ chapters:
   - 07-modern-cli-tools
   - 08-fzf-and-search
   - 09-security-and-encryption
-  - 10-cross-platform
-  - 11-development-workflow
-  - 12-reference
-  - 13-zed-editor
+  - 10-git-signing
+  - 11-cross-platform
+  - 12-development-workflow
+  - 13-reference
+  - 14-zed-editor
