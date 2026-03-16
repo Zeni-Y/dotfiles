@@ -186,9 +186,54 @@ function run_mise_install() {
 }
 ```
 
-chezmoi apply の流れ:
-1. `run_once_after_01-install-mise.sh` で mise をインストール
-2. `mise install` で config.toml に記述された全ツールをインストール
-3. 以降の `run_once` スクリプトで mise 経由のツールが使える
+新しいマシンで `chezmoi apply` を実行すると、以下の流れでツールが揃います。
+
+```
+chezmoi apply
+  │
+  ├─ 1. run_once_after_01-install-mise.sh が実行される
+  │     → mise 本体がインストールされる（~/.local/bin/mise）
+  │
+  ├─ 2. mise install が実行される
+  │     → config.toml に記述された全ツールがインストールされる
+  │     → Go, Node, Python, Rust 等のランタイム
+  │     → eza, bat, fd, jq 等の CLI ツール
+  │     → Claude Code, pyright 等の npm パッケージ
+  │
+  └─ 3. 以降の run_once スクリプトで mise 経由のツールが使える
+        → 例: fd-find のインストールスクリプトが mise の存在を前提にできる
+```
 
 新しいマシンで `chezmoi apply` を叩くだけで、言語ランタイムから CLI ツールまで全部揃います。
+
+## ライフサイクル
+
+### 初期セットアップ（初回のみ）
+
+`chezmoi apply` で mise 自体のインストールと全ツールのインストールが自動的に行われます。手動での操作は不要です。
+
+### 日常の操作
+
+| やりたいこと | コマンド |
+|------------|---------|
+| インストール済みツールの一覧を見る | `mise ls` |
+| 各ツールの現在のバージョンを確認する | `mise current` |
+| 全ツールを最新に更新する | `mise upgrade` |
+| 特定のツールを更新する | `mise upgrade node` |
+| 設定ファイルを信頼する | `mise trust` |
+
+### ツールを追加・変更したいとき
+
+```bash
+# 1. config.toml にツールを追記
+chezmoi edit ~/.config/mise/config.toml
+
+# 2. 適用してツールをインストール
+chezmoi apply
+mise install
+
+# 3. 動作確認
+mise current
+```
+
+`config.toml` を編集して `mise install` を実行するだけで新しいツールが使えるようになります。バージョンを変更したい場合も同様に `config.toml` を編集 → `mise install` の流れです。

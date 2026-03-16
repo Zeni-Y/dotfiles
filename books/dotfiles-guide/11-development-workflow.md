@@ -114,7 +114,21 @@ watchexec -w ~/.local/share/chezmoi/home -- chezmoi apply
 
 ## Docker でクリーン環境テスト
 
-新しいマシンでの `chezmoi init` が正しく動作するか、Docker で検証できます。
+新しいマシンでの `chezmoi init` が正しく動作するか、Docker で検証できます。「自分のマシンでは動くけど新しいマシンだとコケる」はよくあるパターンなので、定期的に検証しておくと安心です。
+
+### テストの流れ
+
+```
+1. Dockerfile を作成（クリーンな Ubuntu 環境を定義）
+      ↓
+2. docker build でイメージをビルド
+      ↓ chezmoi init --apply が実行され、dotfiles が適用される
+      ↓ この時点でエラーが出れば新規マシンでも同じ問題が起きる
+3. docker run -it でコンテナに入って動作確認
+      ↓ zsh が起動し、プラグインやツールが正しく動くか確認
+```
+
+### Dockerfile の例
 
 ```dockerfile
 FROM ubuntu:24.04
@@ -132,13 +146,17 @@ WORKDIR /home/testuser
 RUN sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply username
 ```
 
+### ビルドと確認
+
 ```bash
-# ビルドして確認
+# ビルド（chezmoi init --apply が実行される）
 docker build -t dotfiles-test .
+
+# コンテナに入って動作確認
 docker run -it dotfiles-test zsh
 ```
 
-クリーン環境での動作を確認することで、新しいマシンへの展開時のトラブルを事前に防げます。「自分のマシンでは動くけど新しいマシンだとコケる」はよくあるパターンなので、定期的に検証しておくと安心です。
+ビルドが成功すれば、新しい Ubuntu マシンでも `chezmoi init --apply` が正しく動作することが確認できます。
 
 ## bats によるシェルスクリプトテスト
 
@@ -280,7 +298,22 @@ jobs:
         run: bats tests/
 ```
 
-`CI=true` 環境変数を設定することで、age 暗号化が無効化され、秘密鍵なしでもテストが実行できます。
+CI で実行される流れはこうなっています。
+
+```
+push / PR → GitHub Actions が起動
+  │
+  ├─ CI=true が設定される
+  │   → .chezmoi.yaml.tmpl の age 暗号化設定がスキップされる
+  │   → 秘密鍵がなくてもエラーにならない
+  │
+  ├─ chezmoi init --apply --source .
+  │   → リポジトリ自体をソースとして dotfiles を適用
+  │   → encrypted_* ファイルは暗号化無効のためスキップ
+  │
+  └─ bats tests/
+      → シェルスクリプトのテストを実行
+```
 
 ## GitHub 連携と Zenn デプロイ
 

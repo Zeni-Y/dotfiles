@@ -72,10 +72,16 @@ Zed エディタ  ──接続──→  プロジェクトファイル
 
 **WSL プロジェクトを開く手順:**
 
-1. Zed のコマンドパレット（`Ctrl + Shift + P`）を開く
-2. `projects: open in wsl` を実行
-3. 使用する WSL ディストリビューションを選択
+```
+1. Ctrl + Shift + P でコマンドパレットを開く
+      ↓
+2. 「projects: open in wsl」を入力・実行
+      ↓ WSL ディストリビューション一覧が表示される
+3. 使用するディストリビューション（Ubuntu-24.04 等）を選択
+      ↓ WSL 内のフォルダ一覧が表示される
 4. フォルダを選択して開く
+      ↓ WSL 側のファイルが Zed で編集可能になる
+```
 
 **WSL 利用時の注意点:**
 
@@ -330,10 +336,14 @@ WSL 環境では Zed が Windows 側で動作するため、keymap.json は Wind
 
 ```
 chezmoi apply
-  ↓
-~/.config/zed/keymap.json に配置（Linux / WSL 側）
-  ↓
-WSL を検出したら自動で %APPDATA%\Zed\keymap.json にもコピー
+  │
+  ├─ 1. ~/.config/zed/keymap.json に配置（Linux / WSL 側）
+  │
+  └─ 2. run_onchange_after スクリプトが実行される
+        ├─ /proc/version を確認 → WSL 環境か判定
+        ├─ WSL なら cmd.exe 経由で %APPDATA% のパスを取得
+        └─ wslpath で Windows パスに変換し、keymap.json をコピー
+           → %APPDATA%\Zed\keymap.json が更新される
 ```
 
 スクリプトは `keymap.json` の内容が変わるたびに再実行されます（`run_onchange_` による制御）。
@@ -379,3 +389,46 @@ VS Code から Zed への移行で知っておくべきポイント:
 | Remote WSL | `projects: open in wsl` コマンド |
 
 Zed は VS Code に比べて拡張機能のエコシステムは発展途上ですが、エディタ本体のパフォーマンスとビルトイン機能の完成度が高いのが特徴です。必要な機能が揃っていて動作が速い、というシンプルな良さがあります。
+
+## ライフサイクル
+
+### 初期セットアップ（初回のみ）
+
+```bash
+# Linux / WSL の場合
+curl -f https://zed.dev/install.sh | sh
+
+# macOS の場合
+brew install --cask zed
+```
+
+`chezmoi apply` で `settings.json` と `keymap.json` が自動配置されるので、インストール後すぐに自分の設定で使い始められます。
+
+### 日常の操作
+
+| やりたいこと | キー / コマンド |
+|------------|---------------|
+| ファイルを素早く開く | `Ctrl + P` |
+| コマンドパレット | `Ctrl + Shift + P` |
+| プロジェクト内検索 | `Ctrl + Shift + F` |
+| ターミナルを開く | `Ctrl + J` |
+| AI アシスタント | `Ctrl + Enter` |
+| WSL プロジェクトを開く | コマンドパレット → `projects: open in wsl` |
+
+### 設定を変更したいとき
+
+```bash
+# 1. chezmoi 経由で設定ファイルを編集
+chezmoi edit ~/.config/zed/settings.json
+
+# 2. 差分を確認して適用
+chezmoi diff
+chezmoi apply
+# → WSL 環境では keymap.json が Windows 側にも自動コピーされる
+
+# 3. Zed を再起動（設定によってはホットリロードされる）
+```
+
+### 拡張機能を追加したいとき
+
+`Ctrl + Shift + X` で拡張機能パネルを開き、検索・インストールします。拡張機能の設定は `settings.json` に追記されるので、`chezmoi add` で管理対象に含めればほかのマシンにも反映できます。

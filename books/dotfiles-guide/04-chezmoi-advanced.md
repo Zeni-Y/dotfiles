@@ -95,16 +95,33 @@ chezmoi では `.chezmoiscripts/` 以下にスクリプトを配置して、`che
 | `run_before_` | apply の前に**毎回** |
 | `run_after_` | apply の後に**毎回** |
 
+### chezmoi apply の実行順序
+
+`chezmoi apply` を実行すると、以下の順番で処理が進みます。
+
+```
+chezmoi apply
+  │
+  ├─ 1. run_once_before_* スクリプトを実行（番号順）
+  │     → 前提となるツールのインストール等
+  │
+  ├─ 2. ファイルの展開・配置
+  │     → dot_zshrc → ~/.zshrc、encrypted_* → 復号して配置 等
+  │
+  └─ 3. run_once_after_* スクリプトを実行（番号順）
+        → mise install、sheldon インストール等
+```
+
 ### 実行順序の制御
 
-ファイル名に番号を付けて実行順序を制御します。
+ファイル名に番号を付けて、同じフェーズ内での実行順序を制御します。
 
 ```
 .chezmoiscripts/
 ├── common/
-│   └── run_once_after_01-install-mise.sh.tmpl    # 最初に実行
+│   └── run_once_after_01-install-mise.sh.tmpl    # after の中で最初に実行
 └── ubuntu/
-    └── run_once_20-install-fd.sh.tmpl             # 後で実行
+    └── run_once_20-install-fd.sh.tmpl             # mise の後に実行
 ```
 
 番号が小さいほど先に実行されます。このリポジトリでは:
@@ -134,12 +151,17 @@ chezmoi では `.chezmoiscripts/` 以下にスクリプトを配置して、`che
 このリポジトリの特徴的なパターンは、**インストールロジックを `install/` ディレクトリに分離**していることです。
 
 ```
-install/
-├── common/
-│   └── mise.sh          # mise インストールスクリプト
-└── ubuntu/
-    └── common/
-        └── fd.sh         # fd-find インストールスクリプト
+.chezmoiscripts/（いつ・何を実行するか）
+  └── run_once_after_01-install-mise.sh.tmpl
+        │
+        │ {{ include }} で参照
+        ↓
+install/（どうやってインストールするか）
+  ├── common/
+  │   └── mise.sh          # mise インストールスクリプト
+  └── ubuntu/
+      └── common/
+          └── fd.sh         # fd-find インストールスクリプト
 ```
 
 `.chezmoiscripts/` からは `{{ include }}` で参照します。
@@ -267,10 +289,16 @@ OS と system の組み合わせで除外ファイルを切り替えています
   refreshPeriod: "720h"
 ```
 
-ポイント:
-- `gitHubLatestReleaseAssetURL` で GitHub リリースの最新アセット URL を自動取得
-- `refreshPeriod: "720h"`（30日）で定期的に更新チェック
-- `type: "archive"` で ZIP を自動展開してフォントディレクトリに配置
+`chezmoi apply` 時に以下の流れで処理されます。
+
+```
+chezmoi apply
+  ↓ .chezmoiexternal.yaml.tmpl を読み込み
+  ↓ gitHubLatestReleaseAssetURL で GitHub リリースの最新 URL を取得
+  ↓ Hack.zip をダウンロード・展開
+  ↓ ~/.local/share/fonts/Hack/ にフォントファイルが配置される
+  ↓ 30日後（refreshPeriod: "720h"）に再度更新チェック
+```
 
 `chezmoi apply` するだけで Nerd Font がインストールされるのはめちゃめちゃ便利です。
 

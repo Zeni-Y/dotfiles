@@ -35,24 +35,44 @@ chezmoi は暗号化機能を内蔵しているので、**秘密情報を暗号�
 
 age は使わない機能を削ぎ落としている分、覚えることが少なくて済みます。dotfiles の秘密情報を暗号化する用途には age がぴったりです。
 
-### 鍵の生成
+## chezmoi + age でファイルを暗号化管理するまでの全体像
 
-```bash
-# 鍵を生成
-age-keygen -o ~/.config/age/key.txt
+ここから、age の鍵生成 → chezmoi の設定 → ファイルの暗号化追加 → 復号・適用 までを順番に進めていきます。全体の流れを先に示しておきます。
 
-# 出力例
-# created: 2024-01-01T00:00:00+09:00
-# public key: age1vhjw9eclwdtcsc47wspfkgakyvqehlgkuqd8m338ql7nnp9y0s0qwnw9sx
-AGE-SECRET-KEY-1XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+```
+Step 1: age 鍵ペアを生成
+         ↓ 公開鍵（age1...）と秘密鍵（AGE-SECRET-KEY-...）が得られる
+Step 2: chezmoi に age を設定（.chezmoi.yaml.tmpl に公開鍵の中身と秘密鍵のパスを記載）
+         ↓ chezmoi が暗号化・復号できる状態になる
+Step 3: chezmoi add --encrypt で秘密ファイルを追加
+         ↓ ソースディレクトリに .age ファイルが作成される
+Step 4: chezmoi apply で復号・配置
+         ↓ 暗号化ファイルが元のパスに復号されて配置される
 ```
 
-- **公開鍵** (`age1...`): 暗号化に使う。`.chezmoi.yaml.tmpl` に記載して OK
-- **秘密鍵** (`AGE-SECRET-KEY-...`): 復号に使う。**絶対にコミットしない**
+### Step 1: age 鍵ペアの生成
 
-## chezmoi + age の設定
+まず age の鍵ペア（公開鍵と秘密鍵）を生成します。
 
-### .chezmoi.yaml.tmpl
+```bash
+mkdir -p ~/.config/age
+age-keygen -o ~/.config/age/key.txt
+```
+
+実行すると、以下のような出力が表示されます。
+
+```
+Public key: age1vhjw9eclwdtcsc47wspfkgakyvqehlgkuqd8m338ql7nnp9y0s0qwnw9sx
+```
+
+この時点で2つのものが手に入ります。
+
+- **公開鍵** (`age1...`): 画面に表示される文字列。暗号化に使う。次の Step 2 で `.chezmoi.yaml.tmpl` に記載する
+- **秘密鍵** (`AGE-SECRET-KEY-...`): `~/.config/age/key.txt` に保存される。復号に使う。**絶対にコミットしない**
+
+### Step 2: chezmoi に age を設定する
+
+Step 1 で得た**公開鍵**と、秘密鍵の**ファイルパス**を `.chezmoi.yaml.tmpl` に記載します。
 
 ```yaml
 {{ if ne (env "CI") "true" -}}
@@ -64,27 +84,61 @@ age:
 ```
 
 - `encryption: "age"` — 暗号化方式に age を指定
-- `identity` — 秘密鍵のパス
-- `recipient` — 公開鍵（暗号化時に使用）
+- `identity` — Step 1 で生成した秘密鍵のパス（復号時に使用）
+- `recipient` — Step 1 で表示された公開鍵（暗号化時に使用）。**ここを自分の公開鍵に書き換える**
 
-### 暗号化ファイルの追加
+この設定により、chezmoi が `--encrypt` フラグ付きで追加されたファイルを公開鍵で暗号化し、`chezmoi apply` 時に秘密鍵で復号できるようになります。
+
+### Step 3: 暗号化ファイルの追加
+
+Step 2 の設定が済んだら、秘密ファイルを暗号化して管理対象に追加します。
 
 ```bash
-# --encrypt フラグで暗号化して管理
 chezmoi add --encrypt ~/.ssh/id_ed25519
-
-# ソースディレクトリに暗号化されたファイルが作成される
-# → home/private_dot_ssh/encrypted_private_id_ed25519.age
 ```
 
-`chezmoi apply` 時に自動的に復号されて配置されます。
+実行すると、chezmoi のソースディレクトリに暗号化されたファイルが作成されます。
+
+```
+home/private_dot_ssh/encrypted_private_id_ed25519.age
+```
+
+ファイル名の各パーツの意味はこうです。
+
+| パーツ | 意味 |
+|--------|------|
+| `private_dot_ssh/` | `~/.ssh/`（`private_` でパーミッション制限、`dot_` で `.` に変換） |
+| `encrypted_` | age で暗号化されていることを示す |
+| `private_` | パーミッションを制限（ファイル: `0600`、ディレクトリ: `0700`） |
+| `id_ed25519` | 元のファイル名 |
+| `.age` | age 暗号化ファイルの拡張子 |
+
+`.age` ファイルの中身はバイナリの暗号文なので、Git にコミットしても秘密情報が漏れることはありません。
+
+:::message
+**`private_` が付かない場合**: chezmoi は `chezmoi add` 時に**実際のファイル・ディレクトリのパーミッション**を見て `private_` を付けるか判断します。`~/.ssh/` のパーミッションが `700`（所有者のみ）なら `private_dot_ssh` に、`755` や `775` なら `dot_ssh`（`private_` なし）になります。Docker 環境などではディレクトリのパーミッションが緩くなっていることがあるので、`chezmoi add` の前に `chmod 700 ~/.ssh` でパーミッションを正しくしておきましょう。
+:::
+
+### Step 4: 復号と適用
+
+別のマシンや、`chezmoi apply` を実行すると、Step 2 で設定した秘密鍵（`identity`）を使って `.age` ファイルが自動的に復号され、元のパスに配置されます。
+
+```bash
+chezmoi apply
+
+# 結果: ~/.ssh/id_ed25519 が復号されて配置される（パーミッション 0600）
+```
+
+:::message alert
+`chezmoi apply` 時に `age: error: no identity matched any of the recipients` というエラーが出る場合、`identity` に指定した秘密鍵が `recipient` の公開鍵と対応していません。`age-keygen -y ~/.config/age/key.txt` で秘密鍵から公開鍵を導出し、`.chezmoi.yaml.tmpl` の `recipient` と一致するか確認してください。
+:::
 
 ## private_ プレフィックス
 
-`private_` プレフィックスを付けたファイルは、パーミッションが `0600`（所有者のみ読み書き可能）で配置されます。
+`private_` プレフィックスを付けると、パーミッションが所有者のみに制限されます。ディレクトリは `0700`（rwx）、ファイルは `0600`（rw）です。
 
 ```
-private_dot_ssh/              → ~/.ssh/ (パーミッション制限)
+private_dot_ssh/              → ~/.ssh/ (0700)
 private_dot_ssh/config        → ~/.ssh/config (0600)
 ```
 
@@ -160,20 +214,28 @@ age 秘密鍵も安全に管理したい   → でもどうやって？
 
 これ、最初にぶつかるポイントだと思います。
 
-### 解決策: パスフレーズ暗号化
+### 解決策: パスフレーズ暗号化でリポジトリに含める
 
-age にはパスフレーズでファイルを暗号化する機能があります。これを使って**秘密鍵自体をパスフレーズで暗号化し、リポジトリに含めてしまう**という方法があります。
+age にはパスフレーズでファイルを暗号化する機能があります。これを使って**秘密鍵自体をパスフレーズで暗号化し、リポジトリに含めてしまう**という方法があります。セットアップの流れを見ていきましょう。
+
+#### 1. age 秘密鍵をパスフレーズで暗号化する
 
 ```bash
-# age 秘密鍵をパスフレーズで暗号化
 age --encrypt --passphrase --output .key.txt.age ~/.config/age/key.txt
 ```
 
-リポジトリに `.key.txt.age`（パスフレーズで暗号化された秘密鍵）を含めておいて、初回セットアップ時に復号するという流れです。
+実行するとパスフレーズの入力を求められます。ここで入力したパスフレーズが、新しいマシンでのセットアップ時に必要になるので、パスワードマネージャ等に保管しておきましょう。
 
-### 初回セットアップの自動化
+これで以下の2つが揃います。
 
-chezmoi の `run_once_before` スクリプトを使えば、`chezmoi apply` 時に自動で復号してくれます。
+| ファイル | 内容 | Git 管理 |
+|----------|------|----------|
+| `.key.txt.age` | パスフレーズで暗号化された age 秘密鍵 | **する**（リポジトリに含める） |
+| `~/.config/age/key.txt` | 平文の age 秘密鍵 | **しない**（`.gitignore` で除外） |
+
+#### 2. 初回セットアップの自動化スクリプトを作る
+
+新しいマシンで `chezmoi apply` したとき、暗号化ファイルを復号するには age 秘密鍵が必要です。でも秘密鍵自体がまだない——ということで、`run_once_before` スクリプトで**他のファイルより先に**秘密鍵を復号します。
 
 ```bash
 #!/usr/bin/env bash
@@ -191,21 +253,44 @@ fi
 {{- end }}
 ```
 
-- `run_once_before` なので、他のファイル展開**より前に**実行される
-- パスフレーズの入力を求められ、正しければ秘密鍵が復号される
-- 以降の `encrypted_*` ファイルの復号が可能になる
+ポイント:
+
+- `run_once_before` なので、他のファイル展開（`encrypted_*` の復号含む）**より前に**実行される
+- `if [ ! -f ... ]` で秘密鍵が既に存在する場合はスキップ（冪等性）
+- `chmod 600` で秘密鍵のパーミッションを適切に設定
+
+#### 3. 新しいマシンでの実行フロー
+
+新しいマシンで `chezmoi apply` を叩くと、以下の順番で処理が進みます。
+
+```
+chezmoi apply
+  │
+  ├─ 1. run_once_before スクリプトが実行される
+  │     → .key.txt.age をパスフレーズで復号
+  │     → ~/.config/age/key.txt（平文の秘密鍵）が生成される
+  │     ★ ここでパスフレーズの入力を求められる
+  │
+  ├─ 2. 通常のファイル展開
+  │     → encrypted_*.age ファイルを秘密鍵で復号
+  │     → ~/.ssh/id_ed25519 等が配置される
+  │
+  └─ 3. run_once_after スクリプトが実行される
+        → sheldon, mise 等のインストール
+```
 
 つまり `chezmoi apply` を叩くだけでパスフレーズを聞かれて、あとは全部自動でやってくれます。めちゃめちゃ楽ですね。
 
 ### 信頼の連鎖
 
-```
-リポジトリ内:  .key.txt.age  ← パスフレーズで暗号化された age 秘密鍵
-復号後:       ~/.config/age/key.txt  ← 実際の age 秘密鍵（ローカルのみ）
+ここまでの仕組みを整理すると、セキュリティの信頼構造はこうなっています。
 
-encrypted_* → age 秘密鍵で復号 → ~/.ssh/id_ed25519 等
-age 秘密鍵  → パスフレーズで復号
-パスフレーズ → 人間の記憶（唯一リポジトリに含まれない秘密）
+```
+パスフレーズ（人間の記憶）
+  └─→ .key.txt.age を復号
+        └─→ ~/.config/age/key.txt（age 秘密鍵）
+              └─→ encrypted_*.age を復号
+                    └─→ ~/.ssh/id_ed25519 等（実際の秘密ファイル）
 ```
 
 結局、セキュリティの信頼の根は**パスフレーズ1つ**に帰着します。覚えるものが1つで済むのはシンプルで良いですよね。
@@ -318,6 +403,57 @@ chezmoi-private init --apply --ssh github-username/dotfiles-private
 :::message alert
 age の秘密鍵を紛失すると、暗号化されたファイルを復号できなくなります。秘密鍵は安全な場所にバックアップしてください。
 :::
+
+## ライフサイクル
+
+### 初期セットアップ（初回のみ）
+
+新しいマシンでは `chezmoi apply` を実行するだけです。`run_once_before` スクリプトがパスフレーズを聞いて age 秘密鍵を復号し、その後の `encrypted_*` ファイルの復号が自動で行われます。
+
+### 日常の操作
+
+暗号化関連で日常的に操作することはほとんどありません。`chezmoi apply` / `chezmoi update` で暗号化ファイルの復号は自動的に行われます。
+
+### 新しい秘密ファイルを追加したいとき
+
+```bash
+# 1. 対象ファイルのパーミッションを確認・修正
+#    （private_ を付けたい場合はディレクトリを 700 にしておく）
+chmod 700 ~/.ssh
+
+# 2. 暗号化して chezmoi に追加
+chezmoi add --encrypt ~/.ssh/id_ed25519
+
+# 3. ソースディレクトリで確認・コミット
+chezmoi cd
+git add -A
+git commit -m "feat: add encrypted ssh key"
+git push
+```
+
+### age 鍵を再生成したいとき
+
+鍵の漏洩が疑われる場合や、鍵をローテーションしたい場合の手順です。
+
+```bash
+# 1. 新しい鍵ペアを生成
+age-keygen -o ~/.config/age/key.txt
+
+# 2. 新しい公開鍵を .chezmoi.yaml.tmpl の recipient に記載
+chezmoi edit-config-template
+
+# 3. 既存の暗号化ファイルを再暗号化（古い鍵で復号 → 新しい鍵で暗号化）
+chezmoi re-add
+
+# 4. .key.txt.age も再暗号化
+age --encrypt --passphrase --output .key.txt.age ~/.config/age/key.txt
+
+# 5. コミット
+chezmoi cd
+git add -A
+git commit -m "chore: rotate age key"
+git push
+```
 
 ## 参考文献
 

@@ -53,6 +53,22 @@ eval "$(/home/zenimoto/.local/bin/mise activate zsh)"
 
 たった3行の `eval` で、プロンプト・プラグイン・ランタイムがすべて初期化されます。設定の詳細は各ツールの設定ファイルに分離されているので、`.zshrc` はこれだけで済むわけです。すごくないですか？
 
+zsh 起動時の処理の流れを整理するとこうなっています。
+
+```
+zsh 起動
+  │
+  ├─ 1. starship init zsh → プロンプトの初期化（即座に表示される）
+  │
+  ├─ 2. sheldon source → plugins.toml を読み込み
+  │     ├─ fzf キーバインド等（即座に有効化）
+  │     └─ zsh-defer 付きプラグイン（プロンプト表示後に遅延読み込み）
+  │         → autosuggestions, syntax-highlighting, compinit 等
+  │
+  └─ 3. mise activate zsh → chpwd フックを登録
+        → ディレクトリ移動時に PATH を動的に切り替え
+```
+
 ## plugins.toml のテンプレート分割
 
 sheldon の設定ファイルは `~/.config/sheldon/plugins.toml` です。このリポジトリでは、chezmoi のテンプレート機能を使って **common / client / server に分割管理**しています。
@@ -68,7 +84,7 @@ dot_config/sheldon/
     └── server.toml             # リモートサーバー向け
 ```
 
-`plugins.toml.tmpl` が `{{ include }}` で各ファイルを結合します。
+`plugins.toml.tmpl` が `{{ include }}` で各ファイルを結合します。`chezmoi apply` 時にテンプレートが処理され、最終的な `plugins.toml` が生成されます。
 
 ```go
 {{ include "dot_config/sheldon/plugin_sources/common.toml" }}
@@ -399,4 +415,41 @@ client.toml と server.toml の両方に定義しています。
 ```toml
 [plugins.chezmoi-notify]
 local = "~/.config/zsh/plugins/chezmoi-notify"
+```
+
+## ライフサイクル
+
+### 初期セットアップ（初回のみ）
+
+sheldon は `chezmoi apply` 時に自動インストールされます。`plugins.toml` も chezmoi が配置するので、手動でのセットアップは不要です。
+
+```bash
+chezmoi apply
+# → sheldon がインストールされ、plugins.toml が配置される
+# → 次回 zsh 起動時にプラグインが自動ダウンロードされる
+```
+
+### 日常の操作
+
+| やりたいこと | コマンド |
+|------------|---------|
+| プラグインの状態を確認する | `sheldon lock --update` |
+| プラグインをすべて再インストールする | `sheldon lock --update && sheldon source` |
+| abbreviation を追加する | `abbr "gs"="git status"` （その後 `chezmoi add` で反映） |
+| zsh の起動時間を確認する | `time zsh -i -c exit` |
+
+### プラグインを追加・変更したいとき
+
+```bash
+# 1. plugin_sources/ の該当ファイルを編集
+#    全環境共通なら common.toml、client のみなら client.toml
+chezmoi cd
+vim home/dot_config/sheldon/plugin_sources/common.toml
+
+# 2. テンプレート展開後の結果を確認
+chezmoi cat ~/.config/sheldon/plugins.toml
+
+# 3. 適用して新しいシェルで動作確認
+chezmoi apply
+zsh
 ```

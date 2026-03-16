@@ -148,7 +148,7 @@ chezmoi はファイル名の**プレフィックス**と**サフィックス**�
 | プレフィックス | 意味 | 例 |
 |--------------|------|-----|
 | `dot_` | `.` に変換 | `dot_zshrc` → `~/.zshrc` |
-| `private_` | パーミッション制限（0o600） | `private_dot_ssh/` → `~/.ssh/` |
+| `private_` | パーミッション制限（ディレクトリ: `0700`、ファイル: `0600`） | `private_dot_ssh/` → `~/.ssh/` |
 | `executable_` | 実行権限付き | `executable_script.sh` → `script.sh` (chmod +x) |
 | `symlink_` | シンボリックリンク | `symlink_link` → シンボリックリンクとして配置 |
 | `empty_` | 空ファイルを作成 | `empty_dot_file` → 空の `.file` |
@@ -189,14 +189,28 @@ dot_zshrc.tmpl → テンプレート処理後に ~/.zshrc として配置
 
 ## 基本的なワークフロー
 
+dotfiles の変更は `edit → diff → apply → commit` のサイクルで行います。
+
+```
+1. edit  — ソースファイルを編集
+      ↓ ソースが変更された状態
+2. diff  — 変更内容を確認（テンプレート展開後の結果を表示）
+      ↓ 意図通りか確認できた
+3. apply — 変更を実際のファイルに反映
+      ↓ ~/.zshrc 等が更新された
+4. commit — ソースディレクトリで git commit & push
+```
+
+### chezmoi edit を使う方法
+
 ```bash
-# 1. 設定ファイルを編集したい
+# 1. ソースファイルを編集（エディタが開く）
 chezmoi edit ~/.zshrc
 
-# 2. 差分を確認
+# 2. テンプレート展開後の差分を確認
 chezmoi diff
 
-# 3. 変更を適用
+# 3. 問題なければ適用
 chezmoi apply
 
 # 4. ソースディレクトリに移動してコミット
@@ -206,23 +220,57 @@ git commit -m "feat: update zshrc"
 git push
 ```
 
-もしくは、直接ソースディレクトリで編集する方法もあります:
+### 直接ソースディレクトリで編集する方法
 
 ```bash
-# ソースディレクトリに移動
+# 1. ソースディレクトリに移動して直接編集
 chezmoi cd
-
-# 直接ファイルを編集
 vim dot_zshrc
 
-# 差分確認 → 適用
+# 2. 差分確認 → 適用
 chezmoi diff
 chezmoi apply
 
-# コミット
+# 3. そのままコミット（既にソースディレクトリにいる）
 git add -A
 git commit -m "feat: update zshrc"
 git push
 ```
 
 筆者は後者のスタイルで、ソースディレクトリで直接編集してから `chezmoi apply` するパターンが多いです。
+
+## ライフサイクル
+
+### 初期セットアップ（初回のみ）
+
+```bash
+# GitHub リポジトリから dotfiles を取得して初期化・適用
+chezmoi init --apply https://github.com/username/dotfiles.git
+```
+
+このコマンド1つで、リポジトリの clone → 対話プロンプト（メール・system 等） → ファイル展開 → スクリプト実行まで全自動で行われます。
+
+### 日常の操作
+
+| やりたいこと | コマンド |
+|------------|---------|
+| 設定ファイルを編集する | `chezmoi edit ~/.zshrc` または `chezmoi cd` して直接編集 |
+| 変更内容を確認する | `chezmoi diff` |
+| 変更を適用する | `chezmoi apply` |
+| テンプレート変数を確認する | `chezmoi data` |
+| リモートの最新を取得・適用する | `chezmoi update` |
+
+### 新しいファイルを管理対象に追加したいとき
+
+```bash
+# 通常のファイル
+chezmoi add ~/.config/starship.toml
+
+# テンプレートとして追加（OS 分岐等が必要な場合）
+chezmoi add --template ~/.config/sheldon/plugins.toml
+
+# 暗号化して追加（秘密鍵等）
+chezmoi add --encrypt ~/.ssh/id_ed25519
+```
+
+追加後は `chezmoi cd` でソースディレクトリに移動し、`git add` → `git commit` → `git push` でリポジトリに反映します。
