@@ -97,6 +97,17 @@ chezmoi cd
 # → ~/.local/share/chezmoi に移動
 ```
 
+### re-add — ターゲット側の変更を取り込む
+
+```bash
+# ~/.zshrc を直接編集した後、変更を source に反映
+chezmoi re-add ~/.zshrc
+```
+
+既に管理対象のファイルについて、ターゲット側（`~/` 以下の実ファイル）の変更を chezmoi の source に書き戻します。暗号化対象のファイルなら自動で再暗号化されます。
+
+通常のワークフローでは source 側を編集して `apply` しますが、「先にターゲット側を変更してしまった」ときに `re-add` で source に反映できます。
+
 ### data — テンプレートデータの確認
 
 ```bash
