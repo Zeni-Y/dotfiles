@@ -459,7 +459,33 @@ OS ごとに必要な外部依存を分離し、条件分岐で結合してい�
 
 ### 実用例: sheldon plugin_sources の除外
 
-sheldon の `plugin_sources/` ディレクトリはビルド時に `plugins.toml.tmpl` から `{{ include }}` で結合されるため、ホームディレクトリへの配置は不要です。`.chezmoiignore` で除外します。
+[sheldon](https://github.com/rossmacarthur/sheldon) は Rust 製の zsh プラグインマネージャーです（詳しくは後の章で解説します）。設定ファイルは `~/.config/sheldon/plugins.toml` で、どのプラグインを読み込むかを定義します。
+
+このリポジトリでは、sheldon の設定を client/server で分岐させるために、テンプレート分割のパターンを使っています。
+
+```
+home/dot_config/sheldon/
+├── plugins.toml.tmpl          # ← chezmoi が展開して ~/.config/sheldon/plugins.toml を生成
+└── plugin_sources/            # ← テンプレートの部品（include 用）
+    ├── common.toml            #    全環境共通のプラグイン定義
+    ├── client.toml            #    client 環境のみのプラグイン定義
+    └── server.toml            #    server 環境のみのプラグイン定義
+```
+
+`plugins.toml.tmpl` の中身はこうなっています。
+
+```go
+{{ include "dot_config/sheldon/plugin_sources/common.toml" }}
+{{- if eq .system "client" }}
+{{ include "dot_config/sheldon/plugin_sources/client.toml" }}
+{{- else if eq .system "server" }}
+{{ include "dot_config/sheldon/plugin_sources/server.toml" }}
+{{- end -}}
+```
+
+chezmoi がテンプレートを展開すると、`common.toml` + 環境に応じた toml が結合された1つの `plugins.toml` が生成されます。
+
+ここで問題になるのが `plugin_sources/` ディレクトリです。chezmoi はデフォルトで source directory 内の全ファイルをホームディレクトリに配置しようとするため、何もしなければ `~/.config/sheldon/plugin_sources/` も作られてしまいます。しかし `plugin_sources/` はテンプレート結合の部品であり、sheldon が実際に読むのは結合後の `plugins.toml` だけです。不要なファイルがホームに散らばるのを防ぐため、`.chezmoiignore` で除外します。
 
 ```
 # chezmoiignore.d/common
