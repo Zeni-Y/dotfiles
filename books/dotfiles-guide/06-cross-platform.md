@@ -109,14 +109,9 @@ install/
     └── server/             # Ubuntu サーバーのみ
 ```
 
-### エイリアス — zsh-abbr で一元管理
+### エイリアス — OS 分岐なし
 
-```
-home/dot_config/zsh-abbr/
-└── user-abbreviations      # 全環境共通の abbreviation 定義
-```
-
-[zsh-abbr](https://github.com/olets/zsh-abbr) を使い、fish シェル風の abbreviation でエイリアスを管理しています。入力時に自動展開されるため、履歴に実際のコマンドが残る利点があります。
+エイリアス（abbreviation）は OS による差異がないため、分岐せず全環境共通の1ファイルで管理しています。詳しくは [zsh と sheldon](09-zsh-and-sheldon) の章で解説します。
 
 ### テンプレート — `{{ if }}` で条件分岐
 
