@@ -17,7 +17,7 @@ fi
 mkdir -p "${AGE_KEY_DIR}"
 
 # パスフレーズを入力して復号
-chezmoi age decrypt --output "${AGE_KEY_FILE}" --passphrase "${AGE_KEY_ENCRYPTED}"
+"{{ .chezmoi.executable }}" age decrypt --output "${AGE_KEY_FILE}" --passphrase "${AGE_KEY_ENCRYPTED}"
 chmod 600 "${AGE_KEY_FILE}"
 
 {{ end -}}
