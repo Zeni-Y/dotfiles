@@ -22,9 +22,13 @@ dotfiles を複数のマシンで共有していると、「同じ設定ファ�
 
 | 環境 | OS | system | 用途 |
 |------|-----|--------|------|
-| macOS | darwin | client | 開発用デスクトップ |
-| Ubuntu Desktop | linux | client | 開発用デスクトップ |
+| macOS | darwin | client | 開発用PC |
+| Ubuntu Desktop | linux | client | 開発用PC |
 | Ubuntu Server | linux | server | リモートサーバー |
+
+ここでの **client** と **server** は、自分が直接操作する手元のマシン（ノートPC・デスクトップ）か、SSH 等でリモート接続して使うマシンかという区分です。
+serverの方では、CUDAやHuggingFaceなどの実験を行うための設定ファイルやツールを追加しています。
+clientの方では、editorやターミナル関係の設定を追加しています。
 
 ## 3層の分岐モデル
 
