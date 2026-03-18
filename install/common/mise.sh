@@ -9,8 +9,7 @@ fi
 export MISE_INSTALL_PATH="${HOME}/.local/bin/mise"
 
 function install_mise() {
-    local version="2026.2.21"
-    curl https://mise.run | MISE_VERSION="${version}" sh
+    curl https://mise.run | sh
     eval "$(~/.local/bin/mise activate bash)"
 }
 
