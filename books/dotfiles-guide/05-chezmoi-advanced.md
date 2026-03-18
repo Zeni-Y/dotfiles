@@ -17,6 +17,8 @@ dotfiles をただコピーするだけなら前章の知識で十分です。�
 3. **外部リソースを自動取得したい** — フォントやプラグインを GitHub から自動ダウンロードしたい
 4. **設定ファイルが肥大化するのを防ぎたい** — 1ファイルに全環境の分岐を詰め込むと見通しが悪くなる
 
+2 について補足します。前章で chezmoi が管理しているファイルを見ると、sheldon の `plugins.toml` や mise の `config.toml` といった**設定ファイル**は管理されていますが、sheldon や mise **そのもの**はインストールされません。chezmoi はあくまで dotfiles（設定ファイル）を配置するツールなので、ツール本体のインストールは守備範囲外です。新しいマシンで `chezmoi apply` すると設定ファイルは配置されるのに、肝心のツールが入っていない — この課題を `run_once` スクリプトで解決します。
+
 chezmoi はこれらの課題を以下の仕組みで解決しています:
 
 | 課題 | chezmoi の仕組み | このリポジトリでの活用 |
@@ -64,6 +66,72 @@ chezmoi は Go の [`text/template`](https://pkg.go.dev/text/template) パッケ
 {{ if eq .chezmoi.os "linux" }}...{{ end }}  {{/* 条件分岐 */}}
 {{ include "path/to/file" }}  {{/* ファイルの取り込み */}}
 ```
+
+Go template は独自の構文を持っているので、初見だと戸惑うかもしれません。よく使う要素をまとめておきます。
+
+#### `{{ }}` — テンプレートの境界
+
+`{{ }}` で囲まれた部分だけがテンプレートとして処理されます。それ以外はそのまま出力されます。シェルスクリプトや YAML の中に Go template を埋め込む形になるので、「ここからここまでがテンプレートの指示ですよ」という目印です。
+
+```yaml
+# {{ }} の外はそのまま出力される
+data:
+    email: {{ $email | quote }}  ← この部分だけテンプレート処理
+```
+
+#### `.`（ドット） — データへのアクセス
+
+`.` は「現在のデータのルート」を表します。テンプレートに渡されたデータ（テンプレートデータ）の起点です。`.chezmoi.os` は「データのルート → chezmoi → os」とたどってアクセスしています。
+
+```go
+{{ .chezmoi.os }}    {{/* ビルトイン変数: "linux" や "darwin" */}}
+{{ .email }}         {{/* カスタムデータ: .chezmoi.yaml.tmpl で定義した値 */}}
+```
+
+JavaScript でいう `data.chezmoi.os` のようなものですが、Go template では `data` の部分が `.` になります。
+
+#### `$変数名 :=` — 変数の宣言と代入
+
+`:=` は「新しい変数を作って値を入れる」構文です。`=` は「既存の変数に値を入れ直す」です。
+
+```go
+{{- $email := "" -}}         {{/* 新しい変数 $email を作り、空文字で初期化 */}}
+{{- $email = .email -}}      {{/* 既存の $email に値を代入し直す */}}
+```
+
+`$` が付いているのはテンプレート内のローカル変数で、`.` で始まるデータ変数と区別するためです。
+
+#### `| quote` — パイプと関数
+
+`|` は Unix のパイプと同じ発想で、左の値を右の関数に渡します。`quote` は文字列を安全にクォート（`"..."` で囲む）する chezmoi 組み込みの関数です。
+
+```go
+{{ $email | quote }}
+{{/* $email が user@example.com なら → "user@example.com" と出力される */}}
+```
+
+なぜ `quote` が必要なのか、付けないとどうなるかを見てみましょう。
+
+```yaml
+# quote なし — そのまま展開される
+data:
+    email: user@example.com
+
+# YAML パーサーはこれをどう解釈する？
+# → email の値は "user@example.com" ... ではなく、エラーになることがある
+#   YAML では : の後にスペースがあるとキーと値の区切りと解釈されるなど、
+#   特殊文字の扱いが厳格
+```
+
+```yaml
+# quote あり — 安全にクォートされる
+data:
+    email: "user@example.com"
+
+# → 確実に文字列として解釈される
+```
+
+YAML では `@`, `:`, `#`, `{`, `}` などが特殊な意味を持つため、値にこれらが含まれるとパースエラーや意図しない解釈が起きます。`quote` を使えば、どんな値でも `"..."` で囲まれた安全な文字列として出力されます。手動で `"{{ $email }}"` と書くこともできますが、値自体にダブルクォートが含まれる場合に壊れるので、`quote` を使うのが確実です。
 
 ### 空白制御
 
@@ -144,6 +212,16 @@ chezmoi では `.chezmoiscripts/` 以下にスクリプトを配置して、`che
 | `run_once_after_` | apply の**後**に1度だけ |
 | `run_before_` | apply の前に**毎回** |
 | `run_after_` | apply の後に**毎回** |
+
+:::message
+`run_once` の「1度だけ」は `chezmoi init` 限定ではありません。`chezmoi apply` でも実行されます。chezmoi はスクリプトの内容のハッシュ値を内部データベースに記録しており、**同じ内容のスクリプトは2回目以降スキップする**という仕組みです。つまり:
+
+- 初回の `chezmoi apply` → スクリプトを実行し、ハッシュを記録
+- 2回目以降の `chezmoi apply` → ハッシュが一致するのでスキップ
+- スクリプトの内容を変更 → ハッシュが変わるので再実行される
+
+「1度だけ」とは「同じ内容に対して1度だけ」という意味です。スクリプトを書き換えれば再度実行されるので、インストール手順の更新にも対応できます。
+:::
 
 ### 実行順序の制御
 
@@ -381,7 +459,33 @@ OS ごとに必要な外部依存を分離し、条件分岐で結合してい�
 
 ### 実用例: sheldon plugin_sources の除外
 
-sheldon の `plugin_sources/` ディレクトリはビルド時に `plugins.toml.tmpl` から `{{ include }}` で結合されるため、ホームディレクトリへの配置は不要です。`.chezmoiignore` で除外します。
+[sheldon](https://github.com/rossmacarthur/sheldon) は Rust 製の zsh プラグインマネージャーです（詳しくは後の章で解説します）。設定ファイルは `~/.config/sheldon/plugins.toml` で、どのプラグインを読み込むかを定義します。
+
+このリポジトリでは、sheldon の設定を client/server で分岐させるために、テンプレート分割のパターンを使っています。
+
+```
+home/dot_config/sheldon/
+├── plugins.toml.tmpl          # ← chezmoi が展開して ~/.config/sheldon/plugins.toml を生成
+└── plugin_sources/            # ← テンプレートの部品（include 用）
+    ├── common.toml            #    全環境共通のプラグイン定義
+    ├── client.toml            #    client 環境のみのプラグイン定義
+    └── server.toml            #    server 環境のみのプラグイン定義
+```
+
+`plugins.toml.tmpl` の中身はこうなっています。
+
+```go
+{{ include "dot_config/sheldon/plugin_sources/common.toml" }}
+{{- if eq .system "client" }}
+{{ include "dot_config/sheldon/plugin_sources/client.toml" }}
+{{- else if eq .system "server" }}
+{{ include "dot_config/sheldon/plugin_sources/server.toml" }}
+{{- end -}}
+```
+
+chezmoi がテンプレートを展開すると、`common.toml` + 環境に応じた toml が結合された1つの `plugins.toml` が生成されます。
+
+ここで問題になるのが `plugin_sources/` ディレクトリです。chezmoi はデフォルトで source directory 内の全ファイルをホームディレクトリに配置しようとするため、何もしなければ `~/.config/sheldon/plugin_sources/` も作られてしまいます。しかし `plugin_sources/` はテンプレート結合の部品であり、sheldon が実際に読むのは結合後の `plugins.toml` だけです。不要なファイルがホームに散らばるのを防ぐため、`.chezmoiignore` で除外します。
 
 ```
 # chezmoiignore.d/common
