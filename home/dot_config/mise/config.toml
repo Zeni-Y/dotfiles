@@ -10,7 +10,6 @@ bun = "latest"
 uv = "latest"
 
 # シェル / ターミナル
-sheldon = "latest"
 starship = "latest"
 yazi = "latest"
 

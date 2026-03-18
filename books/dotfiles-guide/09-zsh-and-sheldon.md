@@ -435,6 +435,21 @@ chezmoi apply
 # → 次回 zsh 起動時にプラグインが自動ダウンロードされる
 ```
 
+### sheldon のインストール方法
+
+sheldon は apt や brew といった OS のパッケージマネージャには登録されていません。公式ドキュメントでは `cargo install` が案内されていますが、Rust ツールチェーンが必要になります。
+
+このリポジトリでは、[sheldon 公式の Installation ページ](https://sheldon.cli.rs/Installation.html) に記載されている **Pre-built binaries** の方法を採用しています。GitHub Release からビルド済みバイナリを直接ダウンロードする方式で、Rust ツールチェーンが不要です。
+
+インストールスクリプト（`install/common/sheldon.sh`）の中核部分:
+
+```bash
+curl --proto '=https' -fLsS https://rossmacarthur.github.io/install/crate.sh |
+    bash -s -- --repo rossmacarthur/sheldon --to "${BIN_DIR}" --force
+```
+
+OS とアーキテクチャを自動検出し、適切なバイナリをダウンロードしてくれます。詳しくは公式ドキュメントを参照してください。
+
 ### 日常の操作
 
 | やりたいこと | コマンド |
