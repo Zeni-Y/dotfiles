@@ -20,10 +20,3 @@ function _client_path() {
 }
 zsh-defer _client_path
 '''
-
-#
-# chezmoi 更新通知
-#
-
-[plugins.chezmoi-notify]
-local = "~/.config/zsh/plugins/chezmoi-notify"
