@@ -1,36 +1,61 @@
 [tools]
+# 言語ランタイム
 go = "latest"
 node = "lts"
-rust = "latest"
 python = "3.12"
+rust = "latest"
 
-age = "latest"
-aws-cli = "latest"
-bats = "latest"
+# パッケージマネージャ / ビルドツール
 bun = "latest"
-chezmoi = "latest"
-dotenvx = "latest"
-eza = "latest"
-starship = "latest"
-gcloud = "latest"
-jq = "latest"
-hugo-extended = "0.136.5"
 uv = "latest"
+
+# シェル / ターミナル
+sheldon = "latest"
+starship = "latest"
 yazi = "latest"
+
+# Git
+chezmoi = "latest"
+gh = "latest"
+ghq = "latest"
+"github:d-kuro/gwq" = "latest"
+
+# クラウド / インフラ
+aws-cli = "latest"
+gcloud = "latest"
+
+# データ処理 / JSON / YAML
+jq = "latest"
 yq = "latest"
+
+# セキュリティ
+age = "latest"
+dotenvx = "latest"
+
+# Lint / フォーマッタ
 shellcheck = "latest"
 shfmt = "latest"
 
+# ファイル / ディレクトリ
+eza = "latest"
+
+# Web / ドキュメント
+hugo-extended = "0.136.5"
+"github:shuntaka9576/blocc" = "latest"
+
+# テスト
+bats = "latest"
+
+# AI コーディング
 "npm:@anthropic-ai/claude-code" = "latest"
 "npm:@openai/codex" = "latest"
+
+# LSP / 開発ツール (npm)
 "npm:bash-language-server" = "latest"
 "npm:pyright" = "latest"
-"npm:fast-cli" = "latest"
 
-"github:x-motemen/ghq" = "latest"
-"github:d-kuro/gwq" = "latest"
-"github:cli/cli" = "latest"
-"github:shuntaka9576/blocc" = "latest"
+# ネットワーク
+"npm:fast-cli" = "latest"
 
 [settings]
 idiomatic_version_file_enable_tools = ["python"]

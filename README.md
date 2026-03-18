@@ -122,6 +122,29 @@ chezmoi re-add
 chezmoi apply --force
 ```
 
+## Docker でのテスト
+
+Docker を使ってクリーンな Ubuntu 環境で dotfiles の適用をテストできる。`CI=true` が設定されるため age 暗号化はスキップされる。
+
+```bash
+# コンテナを起動（初回はイメージを自動ビルド）
+make docker
+
+# イメージをキャッシュなしで再ビルド
+make docker-rebuild
+```
+
+コンテナ内ではリポジトリがマウントされているので、`chezmoi init --apply` でセットアップを試せる。
+
+```bash
+# コンテナ内で実行
+make init     # chezmoi init --apply --verbose
+make update   # chezmoi apply --verbose
+make reset    # run_once スクリプトの実行状態をリセット（再実行可能にする）
+make diff     # chezmoi diff
+make data     # chezmoi data（テンプレート変数の確認）
+```
+
 ## リポジトリ構成
 
 ```

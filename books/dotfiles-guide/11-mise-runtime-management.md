@@ -93,15 +93,17 @@ mise は言語ランタイムだけでなく、CLI ツールも管理できま�
 ```toml
 [tools]
 age = "latest"
-"aqua:aws/aws-cli" = "latest"
+aws-cli = "latest"
 bats = "latest"
 bun = "latest"
 chezmoi = "latest"
+dotenvx = "latest"
 eza = "latest"
+gcloud = "latest"
+gh = "latest"
+ghq = "latest"
+hugo-extended = "0.136.5"
 jq = "latest"
-"pipx:dotenvx" = "latest"
-"aqua:GoogleCloudPlatform/cloud-sdk" = "latest"
-"cargo:hugo-extended" = "0.136.5"
 uv = "latest"
 yazi = "latest"
 yq = "latest"
@@ -109,11 +111,7 @@ shellcheck = "latest"
 shfmt = "latest"
 ```
 
-ツールのインストール元:
-- **デフォルト**: mise の内蔵バックエンド
-- **`aqua:`**: [aqua](https://aquaproj.github.io/) レジストリからインストール（AWS CLI, gcloud 等）
-- **`pipx:`**: Python パッケージとしてインストール
-- **`cargo:`**: Rust の cargo からビルド・インストール
+これらのツールはすべて **mise レジストリ**（後述）に登録されているので、ツール名だけで書けます。
 
 ### npm パッケージ
 
@@ -132,13 +130,35 @@ shfmt = "latest"
 
 ```toml
 [tools]
-"aqua:x-motemen/ghq" = "latest"
-"aqua:d-kuro/gwq" = "latest"
-"aqua:cli/cli" = "latest"
-"aqua:shuntaka9576/blocc" = "latest"
+"github:d-kuro/gwq" = "latest"
+"github:shuntaka9576/blocc" = "latest"
 ```
 
-GitHub リリースからバイナリを直接ダウンロードしてインストールします。
+`github:` プレフィックスで GitHub Releases からバイナリを直接ダウンロードしてインストールできます。レジストリに登録されていないツールに使います。
+
+### バックエンドの選び方
+
+mise には複数のインストールバックエンドがあります。どれを使うかで安定性や速度が変わるので、使い分けの基準を整理しておきます。
+
+| バックエンド | 書き方の例 | 特徴 |
+|------------|-----------|------|
+| レジストリ（デフォルト） | `eza = "latest"` | mise チームが検証済みのメタデータを使用。高速 |
+| `github:` | `"github:owner/repo"` | GitHub Releases から直接ダウンロード |
+| `npm:` | `"npm:pyright"` | npm パッケージとしてインストール |
+| `cargo:` | `"cargo:tool"` | Rust の cargo でビルド・インストール |
+| `pipx:` | `"pipx:tool"` | Python パッケージとしてインストール |
+| `aqua:` | `"aqua:owner/repo"` | aqua レジストリを明示的に指定 |
+
+**原則: レジストリに登録されているツールは、ツール名だけ（bare name）で書く。**
+
+レジストリは mise が管理する [aqua レジストリ](https://mise-versions.jdx.dev/) ベースのインデックスで、ツール名とダウンロード元のマッピングが検証済みです。bare name で書くと mise がレジストリから最適なバックエンドを自動で選んでくれます。
+
+`github:` バックエンドは、レジストリに登録されていないニッチなツールを補完する手段として使います。GitHub API のレート制限（認証なしだと 60 req/h）を受ける可能性がある点にも注意してください。
+
+```bash
+# ツールがレジストリに登録されているか確認する
+mise registry | grep <tool-name>
+```
 
 ## 設定オプション
 
