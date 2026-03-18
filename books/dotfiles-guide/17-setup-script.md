@@ -152,6 +152,46 @@ shunk031 の setup.sh をベースにしていますが、以下の機能は当�
 - シェルの再起動（shunk031 でも無効化されている）
 :::
 
+## install/ スクリプトと mise の使い分け
+
+ツールのインストールには「`install/` にシェルスクリプトを書く」方法と「mise の `config.toml` に追加する」方法があります。どちらを使うかの判断基準を整理しておきます。
+
+### mise で管理するもの
+
+以下に当てはまるツールは mise に任せます。
+
+- **mise がバックエンドとして対応している**（`mise registry` で確認できる）
+- **バージョンの切り替え・アップデートを一元管理したい**
+- **OS 固有のインストール手順が不要**（バイナリを取得するだけで動く）
+
+例: go, node, rust, python, eza, jq, starship, shfmt, gh, claude-code など
+
+### install/ スクリプトで管理するもの
+
+以下のいずれかに当てはまるツールは `install/` にスクリプトを書きます。
+
+- **mise 自体のインストール**（mise より先に存在する必要がある）
+- **mise が対応していない**（sheldon など）
+- **OS 固有のインストール手順がある**（apt-get, brew, systemd 設定などが必要）
+- **テスト（bats）で install/uninstall のサイクルを検証したい**[^5]
+
+例: mise 本体, sheldon, apt/brew パッケージ, Docker, SSH サーバー設定など
+
+### 判断フローチャート
+
+```
+そのツールは mise が対応している？
+  ├─ No → install/ スクリプト
+  └─ Yes
+       OS 固有の手順が必要？
+         ├─ Yes → install/ スクリプト
+         └─ No → mise で管理
+```
+
+:::message
+shunk031/dotfiles[^3] では starship を `install/ubuntu/server/` で管理していますが、mise が starship に対応している現在は mise 管理の方がシンプルです。当リポジトリでは `config.toml` に `starship = "latest"` を追加する方式を採用しています。
+:::
+
 ## セットアップのフロー
 
 ```
