@@ -11,3 +11,7 @@ when = "test -s ${XDG_CACHE_HOME:-$HOME/.cache}/starship-chezmoi/count"
 symbol = " dotfiles  ⇣"
 style = "bold red"
 format = "[$symbol$output]($style) "
+
+# Git リポジトリ内でのみ Git 情報を表示
+[git_branch]
+only_attached = true
