@@ -22,13 +22,6 @@ zsh-defer _server_path
 '''
 
 #
-# Prompt (starship)
-#
-
-[plugins.starship]
-inline = 'eval "$(starship init zsh)"'
-
-#
 # chezmoi 更新通知
 #
 

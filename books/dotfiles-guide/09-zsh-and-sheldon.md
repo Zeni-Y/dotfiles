@@ -52,32 +52,40 @@ sheldon を選ぶ理由:
 ### .zshrc の構成
 
 ```bash
-# starship プロンプトの初期化
-eval "$(starship init zsh)"
+# PATH の設定
+typeset -gU path fpath
+path=(
+    $path
+    /usr/local/{,s}bin(N-/)
+    /usr/local/cuda/bin(N-/)
+    ${HOME}/.local/bin(N-/)
+    ${HOME}/.local/bin/common(N-/)
+)
+fpath=(
+    $fpath
+    ${HOME}/.local/bin/common(N-/)
+)
 
 # sheldon でプラグインを読み込み
 eval "$(sheldon source)"
-
-# mise でランタイムを管理
-eval "$(/home/zenimoto/.local/bin/mise activate zsh)"
 ```
 
-たった3行の `eval` で、プロンプト・プラグイン・ランタイムがすべて初期化されます。設定の詳細は各ツールの設定ファイルに分離されているので、`.zshrc` はこれだけで済むわけです。すごくないですか？
+`.zshrc` の役割は **PATH の設定** と **sheldon の起動** だけです。starship（プロンプト）や mise（ランタイム管理）の初期化は sheldon の `plugins.toml` 側で管理しています。`.zshrc` がプラグイン設定で肥大化しないのが sheldon の設計の良さです。
 
 zsh 起動時の処理の流れを整理するとこうなっています。
 
 ```
 zsh 起動
   │
-  ├─ 1. starship init zsh → プロンプトの初期化（即座に表示される）
+  ├─ 1. PATH / FPATH の設定（共通パスの登録）
   │
-  ├─ 2. sheldon source → plugins.toml を読み込み
-  │     ├─ fzf キーバインド等（即座に有効化）
-  │     └─ zsh-defer 付きプラグイン（プロンプト表示後に遅延読み込み）
-  │         → autosuggestions, syntax-highlighting, compinit 等
-  │
-  └─ 3. mise activate zsh → chpwd フックを登録
-        → ディレクトリ移動時に PATH を動的に切り替え
+  └─ 2. sheldon source → plugins.toml を読み込み
+        ├─ starship init zsh → プロンプトの初期化（即座に表示される）
+        ├─ fzf キーバインド等（即座に有効化）
+        ├─ zsh-defer 付きプラグイン（プロンプト表示後に遅延読み込み）
+        │   → autosuggestions, syntax-highlighting, compinit 等
+        └─ mise activate zsh → chpwd フックを登録
+            → ディレクトリ移動時に PATH を動的に切り替え
 ```
 
 ## plugins.toml のテンプレート分割
@@ -116,11 +124,11 @@ dot_config/sheldon/
 
 | ファイル | 内容 |
 |---------|------|
-| `common.toml` | zsh-defer, fzf, 補完, 言語環境, zsh-abbr 等 |
-| `client.toml` | starship, chezmoi-notify, client 用 PATH |
-| `server.toml` | starship, chezmoi-notify, server 用 PATH |
+| `common.toml` | starship, zsh-defer, fzf, 補完, 言語環境, zsh-abbr 等 |
+| `client.toml` | chezmoi-notify, client 用 PATH |
+| `server.toml` | chezmoi-notify, server 用 PATH |
 
-client と server で共通するプラグイン（starship, chezmoi-notify 等）は各ファイルに記述し、zsh 本体のプラグイン群は `common.toml` に集約しています。
+全環境で共通するプラグイン（starship, zsh-defer 等）は `common.toml` に集約し、環境固有の設定だけを `client.toml` / `server.toml` に分離しています。
 
 ### カスタムテンプレート
 
@@ -402,22 +410,9 @@ add-zsh-hook precmd _check_chezmoi_update_async
 
 ### starship との連携
 
-`~/.config/starship.toml` にカスタムモジュールを定義して、キャッシュファイルの内容をプロンプトに表示します。
+chezmoi-notify はキャッシュファイルに未適用の件数を書き込み、starship のカスタムコマンドモジュールがそれを読み取ってプロンプトに表示します。未適用の更新がある場合、プロンプトの右側に `dotfiles ⇣3` のように表示されます。
 
-```toml
-right_format = """
-${custom.chezmoi}
-"""
-
-[custom.chezmoi]
-command = "cat ${XDG_CACHE_HOME:-$HOME/.cache}/starship-chezmoi/count"
-when = "test -s ${XDG_CACHE_HOME:-$HOME/.cache}/starship-chezmoi/count"
-symbol = " dotfiles  ⇣"
-style = "bold red"
-format = "[$symbol$output]($style) "
-```
-
-未適用の更新がある場合、プロンプトの右側に `dotfiles ⇣3` のように表示されます。`chezmoi update` で更新を適用すると通知が消えます。
+starship の設定詳細については [starship — クロスシェル対応のモダンプロンプト](10-starship) を参照してください。
 
 ### sheldon での読み込み
 

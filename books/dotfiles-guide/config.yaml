@@ -14,10 +14,13 @@ chapters:
   - 07-security-and-encryption
   - 08-git-signing
   - 09-zsh-and-sheldon
-  - 10-mise-runtime-management
-  - 11-modern-cli-tools
-  - 12-fzf-and-search
-  - 13-zed-editor
-  - 14-zellij
-  - 15-development-workflow
+  - 10-starship
+  - 11-mise-runtime-management
+  - 12-modern-cli-tools
+  - 13-fzf-and-search
+  - 14-zed-editor
+  - 15-zellij
+  - 16-development-workflow
+  - 17-setup-script
+  - 18-comparison-with-others
   - 99-reference
