@@ -59,12 +59,12 @@ chezmoi では `home/dot_claude/` に配置することで `~/.claude/` に展�
 
 `deny` リストで危険な操作を明示的にブロックします。
 
-| ルール | 説明 |
-|--------|------|
-| `Bash(sudo:*)` | sudo コマンドの実行を禁止 |
-| `Bash(rm -rf:*)` | 再帰的な強制削除を禁止 |
-| `Read(.env.*)` / `Write(.env*)` | 環境変数ファイルの読み書きを禁止 |
-| `Read(id_rsa*)` / `Read(id_ed25519*)` | 秘密鍵の読み取りを禁止 |
+| ルール                                | 説明                             |
+| ------------------------------------- | -------------------------------- |
+| `Bash(sudo:*)`                        | sudo コマンドの実行を禁止        |
+| `Bash(rm -rf:*)`                      | 再帰的な強制削除を禁止           |
+| `Read(.env.*)` / `Write(.env*)`       | 環境変数ファイルの読み書きを禁止 |
+| `Read(id_rsa*)` / `Read(id_ed25519*)` | 秘密鍵の読み取りを禁止           |
 
 `defaultMode: "plan"` にすると、Claude Code は実行前に計画を提示してくれます。いきなりファイルを編集されたくない場合に便利です。
 
@@ -80,11 +80,11 @@ chezmoi では `home/dot_claude/` に配置することで `~/.claude/` に展�
 }
 ```
 
-| 変数 | 説明 |
-|------|------|
-| `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` | テレメトリ等の非必須通信を無効化 |
-| `DISABLE_PROMPT_CACHING` | プロンプトキャッシュを無効化 |
-| `DISABLE_INSTALLATION_CHECKS` | 起動時のアップデートチェックをスキップ |
+| 変数                                       | 説明                                   |
+| ------------------------------------------ | -------------------------------------- |
+| `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` | テレメトリ等の非必須通信を無効化       |
+| `DISABLE_PROMPT_CACHING`                   | プロンプトキャッシュを無効化           |
+| `DISABLE_INSTALLATION_CHECKS`              | 起動時のアップデートチェックをスキップ |
 
 ### プラグイン（enabledPlugins）
 
@@ -115,7 +115,7 @@ chezmoi では `home/dot_claude/` に配置することで `~/.claude/` に展�
 
 - `alwaysThinkingEnabled`: 常に思考プロセスを表示する（回答の根拠が見えて安心）
 - `plansDirectory`: 計画ファイルの保存先
-- `statusLine`: ステータスバーのカスタマイズ
+- `statusLine`: ステータスバーのカスタマイズ（後述の ccstatusline セクション参照）
 
 ## Hooks — ツール実行の自動化
 
@@ -187,10 +187,10 @@ Claude Code は CLAUDE.md に「uv を使え」と書いても、たまに `pip`
 
 ファイルの書き込み・編集後に自動で実行されます。
 
-| 対象 | 実行されるツール |
-|------|----------------|
+| 対象           | 実行されるツール                            |
+| -------------- | ------------------------------------------- |
 | `.py` ファイル | `ruff format` → `ruff check --fix` → `mypy` |
-| `.md` ファイル | `prettier` でフォーマット |
+| `.md` ファイル | `prettier` でフォーマット                   |
 
 Claude Code がコードを書くたびに自動でフォーマット・リント・型チェックが走るので、品質を常に保てます。
 
@@ -206,14 +206,17 @@ paths: **/*.py
 ---
 
 ## `uv` の使用
+
 - Python プロジェクトの場合は常に `uv` を使う
 - コードを書いたときは常にテストを記述する
 - `uv run <script>` でスクリプトを実行
 
 ## `pyright-lsp` の使用
+
 - pyright-lsp がインストールされていれば静的解析に使用
 
 ## 探索的なデバッグ
+
 - `uv run --with <library> python -c "..."` で一時的にライブラリを試す
 ```
 
@@ -233,10 +236,10 @@ GPU を使うスクリプトで、Claude Code がうっかり全 GPU を掴ん�
 
 ### その他のルール
 
-| ルール | 対象 | 内容 |
-|--------|------|------|
-| `latex.md` | `**/*.tex` | LaTeX 論文執筆のサポート |
-| `ask-user-question.md` | 全般 | Plan モードで仕様不明確時に質問させる |
+| ルール                 | 対象       | 内容                                  |
+| ---------------------- | ---------- | ------------------------------------- |
+| `latex.md`             | `**/*.tex` | LaTeX 論文執筆のサポート              |
+| `ask-user-question.md` | 全般       | Plan モードで仕様不明確時に質問させる |
 
 ## Skills — 専門ワークフロー
 
@@ -290,17 +293,65 @@ Conventional Commits 形式でコミットメッセージを自動生成する�
 }
 ```
 
-| 設定 | 説明 |
-|------|------|
-| `CLAUDE_MEM_MODEL` | メモリ要約に使うモデル |
+| 設定                              | 説明                     |
+| --------------------------------- | ------------------------ |
+| `CLAUDE_MEM_MODEL`                | メモリ要約に使うモデル   |
 | `CLAUDE_MEM_CONTEXT_OBSERVATIONS` | 保持する観察記録の最大数 |
-| `CLAUDE_MEM_WORKER_PORT` | ワーカーサーバーのポート |
+| `CLAUDE_MEM_WORKER_PORT`          | ワーカーサーバーのポート |
 
 観察タイプとして `bugfix`, `feature`, `refactor`, `discovery`, `decision`, `change` を自動分類し、コンセプト（`how-it-works`, `problem-solution`, `gotcha` 等）でタグ付けしてくれます。
 
 :::message
 Claude Code 本体にも auto memory 機能（`~/.claude/projects/*/memory/`）があります。claude-mem はより細かい粒度で自動追跡する補完的な位置づけです。追加の API コストが発生する点には注意してください。
 :::
+
+## ccstatusline — ステータスライン
+
+[ccstatusline](https://github.com/nicobailon/ccstatusline) は Claude Code のステータスバーをカスタマイズするツールです。トークン使用量やコンテキスト消費率をリアルタイムで表示できます。
+
+設定は `~/.ccstatusline/settings.json` に保存します。`settings.json` の `statusLine` で参照しています。
+
+```json
+{
+  "version": 3,
+  "lines": [
+    [
+      {
+        "type": "custom-command",
+        "commandPath": "npx -y ccusage@latest statusline",
+        "timeout": 50000
+      }
+    ],
+    [
+      { "type": "custom-text", "customText": "input " },
+      { "type": "tokens-input" },
+      { "type": "separator" },
+      { "type": "custom-text", "customText": "output " },
+      { "type": "tokens-output" },
+      { "type": "separator" },
+      { "type": "custom-text", "customText": "cached " },
+      { "type": "tokens-cached" },
+      { "type": "separator" },
+      { "type": "custom-text", "customText": "ctx " },
+      { "type": "context-percentage" },
+      { "type": "separator" },
+      { "type": "block-timer", "metadata": { "display": "progress-short" } }
+    ]
+  ]
+}
+```
+
+1 行目に [ccusage](https://github.com/ryoppippi/ccusage) による API 使用量サマリ、2 行目にトークン情報を表示する構成です。
+
+| 表示項目             | 説明                           |
+| -------------------- | ------------------------------ |
+| `tokens-input`       | 入力トークン数                 |
+| `tokens-output`      | 出力トークン数                 |
+| `tokens-cached`      | キャッシュヒットしたトークン数 |
+| `context-percentage` | コンテキストウィンドウの使用率 |
+| `block-timer`        | 現在のブロックの経過時間       |
+
+コンテキスト使用率が高くなったら `/compact` で圧縮する、といった判断に役立ちます。
 
 ## chezmoi での管理
 
@@ -326,6 +377,8 @@ home/
 │       └── high-impact-journal-publishing/
 │           ├── SKILL.md
 │           └── references/
+├── dot_ccstatusline/                          # → ~/.ccstatusline/
+│   └── settings.json
 └── dot_claude-mem/                            # → ~/.claude-mem/
     └── settings.json
 ```
@@ -346,13 +399,13 @@ home/
 
 ### 日常の操作
 
-| やりたいこと | 方法 |
-|------------|------|
-| ルールを追加する | `home/dot_claude/rules/` に Markdown を追加 |
+| やりたいこと     | 方法                                            |
+| ---------------- | ----------------------------------------------- |
+| ルールを追加する | `home/dot_claude/rules/` に Markdown を追加     |
 | スキルを追加する | `home/dot_claude/skills/<name>/SKILL.md` を作成 |
-| Hooks を変更する | `settings.json` の `hooks` セクションを編集 |
-| 権限を変更する | `settings.json` の `permissions.deny` を編集 |
-| 設定を反映する | `chezmoi apply` |
+| Hooks を変更する | `settings.json` の `hooks` セクションを編集     |
+| 権限を変更する   | `settings.json` の `permissions.deny` を編集    |
+| 設定を反映する   | `chezmoi apply`                                 |
 
 ### カスタマイズのヒント
 

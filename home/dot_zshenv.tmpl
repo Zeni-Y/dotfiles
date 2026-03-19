@@ -1,0 +1,17 @@
+#!/usr/bin/env zsh
+
+{{ if eq .system "server" -}}
+#
+# サーバー用環境変数
+# sheldon と無関係で、非対話シェル（cron, SSH コマンド等）でも必要なため .zshenv で管理
+#
+
+# CUDA
+export CUDA_HOME="/usr/local/cuda"
+export LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+${LD_LIBRARY_PATH}:}${CUDA_HOME}/lib64"
+
+# Hugging Face
+export HF_HOME="${HOME}/.cache/huggingface"
+export HF_DATASETS_CACHE="${HF_HOME}/datasets"
+export TRANSFORMERS_CACHE="${HF_HOME}/hub"
+{{ end -}}

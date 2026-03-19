@@ -20,3 +20,33 @@ function _server_path() {
 }
 zsh-defer _server_path
 '''
+
+#
+# Server Environment: CUDA PATH
+# 環境変数の export は .zshenv で行い、ここでは PATH 操作のみ
+#
+
+[plugins.server-cuda-path]
+inline = '''
+function _server_cuda_path() {
+    typeset -gU path
+    path=( $path ${CUDA_HOME}/bin(N-/) )
+}
+zsh-defer _server_cuda_path
+'''
+
+#
+# SSH Agent
+# agent forwarding が使えないサーバーで、パスフレーズ入力を1回で済ませる
+#
+
+[plugins.server-ssh-agent]
+inline = '''
+function _server_ssh_agent() {
+    if [[ -z "${SSH_AUTH_SOCK}" ]]; then
+        eval "$(ssh-agent -s)" > /dev/null 2>&1
+        ssh-add "${HOME}/.ssh/id_ed25519" > /dev/null 2>&1
+    fi
+}
+zsh-defer _server_ssh_agent
+'''

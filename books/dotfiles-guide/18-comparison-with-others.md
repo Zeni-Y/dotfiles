@@ -8,17 +8,17 @@ chezmoi を使った dotfiles 管理には「唯一の正解」はなく、リ�
 
 このチャプターでは、chezmoi 作者である twpayne の dotfiles[^1] と、テスト可能な dotfiles 管理を実践している shunk031 の dotfiles[^2][^3] を比較しながら、当リポジトリの設計判断を振り返ります。
 
-## 3つのリポジトリの概要
+## 3 つのリポジトリの概要
 
-| | twpayne/dotfiles[^1] | shunk031/dotfiles[^2] | 当リポジトリ |
-|---|---|---|---|
-| **方針** | chezmoi の機能をフル活用した最小構成 | テスト可能性を重視した分離構成 | shunk031 ベースにシンプル化 |
-| **対象 OS** | macOS / Linux / Windows | macOS / Ubuntu | Ubuntu (Linux) |
-| **秘密管理** | 1Password CLI | age encryption | age encryption |
-| **ブートストラップ** | `install.sh`（23行） | `setup.sh`（263行） | `install.sh`（190行） |
-| **テスト** | なし | Bats + kcov（カバレッジ計測） | Docker による手動検証 |
-| **シェル** | zsh (oh-my-zsh) | zsh / bash（system で分岐） | zsh (sheldon) |
-| **プラグイン管理** | oh-my-zsh 内蔵 | sheldon | sheldon |
+|                      | twpayne/dotfiles[^1]                 | shunk031/dotfiles[^2]          | 当リポジトリ                |
+| -------------------- | ------------------------------------ | ------------------------------ | --------------------------- |
+| **方針**             | chezmoi の機能をフル活用した最小構成 | テスト可能性を重視した分離構成 | shunk031 ベースにシンプル化 |
+| **対象 OS**          | macOS / Linux / Windows              | macOS / Ubuntu                 | Ubuntu (Linux)              |
+| **秘密管理**         | 1Password CLI                        | age encryption                 | age encryption              |
+| **ブートストラップ** | `install.sh`（23 行）                | `setup.sh`（263 行）           | `install.sh`（190 行）      |
+| **テスト**           | なし                                 | Bats + kcov（カバレッジ計測）  | Docker による手動検証       |
+| **シェル**           | zsh (oh-my-zsh)                      | zsh / bash（system で分岐）    | zsh (sheldon)               |
+| **プラグイン管理**   | oh-my-zsh 内蔵                       | sheldon                        | sheldon                     |
 
 ## ディレクトリ構成の比較
 
@@ -119,7 +119,7 @@ exec "$chezmoi" init --apply "--source=$script_dir"
 
 たったこれだけです。CI 対応も sudo keepalive も暗号化ファイルの除外もありません。なぜなら twpayne は **秘密管理に 1Password CLI を使っている**ため、age のようなパスフレーズ入力の問題がそもそも発生しないからです。
 
-もう1つ注目すべきは `--source=$script_dir` です。リポジトリを `git clone` して直接 `./install.sh` を実行した場合、そのディレクトリをソースとして使います。`chezmoi init <user>` 経由で実行された場合も、chezmoi がリポジトリを clone した先をソースとして渡してくれます。
+もう 1 つ注目すべきは `--source=$script_dir` です。リポジトリを `git clone` して直接 `./install.sh` を実行した場合、そのディレクトリをソースとして使います。`chezmoi init <user>` 経由で実行された場合も、chezmoi がリポジトリを clone した先をソースとして渡してくれます。
 
 ### shunk031 — フル機能の setup.sh
 
@@ -127,7 +127,7 @@ shunk031 の setup.sh は 263 行あり、以下を担当しています。
 
 - macOS / Linux の OS 判定と初期化（Homebrew インストール等）
 - macOS 向けの高度な sudo keepalive（Keychain 経由）
-- CI/非TTY 環境への対応（`--no-tty`、暗号化ファイル除外）
+- CI/非 TTY 環境への対応（`--no-tty`、暗号化ファイル除外）
 - private dotfiles の管理（別リポジトリからの `chezmoi init`）
 - シェルの再起動（現在は無効化）
 
@@ -137,15 +137,15 @@ shunk031 の記事[^3]では、このブートストラップスクリプトの�
 
 当リポジトリの `install.sh` は shunk031 のアプローチをベースに、Ubuntu 単一環境向けにシンプル化したものです。
 
-| 機能 | twpayne | shunk031 | 当リポジトリ |
-|------|---------|----------|------------|
-| chezmoi ダウンロード | あり | あり | あり |
-| CI/非TTY 対応 | なし | あり | あり |
-| sudo keepalive | なし | あり（macOS/Linux） | あり（Linux のみ） |
-| 暗号化ファイル除外 | 不要（1Password） | あり | あり |
-| ブートストラップ用バイナリ削除 | なし | あり | あり |
-| macOS 対応 | 不要（別の仕組み） | あり | なし |
-| private dotfiles | なし | あり（別リポジトリ） | なし |
+| 機能                           | twpayne            | shunk031             | 当リポジトリ       |
+| ------------------------------ | ------------------ | -------------------- | ------------------ |
+| chezmoi ダウンロード           | あり               | あり                 | あり               |
+| CI/非 TTY 対応                 | なし               | あり                 | あり               |
+| sudo keepalive                 | なし               | あり（macOS/Linux）  | あり（Linux のみ） |
+| 暗号化ファイル除外             | 不要（1Password）  | あり                 | あり               |
+| ブートストラップ用バイナリ削除 | なし               | あり                 | あり               |
+| macOS 対応                     | 不要（別の仕組み） | あり                 | なし               |
+| private dotfiles               | なし               | あり（別リポジトリ） | なし               |
 
 ## 秘密管理の比較
 
@@ -286,13 +286,60 @@ shunk031 の `install/` + `{{ include }}` パターンを採用しています�
 
 ## まとめ
 
-| 観点 | twpayne | shunk031 | 当リポジトリ |
-|------|---------|----------|------------|
-| 設計の軸 | chezmoi 機能の最大活用 | テスト可能性と関心の分離 | シンプルさと学習しやすさ |
-| 向いている人 | chezmoi に精通した上級者 | チームや大規模 dotfiles | 個人で Ubuntu メインの人 |
-| 複雑度 | 低（chezmoi に委ねる） | 高（テスト基盤込み） | 中 |
+| 観点         | twpayne                  | shunk031                 | 当リポジトリ             |
+| ------------ | ------------------------ | ------------------------ | ------------------------ |
+| 設計の軸     | chezmoi 機能の最大活用   | テスト可能性と関心の分離 | シンプルさと学習しやすさ |
+| 向いている人 | chezmoi に精通した上級者 | チームや大規模 dotfiles  | 個人で Ubuntu メインの人 |
+| 複雑度       | 低（chezmoi に委ねる）   | 高（テスト基盤込み）     | 中                       |
 
 どのアプローチが正解というわけではなく、自分の環境や目的に合ったものを選ぶのが大事です。当リポジトリは shunk031 の設計パターンを土台にしつつ、twpayne の `install.sh` 規約も取り入れた構成になっています。
+
+## shunk031 との詳細な差分
+
+shunk031/dotfiles には当リポジトリに含まれていない要素が多数あります。以下に、採用したもの・採用しなかったものとその理由を整理します。
+
+### 採用したもの
+
+| 要素               | 内容                                                     | 理由                                             | 実装方法                                                            |
+| ------------------ | -------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------- |
+| Claude Code 設定   | `~/.claude/` の settings, hooks, rules, skills, commands | AI コーディングの品質管理に直結する              | chezmoi で直接配置                                                  |
+| ccstatusline 設定  | `~/.ccstatusline/settings.json`                          | トークン使用量の可視化で無駄なコスト消費を防げる | chezmoi で直接配置                                                  |
+| claude-mem 設定    | `~/.claude-mem/settings.json`                            | 会話の学びを自動蓄積する補完ツール               | chezmoi で直接配置                                                  |
+| サーバー用環境変数 | CUDA, HF キャッシュ                                      | GPU サーバーでの開発に必要                       | `.zshenv` で chezmoi テンプレート分岐（`system = "server"` 時のみ） |
+| SSH agent          | ssh-agent の起動と鍵追加                                 | agent forwarding が使えないサーバーで必要        | sheldon の `server.toml` にインラインで定義                         |
+
+### 採用しなかったもの
+
+| 要素                 | 内容                                   | 不採用の理由                                                                       |
+| -------------------- | -------------------------------------- | ---------------------------------------------------------------------------------- |
+| macOS スクリプト群   | Homebrew, CLT, iTerm2, defaults 等     | 当リポジトリは Ubuntu 専用。macOS 対応が必要になった時点で追加する                 |
+| Spacemacs 設定       | `dot_spacemacs.d/`（18 ファイル以上）  | 当リポジトリでは Zed をエディタとして使用                                          |
+| Tmux 設定            | `dot_tmux.conf.tmpl` + OS 別設定       | 当リポジトリでは Zellij をターミナルマルチプレクサとして使用                       |
+| Powerlevel10k        | `dot_config/powerlevel10k/`            | 当リポジトリでは Starship をプロンプトとして使用                                   |
+| Bash 設定            | `dot_bash/`, `symlink_dot_bashrc.tmpl` | 当リポジトリでは zsh のみ使用                                                      |
+| エイリアスファイル   | `dot_config/alias/`                    | 当リポジトリでは zsh-abbr で管理（fish 風の abbreviation でよりモダン）            |
+| GPG 鍵管理           | `private_dot_gnupg/`（age 暗号化）     | 当リポジトリでは SSH 署名を使用しており GPG は不要                                 |
+| VPN ユーティリティ   | `connect-hosei-vpn` 等                 | 組織固有のスクリプトで汎用性がない                                                 |
+| symlink テンプレート | `symlink_*.tmpl` パターン              | Claude Code にシンボリックリンク関連のバグが複数報告されており、直接配置の方が安全 |
+| Sheldon OS 別分割    | `plugin_sources/client/macos.toml` 等  | macOS を使わないため `client.toml` に統合で十分                                    |
+| Jupyter 設定         | ターミナル設定                         | 当リポジトリでは使用していない                                                     |
+| mise symlink 構成    | `symlink_config.toml.tmpl`             | 直接配置の方がシンプルで確実                                                       |
+
+### 設計方針の違い
+
+shunk031/dotfiles は **macOS + Ubuntu のクロスプラットフォーム**を前提に、テンプレートとシンボリックリンクを多用した柔軟な構成です。一方、当リポジトリは **Ubuntu 単一環境**に絞ることで、不要な抽象化を排除してシンプルさを保っています。
+
+ツール選定でも方針が異なります。
+
+| 用途                     | shunk031            | 当リポジトリ |
+| ------------------------ | ------------------- | ------------ |
+| エディタ                 | Spacemacs (Emacs)   | Zed          |
+| ターミナルマルチプレクサ | Tmux                | Zellij       |
+| プロンプト               | Powerlevel10k       | Starship     |
+| シェルエイリアス         | `dot_config/alias/` | zsh-abbr     |
+| Git 署名                 | GPG                 | SSH          |
+
+どちらが優れているということではなく、それぞれの用途や好みに合ったツールを選んでいます。必要十分な技術で可能な限りシンプルにするのが当リポジトリの方針です。
 
 ## 参考文献
 

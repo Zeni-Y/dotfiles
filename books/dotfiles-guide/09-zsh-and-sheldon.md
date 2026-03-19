@@ -8,14 +8,14 @@ title: "zsh と sheldon プラグイン管理"
 
 シェル環境を快適にするには、プラグイン（補完、ハイライト、履歴管理など）の導入が欠かせません。しかし、プラグインを何も考えずに入れていくと **シェルの起動が遅くなる** という問題が生まれます。
 
-この章では、以下の2つの課題を解決する構成を解説します:
+この章では、以下の 2 つの課題を解決する構成を解説します:
 
-| 課題 | 解決するツール | アプローチ |
-|------|--------------|-----------|
-| プラグインの管理が煩雑 | **sheldon** | 設定ファイル（TOML）にプラグインを宣言的に定義。`.zshrc` から分離 |
-| プラグインを増やすと起動が遅くなる | **zsh-defer** | プロンプト表示後にプラグインを遅延読み込み |
+| 課題                               | 解決するツール | アプローチ                                                        |
+| ---------------------------------- | -------------- | ----------------------------------------------------------------- |
+| プラグインの管理が煩雑             | **sheldon**    | 設定ファイル（TOML）にプラグインを宣言的に定義。`.zshrc` から分離 |
+| プラグインを増やすと起動が遅くなる | **zsh-defer**  | プロンプト表示後にプラグインを遅延読み込み                        |
 
-この2つの組み合わせにより、**プラグインを増やしても起動時間を 100ms 以下に保つ**ことが目標です。
+この 2 つの組み合わせにより、**プラグインを増やしても起動時間を 100ms 以下に保つ**ことが目標です。
 
 ## zsh とは
 
@@ -23,13 +23,13 @@ title: "zsh と sheldon プラグイン管理"
 
 bash との主な違い:
 
-| 機能 | bash | zsh |
-|------|------|-----|
-| 補完システム | 基本的 | 高度（compinit） |
-| グロブ | 標準 | 拡張（`**/*.md` 等） |
-| プロンプト | PS1 | PROMPT + テーマ |
-| プラグイン | 少ない | 豊富なエコシステム |
-| 配列 | 0始まり | 1始まり |
+| 機能         | bash     | zsh                  |
+| ------------ | -------- | -------------------- |
+| 補完システム | 基本的   | 高度（compinit）     |
+| グロブ       | 標準     | 拡張（`**/*.md` 等） |
+| プロンプト   | PS1      | PROMPT + テーマ      |
+| プラグイン   | 少ない   | 豊富なエコシステム   |
+| 配列         | 0 始まり | 1 始まり             |
 
 ## sheldon とは
 
@@ -37,14 +37,15 @@ bash との主な違い:
 
 ### 他のプラグインマネージャーとの比較
 
-| ツール | 言語 | 速度 | 設定形式 |
-|--------|------|------|---------|
-| [oh-my-zsh](https://ohmyz.sh/) | Shell | 遅い | .zshrc に直接記述 |
-| [zinit](https://github.com/zdharma-continuum/zinit) | Shell | 速い | .zshrc に直接記述 |
-| [antigen](https://github.com/zsh-users/antigen) | Shell | 遅い | .zshrc に直接記述 |
-| **[sheldon](https://sheldon.cli.rs/)** | **Rust** | **速い** | **TOML ファイル** |
+| ツール                                              | 言語     | 速度     | 設定形式          |
+| --------------------------------------------------- | -------- | -------- | ----------------- |
+| [oh-my-zsh](https://ohmyz.sh/)                      | Shell    | 遅い     | .zshrc に直接記述 |
+| [zinit](https://github.com/zdharma-continuum/zinit) | Shell    | 速い     | .zshrc に直接記述 |
+| [antigen](https://github.com/zsh-users/antigen)     | Shell    | 遅い     | .zshrc に直接記述 |
+| **[sheldon](https://sheldon.cli.rs/)**              | **Rust** | **速い** | **TOML ファイル** |
 
 sheldon を選ぶ理由:
+
 - **高速**: Rust 製で起動が速い
 - **設定と実行の分離**: `plugins.toml` に設定を集約し、`.zshrc` はクリーンに保てる
 - **遅延読み込み対応**: `zsh-defer` と組み合わせて高速起動を実現
@@ -57,7 +58,6 @@ typeset -gU path fpath
 path=(
     $path
     /usr/local/{,s}bin(N-/)
-    /usr/local/cuda/bin(N-/)
     ${HOME}/.local/bin(N-/)
     ${HOME}/.local/bin/common(N-/)
 )
@@ -122,11 +122,11 @@ dot_config/sheldon/
 
 ### 分割の効果
 
-| ファイル | 内容 |
-|---------|------|
-| `common.toml` | starship, zsh-defer, fzf, 補完, 言語環境, zsh-abbr 等 |
-| `client.toml` | chezmoi-notify, client 用 PATH |
-| `server.toml` | chezmoi-notify, server 用 PATH |
+| ファイル      | 内容                                                           |
+| ------------- | -------------------------------------------------------------- |
+| `common.toml` | starship, zsh-defer, fzf, 補完, 言語環境, zsh-abbr 等          |
+| `client.toml` | chezmoi-notify, client 用 PATH                                 |
+| `server.toml` | chezmoi-notify, server 用 PATH, CUDA/HF 環境変数, SSH agent 等 |
 
 全環境で共通するプラグイン（starship, zsh-defer 等）は `common.toml` に集約し、環境固有の設定だけを `client.toml` / `server.toml` に分離しています。
 
@@ -274,19 +274,84 @@ apply = ["fpath"]
 
 ### 言語環境の設定
 
-Go, Rust, Bun の環境変数も sheldon の inline プラグインとして管理しています。
+Go, Rust, Bun の環境変数と PATH 設定も sheldon の inline プラグインとして管理しています。
 
 ```toml
 [plugins.go]
-inline = 'export GOPATH="$HOME/ghq" && path=("$GOPATH/bin" "$GOROOT/bin" $path)'
-apply = ["defer"]
+inline = '''
+function _go() {
+    export GOPATH="${HOME}/ghq"
+    export GOROOT=$(go env GOROOT)
+    typeset -gU path
+    path=( $path ${GOPATH}/bin(N-/) ${HOME}/.go/bin(N-/) )
+}
+zsh-defer _go
+'''
 
 [plugins.rust]
-inline = 'path=("$HOME/.cargo/bin" $path)'
-apply = ["defer"]
+inline = '''
+function _rust() {
+    typeset -gU path
+    path=( $path ${HOME}/.cargo/bin(N-/) )
+}
+zsh-defer _rust
+'''
 ```
 
 すべて `defer` 付きで、プロンプト表示後に遅延設定されます。
+
+### サーバー用設定（server.toml）
+
+server.toml には、サーバー固有の PATH 設定と SSH agent の起動を定義しています。
+
+```toml
+# CUDA の PATH 追加（環境変数は .zshenv で設定済み）
+[plugins.server-cuda-path]
+inline = '''
+function _server_cuda_path() {
+    typeset -gU path
+    path=( $path ${CUDA_HOME}/bin(N-/) )
+}
+zsh-defer _server_cuda_path
+'''
+
+# SSH agent の起動
+[plugins.server-ssh-agent]
+inline = '''
+function _server_ssh_agent() {
+    if [[ -z "${SSH_AUTH_SOCK}" ]]; then
+        eval "$(ssh-agent -s)" > /dev/null 2>&1
+        ssh-add "${HOME}/.ssh/id_ed25519" > /dev/null 2>&1
+    fi
+}
+zsh-defer _server_ssh_agent
+'''
+```
+
+### .zshenv — サーバー用環境変数
+
+`CUDA_HOME` や `HF_HOME` のようなサーバー固有の環境変数は `.zshenv` で管理しています。`.zshenv` は対話/非対話を問わず全シェルで読み込まれるため、cron ジョブや SSH コマンド実行時にも環境変数が利用できます。
+
+```zsh
+# CUDA
+export CUDA_HOME="/usr/local/cuda"
+export LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+${LD_LIBRARY_PATH}:}${CUDA_HOME}/lib64"
+
+# Hugging Face
+export HF_HOME="${HOME}/.cache/huggingface"
+export HF_DATASETS_CACHE="${HF_HOME}/datasets"
+export TRANSFORMERS_CACHE="${HF_HOME}/hub"
+```
+
+`.zshenv` は chezmoi テンプレート（`dot_zshenv.tmpl`）で、`system = "server"` の場合のみこれらの変数が出力されます。
+
+### .zshenv と sheldon の使い分け
+
+| 対象                       | 配置先    | 理由                                         |
+| -------------------------- | --------- | -------------------------------------------- |
+| ツール関連の環境変数・PATH | sheldon   | 各プラグインと一緒に管理した方が分かりやすい |
+| サーバー固有の環境変数     | `.zshenv` | sheldon と無関係で、非対話シェルでも必要     |
+| SSH agent 等               | sheldon   | インラインで完結できる                       |
 
 ### エイリアスと非追跡設定
 
@@ -324,11 +389,11 @@ $ git status[Enter]  → 履歴にも "git status" が残る
 
 ### abbreviation のメリット
 
-| 比較項目 | エイリアス | abbreviation |
-|---------|-----------|--------------|
-| 履歴の可読性 | 省略形で残る | フルコマンドで残る |
-| 他の環境での再現 | エイリアス定義が必要 | 履歴をコピペすればそのまま動く |
-| コマンドの確認 | 実行するまで分からない | 展開されるので確認できる |
+| 比較項目         | エイリアス             | abbreviation                   |
+| ---------------- | ---------------------- | ------------------------------ |
+| 履歴の可読性     | 省略形で残る           | フルコマンドで残る             |
+| 他の環境での再現 | エイリアス定義が必要   | 履歴をコピペすればそのまま動く |
+| コマンドの確認   | 実行するまで分からない | 展開されるので確認できる       |
 
 個人的に一番嬉しいのは、履歴にフルコマンドが残ることです。後から `history` を見返したときに何をやったかすぐ分かります。
 
@@ -452,12 +517,12 @@ OS とアーキテクチャを自動検出し、適切なバイナリをダウ�
 
 ### 日常の操作
 
-| やりたいこと | コマンド |
-|------------|---------|
-| プラグインの状態を確認する | `sheldon lock --update` |
-| プラグインをすべて再インストールする | `sheldon lock --update && sheldon source` |
-| abbreviation を追加する | `abbr "gs"="git status"` （その後 `chezmoi add` で反映） |
-| zsh の起動時間を確認する | `time zsh -i -c exit` |
+| やりたいこと                         | コマンド                                                 |
+| ------------------------------------ | -------------------------------------------------------- |
+| プラグインの状態を確認する           | `sheldon lock --update`                                  |
+| プラグインをすべて再インストールする | `sheldon lock --update && sheldon source`                |
+| abbreviation を追加する              | `abbr "gs"="git status"` （その後 `chezmoi add` で反映） |
+| zsh の起動時間を確認する             | `time zsh -i -c exit`                                    |
 
 ### プラグインを追加・変更したいとき
 
