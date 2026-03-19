@@ -1,12 +1,16 @@
 #!/usr/bin/env zsh
 
-# Claude Codeの設定ファイルをXDG規格に変更
+# 設定ファイルをXDG規格にできるものはする
 # https://code.claude.com/docs/en/env-vars
-export CLAUDE_CONFIG_DIR="~/.config/claude"
+export CLAUDE_CONFIG_DIR="${HOME}/.config/claude"
 
-# Codexも同様に
-# https://code.claude.com/docs/en/env-vars
-export CODEX_HOME="~/.config/codex"
+# Codexも同様
+export CODEX_HOME="${HOME}/.config/codex"
+
+# claude-mem のデータディレクトリをXDG規格に変更
+export CLAUDE_MEM_DATA_DIR="${HOME}/.config/claude-mem"
+
+export KEYCHAIN_DIR="${HOME}/.config/.keychain"
 
 
 {{ if eq .system "server" -}}

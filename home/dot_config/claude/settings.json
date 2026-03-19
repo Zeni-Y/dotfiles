@@ -22,7 +22,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/enforce-uv.sh"
+            "command": "~/.config/claude/hooks/enforce-uv.sh"
           }
         ]
       }
