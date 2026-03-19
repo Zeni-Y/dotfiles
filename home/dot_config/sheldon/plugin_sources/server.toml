@@ -37,16 +37,8 @@ zsh-defer _server_cuda_path
 
 #
 # SSH Agent
-# agent forwarding が使えないサーバーで、パスフレーズ入力を1回で済ませる
+# agent forwarding が使えないサーバーで、pane 間で同じ agent を共有する
 #
 
 [plugins.server-ssh-agent]
-inline = '''
-function _server_ssh_agent() {
-    if [[ -z "${SSH_AUTH_SOCK}" ]]; then
-        eval "$(ssh-agent -s)" > /dev/null 2>&1
-        ssh-add "${HOME}/.ssh/id_ed25519" > /dev/null 2>&1
-    fi
-}
-zsh-defer _server_ssh_agent
-'''
+inline = "eval $(keychain --eval --agents ssh ~/.ssh/id_ed25519)"
