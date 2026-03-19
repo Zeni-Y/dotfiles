@@ -1,5 +1,14 @@
 #!/usr/bin/env zsh
 
+# Claude Codeの設定ファイルをXDG規格に変更
+# https://code.claude.com/docs/en/env-vars
+export CLAUDE_CONFIG_DIR="~/.config/claude"
+
+# Codexも同様に
+# https://code.claude.com/docs/en/env-vars
+export CODEX_HOME="~/.config/codex"
+
+
 {{ if eq .system "server" -}}
 #
 # サーバー用環境変数
