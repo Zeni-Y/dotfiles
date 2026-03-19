@@ -306,7 +306,7 @@ shunk031/dotfiles には当リポジトリに含まれていない要素が多�
 | ccstatusline 設定  | `~/.ccstatusline/settings.json`                          | トークン使用量の可視化で無駄なコスト消費を防げる | chezmoi で直接配置                                                  |
 | claude-mem 設定    | `~/.claude-mem/settings.json`                            | 会話の学びを自動蓄積する補完ツール               | chezmoi で直接配置                                                  |
 | サーバー用環境変数 | CUDA, HF キャッシュ                                      | GPU サーバーでの開発に必要                       | `.zshenv` で chezmoi テンプレート分岐（`system = "server"` 時のみ） |
-| SSH agent          | ssh-agent の起動と鍵追加                                 | agent forwarding が使えないサーバーで必要        | sheldon の `server.toml` にインラインで定義                         |
+| SSH agent          | keychain による agent 管理                               | agent forwarding が使えないサーバーで必要        | sheldon の `server.toml` + chezmoi スクリプトでインストール         |
 
 ### 採用しなかったもの
 

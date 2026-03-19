@@ -302,7 +302,7 @@ zsh-defer _rust
 
 ### サーバー用設定（server.toml）
 
-server.toml には、サーバー固有の PATH 設定と SSH agent の起動を定義しています。
+server.toml には、サーバー固有の PATH 設定と SSH agent の管理（keychain）を定義しています。
 
 ```toml
 # CUDA の PATH 追加（環境変数は .zshenv で設定済み）
@@ -315,18 +315,16 @@ function _server_cuda_path() {
 zsh-defer _server_cuda_path
 '''
 
-# SSH agent の起動
+# SSH agent の管理（keychain）
 [plugins.server-ssh-agent]
-inline = '''
-function _server_ssh_agent() {
-    if [[ -z "${SSH_AUTH_SOCK}" ]]; then
-        eval "$(ssh-agent -s)" > /dev/null 2>&1
-        ssh-add "${HOME}/.ssh/id_ed25519" > /dev/null 2>&1
-    fi
-}
-zsh-defer _server_ssh_agent
-'''
+inline = "eval $(keychain --eval --agents ssh ~/.ssh/id_ed25519)"
 ```
+
+SSH agent の管理には [keychain](https://github.com/funtoo/keychain) を使っています。keychain は SSH agent のラッパーで、一度パスフレーズを入力すれば、以降のシェルセッションで再入力が不要になります。
+
+手動で `ssh-agent` を起動する方法だと、tmux の pane を開くたびに別の agent プロセスが立ち上がり、そのたびにパスフレーズを求められてしまいます。keychain はすでに起動済みの agent を検出して再利用するので、この問題が起きません。
+
+keychain のインストールは chezmoi の `run_once_21-install-keychain.sh.tmpl` で自動化しています。
 
 ### .zshenv — サーバー用環境変数
 
@@ -351,7 +349,7 @@ export TRANSFORMERS_CACHE="${HF_HOME}/hub"
 | -------------------------- | --------- | -------------------------------------------- |
 | ツール関連の環境変数・PATH | sheldon   | 各プラグインと一緒に管理した方が分かりやすい |
 | サーバー固有の環境変数     | `.zshenv` | sheldon と無関係で、非対話シェルでも必要     |
-| SSH agent 等               | sheldon   | インラインで完結できる                       |
+| SSH agent（keychain）      | sheldon   | keychain の呼び出しをインラインで完結できる  |
 
 ### エイリアスと非追跡設定
 
