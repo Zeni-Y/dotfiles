@@ -11,7 +11,7 @@ chezmoi には**リポジトリルートに `install.sh` があれば自動実�
 chezmoi init Zeni-Y
 ```
 
-そのため、単にchezmoi initやapplyではカバーできない処理を挟みたい場合には、install.shに処理を記載することで通常通りワンライナーでセットアップが行えます。
+そのため、単に chezmoi init や apply ではカバーできない処理を挟みたい場合には、install.sh に処理を記載することで通常通りワンライナーでセットアップが行えます。
 
 ```bash
 sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply Zeni-Y
@@ -46,9 +46,9 @@ PRIVATE_DOTFILES_CONFIG_PATH="${HOME}/.config/chezmoi-private/chezmoi.yaml"
 
 chezmoi は `--source` と `--config` を指定することで**複数のソースディレクトリを管理**できます。shunk031 はこの仕組みを使い、public リポジトリと private リポジトリを分離しています。
 
-この「2つのリポジトリを順に init → apply する」というフローは `chezmoi init --apply <user>` のワンライナーではできません。**setup.sh が存在する最大の理由**がここにあります。
+この「2 つのリポジトリを順に init → apply する」というフローは `chezmoi init --apply <user>` のワンライナーではできません。**setup.sh が存在する最大の理由**がここにあります。
 
-それ以外にも、CI/非TTY 環境への対応、macOS/Linux 両対応の sudo keepalive、ブートストラップ用バイナリの後始末なども setup.sh が担当しています。
+それ以外にも、CI/非 TTY 環境への対応、macOS/Linux 両対応の sudo keepalive、ブートストラップ用バイナリの後始末なども setup.sh が担当しています。
 
 ### twpayne の install.sh — 最小のブートストラップ
 
@@ -77,7 +77,7 @@ script_dir="$(cd -P -- "$(dirname -- "$(command -v -- "$0")")" && pwd -P)"
 exec "$chezmoi" init --apply "--source=$script_dir"
 ```
 
-やっていることは3つだけです。
+やっていることは 3 つだけです。
 
 1. **chezmoi が未インストールなら curl/wget でダウンロード**
 2. **スクリプト自身のディレクトリを取得**
@@ -87,12 +87,12 @@ exec "$chezmoi" init --apply "--source=$script_dir"
 
 CI 対応も sudo keepalive も暗号化ファイルの除外もありません。これは twpayne が**秘密管理に 1Password CLI を使っている**ため、age のようなパスフレーズ入力の問題がそもそも発生しないからです。それ以外の環境固有の処理はすべて `.chezmoiscripts/` に委ねています。
 
-注目すべきは `--source=$script_dir` です。これにより2つの経路をサポートしています。
+注目すべきは `--source=$script_dir` です。これにより 2 つの経路をサポートしています。
 
-| 経路 | 動作 |
-|------|------|
-| `chezmoi init twpayne` | chezmoi がリポジトリを clone → `install.sh` を自動検出・実行 → `--source` で clone 先を指定 |
-| `git clone` → `./install.sh` | 手動で clone したディレクトリをそのまま `--source` に指定 |
+| 経路                         | 動作                                                                                        |
+| ---------------------------- | ------------------------------------------------------------------------------------------- |
+| `chezmoi init twpayne`       | chezmoi がリポジトリを clone → `install.sh` を自動検出・実行 → `--source` で clone 先を指定 |
+| `git clone` → `./install.sh` | 手動で clone したディレクトリをそのまま `--source` に指定                                   |
 
 どちらの経路でも同じ install.sh で動作するシンプルな設計です。
 
@@ -102,9 +102,9 @@ CI 対応も sudo keepalive も暗号化ファイルの除外もありません�
 
 ### chezmoi init --apply だけではカバーできないこと
 
-当リポジトリの場合、install.sh が必要な理由は以下の3つです。
+当リポジトリの場合、install.sh が必要な理由は以下の 3 つです。
 
-**1. CI/非TTY 環境への対応**
+**1. CI/非 TTY 環境への対応**
 
 age 暗号化を使っている場合、パスフレーズの入力に **TTY** が必要です。
 
@@ -125,7 +125,7 @@ install.sh なら、バックグラウンドで sudo のタイムスタンプを
 
 **3. ブートストラップ用バイナリの後始末**
 
-ワンライナーは chezmoi バイナリを `~/.local/bin/chezmoi` にダウンロードして実行します。一方、`chezmoi apply` の中で mise がインストールされ、mise 経由でも chezmoi がインストールされます。結果として**同じツールが2箇所に存在する**状態になります。
+ワンライナーは chezmoi バイナリを `~/.local/bin/chezmoi` にダウンロードして実行します。一方、`chezmoi apply` の中で mise がインストールされ、mise 経由でも chezmoi がインストールされます。結果として**同じツールが 2 箇所に存在する**状態になります。
 
 ```
 ~/.local/bin/chezmoi              ← ワンライナーでダウンロードしたもの
@@ -147,10 +147,11 @@ chezmoi 自体はあくまでブートストラップ専用としてダウンロ
 :::message
 **shunk031/dotfiles との差分**
 shunk031 の setup.sh をベースにしていますが、以下の機能は当リポジトリでは不要なため省いています。
+
 - private dotfiles の管理（別リポジトリからの init）— 当リポジトリでは age encryption で単一リポジトリに統合
 - macOS 対応（Homebrew 初期化、macOS 向け sudo keepalive）
 - シェルの再起動（shunk031 でも無効化されている）
-:::
+  :::
 
 ## install/ スクリプトと mise の使い分け
 
@@ -171,11 +172,11 @@ shunk031 の setup.sh をベースにしていますが、以下の機能は当�
 以下のいずれかに当てはまるツールは `install/` にスクリプトを書きます。
 
 - **mise 自体のインストール**（mise より先に存在する必要がある）
-- **mise が対応していない**（sheldon など）
+- **mise が対応していない**（fish, fisher など）
 - **OS 固有のインストール手順がある**（apt-get, brew, systemd 設定などが必要）
 - **テスト（bats）で install/uninstall のサイクルを検証したい**[^5]
 
-例: mise 本体, sheldon, apt/brew パッケージ, Docker, SSH サーバー設定など
+例: mise 本体, fish, fisher, apt/brew パッケージ, Docker, SSH サーバー設定など
 
 ### 判断フローチャート
 
@@ -203,7 +204,7 @@ Step 3: chezmoi init（リポジトリを clone）
          ↓ ~/.local/share/chezmoi にソースが展開される
          ↓ CI/非TTY なら encrypted_* を除外
 Step 4: chezmoi apply（dotfiles を適用）
-         ↓ mise, sheldon, starship 等がインストールされる
+         ↓ mise, fish, fisher, starship 等がインストールされる
          ↓ mise 経由で chezmoi もインストールされる
 Step 5: ブートストラップ用 chezmoi を削除
          ↓ 以降は mise 管理の chezmoi を使用
@@ -217,11 +218,11 @@ Step 5: ブートストラップ用 chezmoi を削除
 set -Eeuo pipefail
 ```
 
-| オプション | 効果 |
-|-----------|------|
-| `-E` | `ERR` トラップをサブシェルや関数にも伝播させる |
-| `-e` | コマンドが失敗したら即座にスクリプトを終了する |
-| `-u` | 未定義の変数を参照したらエラーにする |
+| オプション    | 効果                                             |
+| ------------- | ------------------------------------------------ |
+| `-E`          | `ERR` トラップをサブシェルや関数にも伝播させる   |
+| `-e`          | コマンドが失敗したら即座にスクリプトを終了する   |
+| `-u`          | 未定義の変数を参照したらエラーにする             |
 | `-o pipefail` | パイプラインの途中のコマンドが失敗しても検知する |
 
 ### ユーティリティ関数
@@ -242,7 +243,7 @@ function is_ci_or_not_tty() {
 
 `is_ci` は GitHub Actions 等が自動で設定する `CI=true` を検出します。`is_tty` は `[ -t 0 ]` で標準入力（ファイルディスクリプタ 0）が端末に繋がっているかを判定します。
 
-`is_ci_or_not_tty` はこの2つをまとめて「対話入力ができない環境」を検出するための関数です。この判定は install.sh 内の複数箇所で使われます。
+`is_ci_or_not_tty` はこの 2 つをまとめて「対話入力ができない環境」を検出するための関数です。この判定は install.sh 内の複数箇所で使われます。
 
 ### keepalive_sudo — sudo セッションの維持
 
@@ -312,20 +313,20 @@ chezmoi 公式のインストーラスクリプト[^4]で `~/.local/bin` にバ�
 
 dotfiles リポジトリを clone し、設定ファイル（`.chezmoi.yaml`）を生成します。
 
-| オプション | 効果 |
-|-----------|------|
-| `--force` | 既存の設定があっても上書きする |
-| `--branch` | clone するブランチを指定 |
+| オプション               | 効果                                                         |
+| ------------------------ | ------------------------------------------------------------ |
+| `--force`                | 既存の設定があっても上書きする                               |
+| `--branch`               | clone するブランチを指定                                     |
 | `--use-builtin-git true` | システムに git がなくても chezmoi 内蔵の git で clone できる |
-| `--no-tty` | 対話プロンプトを抑制する（CI/非TTY 時のみ） |
+| `--no-tty`               | 対話プロンプトを抑制する（CI/非 TTY 時のみ）                 |
 
 **3. 暗号化ファイルの除外**
 
-CI/非TTY 環境では `find` で `encrypted_*` prefix のファイルをソースディレクトリから削除します。これにより、`chezmoi apply` 時に age による復号が走らなくなります。
+CI/非 TTY 環境では `find` で `encrypted_*` prefix のファイルをソースディレクトリから削除します。これにより、`chezmoi apply` 時に age による復号が走らなくなります。
 
 **4. chezmoi apply**
 
-ソースディレクトリの内容をホームディレクトリに適用します。この中で `.chezmoiscripts` が実行され、mise, sheldon, starship 等がインストールされます。
+ソースディレクトリの内容をホームディレクトリに適用します。この中で `.chezmoiscripts` が実行され、mise, fish, fisher, starship 等がインストールされます。
 
 **5. ブートストラップ用 chezmoi の削除**
 
@@ -385,19 +386,19 @@ DOTFILES_DEBUG=1 bash install.sh
 
 ### 初期セットアップ（初回のみ）
 
-| やること | コマンド |
-|---------|---------|
-| dotfiles を展開 | `bash -c "$(curl -fsLS https://raw.githubusercontent.com/Zeni-Y/dotfiles/main/install.sh)"` |
-| age 秘密鍵の復号 | セットアップ中に自動でプロンプトが表示される |
+| やること         | コマンド                                                                                    |
+| ---------------- | ------------------------------------------------------------------------------------------- |
+| dotfiles を展開  | `bash -c "$(curl -fsLS https://raw.githubusercontent.com/Zeni-Y/dotfiles/main/install.sh)"` |
+| age 秘密鍵の復号 | セットアップ中に自動でプロンプトが表示される                                                |
 
 ### 日常の操作
 
 初期セットアップ後は `install.sh` を使う必要はありません。mise 管理の chezmoi を直接使います。
 
-| やりたいこと | コマンド |
-|------------|---------|
-| dotfiles の変更を適用 | `chezmoi apply` |
-| 差分を確認 | `chezmoi diff` |
+| やりたいこと             | コマンド             |
+| ------------------------ | -------------------- |
+| dotfiles の変更を適用    | `chezmoi apply`      |
+| 差分を確認               | `chezmoi diff`       |
 | ファイルを管理対象に追加 | `chezmoi add <file>` |
 
 ### 再セットアップ

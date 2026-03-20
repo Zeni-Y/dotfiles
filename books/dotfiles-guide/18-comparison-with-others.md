@@ -17,8 +17,8 @@ chezmoi を使った dotfiles 管理には「唯一の正解」はなく、リ�
 | **秘密管理**         | 1Password CLI                        | age encryption                 | age encryption              |
 | **ブートストラップ** | `install.sh`（23 行）                | `setup.sh`（263 行）           | `install.sh`（190 行）      |
 | **テスト**           | なし                                 | Bats + kcov（カバレッジ計測）  | Docker による手動検証       |
-| **シェル**           | zsh (oh-my-zsh)                      | zsh / bash（system で分岐）    | zsh (sheldon)               |
-| **プラグイン管理**   | oh-my-zsh 内蔵                       | sheldon                        | sheldon                     |
+| **シェル**           | zsh (oh-my-zsh)                      | zsh / bash（system で分岐）    | fish (fisher)               |
+| **プラグイン管理**   | oh-my-zsh 内蔵                       | sheldon                        | fisher                      |
 
 ## ディレクトリ構成の比較
 
@@ -300,13 +300,13 @@ shunk031/dotfiles には当リポジトリに含まれていない要素が多�
 
 ### 採用したもの
 
-| 要素               | 内容                                                     | 理由                                             | 実装方法                                                            |
-| ------------------ | -------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------- |
-| Claude Code 設定   | `~/.claude/` の settings, hooks, rules, skills, commands | AI コーディングの品質管理に直結する              | chezmoi で直接配置                                                  |
-| ccstatusline 設定  | `~/.ccstatusline/settings.json`                          | トークン使用量の可視化で無駄なコスト消費を防げる | chezmoi で直接配置                                                  |
-| claude-mem 設定    | `~/.claude-mem/settings.json`                            | 会話の学びを自動蓄積する補完ツール               | chezmoi で直接配置                                                  |
-| サーバー用環境変数 | CUDA, HF キャッシュ                                      | GPU サーバーでの開発に必要                       | `.zshenv` で chezmoi テンプレート分岐（`system = "server"` 時のみ） |
-| SSH agent          | keychain による agent 管理                               | agent forwarding が使えないサーバーで必要        | sheldon の `server.toml` + chezmoi スクリプトでインストール         |
+| 要素               | 内容                                                     | 理由                                             | 実装方法                                                                     |
+| ------------------ | -------------------------------------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------- |
+| Claude Code 設定   | `~/.claude/` の settings, hooks, rules, skills, commands | AI コーディングの品質管理に直結する              | chezmoi で直接配置                                                           |
+| ccstatusline 設定  | `~/.ccstatusline/settings.json`                          | トークン使用量の可視化で無駄なコスト消費を防げる | chezmoi で直接配置                                                           |
+| claude-mem 設定    | `~/.claude-mem/settings.json`                            | 会話の学びを自動蓄積する補完ツール               | chezmoi で直接配置                                                           |
+| サーバー用環境変数 | CUDA, HF キャッシュ                                      | GPU サーバーでの開発に必要                       | `config.fish.tmpl` で chezmoi テンプレート分岐（`system = "server"` 時のみ） |
+| SSH agent          | keychain による agent 管理                               | agent forwarding が使えないサーバーで必要        | `config.fish.tmpl` + chezmoi スクリプトでインストール                        |
 
 ### 採用しなかったもの
 
@@ -316,8 +316,8 @@ shunk031/dotfiles には当リポジトリに含まれていない要素が多�
 | Spacemacs 設定       | `dot_spacemacs.d/`（18 ファイル以上）  | 当リポジトリでは Zed をエディタとして使用                                          |
 | Tmux 設定            | `dot_tmux.conf.tmpl` + OS 別設定       | 当リポジトリでは Zellij をターミナルマルチプレクサとして使用                       |
 | Powerlevel10k        | `dot_config/powerlevel10k/`            | 当リポジトリでは Starship をプロンプトとして使用                                   |
-| Bash 設定            | `dot_bash/`, `symlink_dot_bashrc.tmpl` | 当リポジトリでは zsh のみ使用                                                      |
-| エイリアスファイル   | `dot_config/alias/`                    | 当リポジトリでは zsh-abbr で管理（fish 風の abbreviation でよりモダン）            |
+| Bash 設定            | `dot_bash/`, `symlink_dot_bashrc.tmpl` | 当リポジトリでは fish を使用                                                       |
+| エイリアスファイル   | `dot_config/alias/`                    | 当リポジトリでは fish 組み込みの abbr + alias で管理                               |
 | GPG 鍵管理           | `private_dot_gnupg/`（age 暗号化）     | 当リポジトリでは SSH 署名を使用しており GPG は不要                                 |
 | VPN ユーティリティ   | `connect-hosei-vpn` 等                 | 組織固有のスクリプトで汎用性がない                                                 |
 | symlink テンプレート | `symlink_*.tmpl` パターン              | Claude Code にシンボリックリンク関連のバグが複数報告されており、直接配置の方が安全 |
@@ -331,13 +331,13 @@ shunk031/dotfiles は **macOS + Ubuntu のクロスプラットフォーム**を
 
 ツール選定でも方針が異なります。
 
-| 用途                     | shunk031            | 当リポジトリ |
-| ------------------------ | ------------------- | ------------ |
-| エディタ                 | Spacemacs (Emacs)   | Zed          |
-| ターミナルマルチプレクサ | Tmux                | Zellij       |
-| プロンプト               | Powerlevel10k       | Starship     |
-| シェルエイリアス         | `dot_config/alias/` | zsh-abbr     |
-| Git 署名                 | GPG                 | SSH          |
+| 用途                     | shunk031            | 当リポジトリ               |
+| ------------------------ | ------------------- | -------------------------- |
+| エディタ                 | Spacemacs (Emacs)   | Zed                        |
+| ターミナルマルチプレクサ | Tmux                | Zellij                     |
+| プロンプト               | Powerlevel10k       | Starship                   |
+| シェルエイリアス         | `dot_config/alias/` | fish 組み込み abbr + alias |
+| Git 署名                 | GPG                 | SSH                        |
 
 どちらが優れているということではなく、それぞれの用途や好みに合ったツールを選んでいます。必要十分な技術で可能な限りシンプルにするのが当リポジトリの方針です。
 

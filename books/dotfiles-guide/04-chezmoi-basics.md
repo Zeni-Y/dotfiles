@@ -12,16 +12,16 @@ title: "chezmoi 入門"
 
 dotfiles 管理ツールにはいくつかのアプローチがあります。代表的なのが [GNU Stow](https://www.gnu.org/software/stow/) に代表される **symlink（シンボリックリンク）ベース** のアプローチです。
 
-**symlink ベース** とは、dotfiles リポジトリ内のファイルへのシンボリックリンク（ショートカットのようなもの）をホームディレクトリに作成する方式です。`~/.zshrc` がリポジトリ内のファイルを直接指すので、ファイルを編集すると即座に反映されます。シンプルですが、環境ごとに異なる設定を出し分けたり、秘密情報を暗号化したりするのが難しいという課題があります。
+**symlink ベース** とは、dotfiles リポジトリ内のファイルへのシンボリックリンク（ショートカットのようなもの）をホームディレクトリに作成する方式です。`~/.gitconfig` がリポジトリ内のファイルを直接指すので、ファイルを編集すると即座に反映されます。シンプルですが、環境ごとに異なる設定を出し分けたり、秘密情報を暗号化したりするのが難しいという課題があります。
 
 chezmoi はこれとは異なり、**コピーベース** のアプローチを取っています。
 
 ```
 # Stow (symlink ベース): リポジトリのファイルを直接参照
-~/.zshrc -> ~/dotfiles/zsh/.zshrc  (同一ファイル)
+~/.gitconfig -> ~/dotfiles/git/.gitconfig  (同一ファイル)
 
 # chezmoi (コピーベース): ソースから生成してコピー
-~/dotfiles/home/dot_zshrc  →(apply)→  ~/.zshrc  (別々のファイル)
+~/dotfiles/home/dot_gitconfig  →(apply)→  ~/.gitconfig  (別々のファイル)
 ```
 
 chezmoi では、リポジトリ内のファイル（**ソース**）と、実際に `~/` 以下に配置されるファイル（**ターゲット**）が完全に独立しています。ソースを編集しても `chezmoi apply` するまで実際の設定は変わりません。この分離があるおかげで:
@@ -34,12 +34,12 @@ chezmoi では、リポジトリ内のファイル（**ソース**）と、実�
 
 chezmoi は以下のデータを使って dotfiles を管理しています。
 
-| 概念 | 場所 | 説明 |
-|------|------|------|
-| **ソースディレクトリ** | `~/.local/share/chezmoi` | dotfiles のソースファイル（Git リポジトリ） |
-| **ターゲットディレクトリ** | `~/`（ホーム） | 実際に配置される設定ファイル群 |
-| **設定ファイル** | `~/.config/chezmoi/chezmoi.yaml` | chezmoi 自体の設定 |
-| **テンプレートデータ** | `.chezmoi.yaml.tmpl` から生成 | テンプレート展開に使うカスタム変数（email, system 等） |
+| 概念                       | 場所                             | 説明                                                   |
+| -------------------------- | -------------------------------- | ------------------------------------------------------ |
+| **ソースディレクトリ**     | `~/.local/share/chezmoi`         | dotfiles のソースファイル（Git リポジトリ）            |
+| **ターゲットディレクトリ** | `~/`（ホーム）                   | 実際に配置される設定ファイル群                         |
+| **設定ファイル**           | `~/.config/chezmoi/chezmoi.yaml` | chezmoi 自体の設定                                     |
+| **テンプレートデータ**     | `.chezmoi.yaml.tmpl` から生成    | テンプレート展開に使うカスタム変数（email, system 等） |
 
 `chezmoi apply` を実行すると、ソースディレクトリの内容を読み取り、テンプレートを展開し、ターゲットディレクトリにコピーします。この **「ソース → 変換 → ターゲット」** という一方向のフローが chezmoi の基本です。
 
@@ -78,7 +78,7 @@ brew install chezmoi
 ```
 
 :::message
-この dotfiles リポジトリでは、chezmoi 以外のツール（mise, sheldon, starship 等）は **`chezmoi apply` 時に自動インストールされる**ように設定しています。個別のインストール手順は各チャプターで紹介していますが、実際には `chezmoi init --apply` を実行するだけで一通り揃います。自動インストールの仕組みについては「chezmoi テンプレートと応用」チャプターの `run_once` スクリプトの節を参照してください。
+この dotfiles リポジトリでは、chezmoi 以外のツール（mise, fish, starship 等）は **`chezmoi apply` 時に自動インストールされる**ように設定しています。個別のインストール手順は各チャプターで紹介していますが、実際には `chezmoi init --apply` を実行するだけで一通り揃います。自動インストールの仕組みについては「chezmoi テンプレートと応用」チャプターの `run_once` スクリプトの節を参照してください。
 :::
 
 ## 基本コマンド
@@ -103,19 +103,19 @@ chezmoi init --data=false
 ### add — ファイルを管理対象に追加
 
 ```bash
-# ~/.zshrc を管理対象に追加
-chezmoi add ~/.zshrc
-# → ~/.local/share/chezmoi/dot_zshrc が作成される
+# ~/.config/fish/config.fish を管理対象に追加
+chezmoi add ~/.config/fish/config.fish
+# → ~/.local/share/chezmoi/dot_config/fish/config.fish.tmpl が作成される
 
 # テンプレートとして追加
-chezmoi add --template ~/.zshrc
+chezmoi add --template ~/.config/fish/config.fish
 ```
 
 ### edit — ソースファイルを編集
 
 ```bash
 # エディタでソースファイルを開く
-chezmoi edit ~/.zshrc
+chezmoi edit ~/.config/fish/config.fish
 ```
 
 ### diff — 差分を確認
@@ -148,8 +148,8 @@ chezmoi cd
 ### re-add — ターゲット側の変更を取り込む
 
 ```bash
-# ~/.zshrc を直接編集した後、変更を source に反映
-chezmoi re-add ~/.zshrc
+# ~/.gitconfig を直接編集した後、変更を source に反映
+chezmoi re-add ~/.gitconfig
 ```
 
 既に管理対象のファイルについて、ターゲット側（`~/` 以下の実ファイル）の変更を chezmoi の source に書き戻します。暗号化対象のファイルなら自動で再暗号化されます。
@@ -158,7 +158,7 @@ chezmoi re-add ~/.zshrc
 
 ### data — テンプレートデータの確認
 
-chezmoi のテンプレートは、展開時に**テンプレートデータ**と呼ばれる変数群を参照します。テンプレートデータには2種類あります:
+chezmoi のテンプレートは、展開時に**テンプレートデータ**と呼ばれる変数群を参照します。テンプレートデータには 2 種類あります:
 
 - **ビルトイン変数** — chezmoi が自動的に提供する変数（OS 名、ホスト名、ユーザー名など）。`.chezmoi.os` のように `.chezmoi.` で始まる
 - **カスタムデータ** — ユーザーが `.chezmoi.yaml.tmpl` で定義する変数（メールアドレス、環境の種別など）。`.email`, `.system` のように参照する
@@ -196,7 +196,7 @@ dotfiles/               # リポジトリルート
 └── home/                # ← chezmoi のソースルート
     ├── .chezmoi.yaml.tmpl
     ├── .chezmoiscripts/
-    ├── dot_zshrc
+    ├── dot_config/fish/config.fish.tmpl
     ├── dot_gitconfig
     └── dot_config/
 ```
@@ -209,13 +209,13 @@ chezmoi はファイル名の**プレフィックス**と**サフィックス**�
 
 ### プレフィックス
 
-| プレフィックス | 意味 | 例 |
-|--------------|------|-----|
-| `dot_` | `.` に変換 | `dot_zshrc` → `~/.zshrc` |
-| `private_` | パーミッション制限（ディレクトリ: `0700`、ファイル: `0600`） | `private_dot_ssh/` → `~/.ssh/` |
-| `executable_` | 実行権限付き | `executable_script.sh` → `script.sh` (chmod +x) |
-| `symlink_` | シンボリックリンク | `symlink_link` → シンボリックリンクとして配置 |
-| `empty_` | 空ファイルを作成 | `empty_dot_file` → 空の `.file` |
+| プレフィックス | 意味                                                         | 例                                              |
+| -------------- | ------------------------------------------------------------ | ----------------------------------------------- |
+| `dot_`         | `.` に変換                                                   | `dot_gitconfig` → `~/.gitconfig`                |
+| `private_`     | パーミッション制限（ディレクトリ: `0700`、ファイル: `0600`） | `private_dot_ssh/` → `~/.ssh/`                  |
+| `executable_`  | 実行権限付き                                                 | `executable_script.sh` → `script.sh` (chmod +x) |
+| `symlink_`     | シンボリックリンク                                           | `symlink_link` → シンボリックリンクとして配置   |
+| `empty_`       | 空ファイルを作成                                             | `empty_dot_file` → 空の `.file`                 |
 
 プレフィックスは**組み合わせ可能**です:
 
@@ -226,29 +226,28 @@ private_executable_dot_script → ~/.script (private + executable)
 
 ### サフィックス
 
-| サフィックス | 意味 |
-|------------|------|
-| `.tmpl` | Go template として処理される |
+| サフィックス | 意味                         |
+| ------------ | ---------------------------- |
+| `.tmpl`      | Go template として処理される |
 
 ```
-dot_zshrc.tmpl → テンプレート処理後に ~/.zshrc として配置
+dot_config/fish/config.fish.tmpl → テンプレート処理後に ~/.config/fish/config.fish として配置
 ```
 
 ### 実際のファイル対応表
 
 このリポジトリの実際の対応を見てみましょう。
 
-| ソースファイル | 配置先 |
-|--------------|--------|
-| `home/dot_zshrc` | `~/.zshrc` |
-| `home/dot_gitconfig` | `~/.gitconfig` |
-| `home/dot_config/sheldon/plugins.toml` | `~/.config/sheldon/plugins.toml` |
-| `home/dot_config/mise/config.toml` | `~/.config/mise/config.toml` |
-| `home/dot_config/zsh-abbr/user-abbreviations` | `~/.config/zsh-abbr/user-abbreviations` |
-| `home/.chezmoi.yaml.tmpl` | `~/.config/chezmoi/chezmoi.yaml` |
+| ソースファイル                          | 配置先                           |
+| --------------------------------------- | -------------------------------- |
+| `home/dot_config/fish/config.fish.tmpl` | `~/.config/fish/config.fish`     |
+| `home/dot_config/fish/fish_plugins`     | `~/.config/fish/fish_plugins`    |
+| `home/dot_gitconfig`                    | `~/.gitconfig`                   |
+| `home/dot_config/mise/config.toml`      | `~/.config/mise/config.toml`     |
+| `home/.chezmoi.yaml.tmpl`               | `~/.config/chezmoi/chezmoi.yaml` |
 
 :::message
-`dot_config/` はディレクトリにも `dot_` プレフィックスが適用されます。`dot_config/sheldon/` は `~/.config/sheldon/` になります。
+`dot_config/` はディレクトリにも `dot_` プレフィックスが適用されます。`dot_config/fish/` は `~/.config/fish/` になります。
 :::
 
 ## 基本的なワークフロー
@@ -261,7 +260,7 @@ dotfiles の変更は `edit → diff → apply → commit` のサイクルで行
 2. diff  — 変更内容を確認（テンプレート展開後の結果を表示）
       ↓ 意図通りか確認できた
 3. apply — 変更を実際のファイルに反映
-      ↓ ~/.zshrc 等が更新された
+      ↓ ~/.config/fish/config.fish 等が更新された
 4. commit — ソースディレクトリで git commit & push
 ```
 
@@ -269,7 +268,7 @@ dotfiles の変更は `edit → diff → apply → commit` のサイクルで行
 
 ```bash
 # 1. ソースファイルを編集（エディタが開く）
-chezmoi edit ~/.zshrc
+chezmoi edit ~/.config/fish/config.fish
 
 # 2. テンプレート展開後の差分を確認
 chezmoi diff
@@ -280,7 +279,7 @@ chezmoi apply
 # 4. ソースディレクトリに移動してコミット
 chezmoi cd
 git add -A
-git commit -m "feat: update zshrc"
+git commit -m "feat: update fish config"
 git push
 ```
 
@@ -289,7 +288,7 @@ git push
 ```bash
 # 1. ソースディレクトリに移動して直接編集
 chezmoi cd
-vim dot_zshrc
+vim dot_config/fish/config.fish.tmpl
 
 # 2. 差分確認 → 適用
 chezmoi diff
@@ -297,7 +296,7 @@ chezmoi apply
 
 # 3. そのままコミット（既にソースディレクトリにいる）
 git add -A
-git commit -m "feat: update zshrc"
+git commit -m "feat: update fish config"
 git push
 ```
 
@@ -312,17 +311,17 @@ git push
 chezmoi init --apply https://github.com/username/dotfiles.git
 ```
 
-このコマンド1つで、リポジトリの clone → 対話プロンプト（メール・system 等） → ファイル展開 → スクリプト実行まで全自動で行われます。
+このコマンド 1 つで、リポジトリの clone → 対話プロンプト（メール・system 等） → ファイル展開 → スクリプト実行まで全自動で行われます。
 
 ### 日常の操作
 
-| やりたいこと | コマンド |
-|------------|---------|
-| 設定ファイルを編集する | `chezmoi edit ~/.zshrc` または `chezmoi cd` して直接編集 |
-| 変更内容を確認する | `chezmoi diff` |
-| 変更を適用する | `chezmoi apply` |
-| テンプレート変数を確認する | `chezmoi data` |
-| リモートの最新を取得・適用する | `chezmoi update` |
+| やりたいこと                   | コマンド                                                                   |
+| ------------------------------ | -------------------------------------------------------------------------- |
+| 設定ファイルを編集する         | `chezmoi edit ~/.config/fish/config.fish` または `chezmoi cd` して直接編集 |
+| 変更内容を確認する             | `chezmoi diff`                                                             |
+| 変更を適用する                 | `chezmoi apply`                                                            |
+| テンプレート変数を確認する     | `chezmoi data`                                                             |
+| リモートの最新を取得・適用する | `chezmoi update`                                                           |
 
 ### 新しいファイルを管理対象に追加したいとき
 
@@ -331,7 +330,7 @@ chezmoi init --apply https://github.com/username/dotfiles.git
 chezmoi add ~/.config/starship.toml
 
 # テンプレートとして追加（OS 分岐等が必要な場合）
-chezmoi add --template ~/.config/sheldon/plugins.toml
+chezmoi add --template ~/.config/fish/config.fish
 
 # 暗号化して追加（秘密鍵等）
 chezmoi add --encrypt ~/.ssh/id_ed25519

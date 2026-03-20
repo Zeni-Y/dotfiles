@@ -10,27 +10,27 @@ title: "mise によるランタイム管理"
 
 従来は言語ごとに専用のバージョンマネージャーを使う必要がありました:
 
-| 言語 | 従来のツール |
-|------|-------------|
+| 言語    | 従来のツール                                                                                                 |
+| ------- | ------------------------------------------------------------------------------------------------------------ |
 | Node.js | [nvm](https://github.com/nvm-sh/nvm), [nodenv](https://github.com/nodenv/nodenv), [volta](https://volta.sh/) |
-| Python | [pyenv](https://github.com/pyenv/pyenv) |
-| Ruby | [rbenv](https://github.com/rbenv/rbenv), rvm |
-| Go | [goenv](https://github.com/go-nv/goenv) |
+| Python  | [pyenv](https://github.com/pyenv/pyenv)                                                                      |
+| Ruby    | [rbenv](https://github.com/rbenv/rbenv), rvm                                                                 |
+| Go      | [goenv](https://github.com/go-nv/goenv)                                                                      |
 
-mise はこれらを**1つのツールで置き換え**ます。言語ごとにバージョンマネージャーを覚えるのはめんどくさいので、mise で一元管理できるのはめちゃめちゃ助かります。
+mise はこれらを**1 つのツールで置き換え**ます。言語ごとにバージョンマネージャーを覚えるのはめんどくさいので、mise で一元管理できるのはめちゃめちゃ助かります。
 
 ### asdf との違い
 
-mise は [asdf](https://asdf-vm.com/) の後継的な位置づけです。asdf も複数言語のバージョン管理を1つのツールで行えますが、Shell 製で動作が遅く、shim 方式のためコマンド実行時にオーバーヘッドがありました。
+mise は [asdf](https://asdf-vm.com/) の後継的な位置づけです。asdf も複数言語のバージョン管理を 1 つのツールで行えますが、Shell 製で動作が遅く、shim 方式のためコマンド実行時にオーバーヘッドがありました。
 
-| 特徴 | asdf | mise |
-|------|------|------|
-| 言語 | Shell | Rust |
-| 速度 | 遅い | 速い |
-| shims | 必要 | 不要（activate 方式） |
-| 設定ファイル | .tool-versions | config.toml + .tool-versions |
-| CLI ツール管理 | △ | ○ |
-| npm パッケージ | × | ○ |
+| 特徴           | asdf           | mise                         |
+| -------------- | -------------- | ---------------------------- |
+| 言語           | Shell          | Rust                         |
+| 速度           | 遅い           | 速い                         |
+| shims          | 必要           | 不要（activate 方式）        |
+| 設定ファイル   | .tool-versions | config.toml + .tool-versions |
+| CLI ツール管理 | △              | ○                            |
+| npm パッケージ | ×              | ○                            |
 
 ## mise の仕組み
 
@@ -40,9 +40,18 @@ config.toml の具体的な内容に入る前に、mise がどうやってツー
 
 mise は shim ファイルではなく、**シェルの hook で PATH を動的に変更**する方式を採用しています。
 
-```bash
-# .zshrc で activate
-eval "$(mise activate zsh)"
+```fish
+# config.fish.tmpl（shims モード）
+fish_add_path $HOME/.local/share/mise/shims
+```
+
+当リポジトリでは起動速度を優先して **shims モード**をデフォルトで採用しています。`mise activate` を使った activate 方式と比べると、シェル起動時のオーバーヘッドがほぼゼロになります。
+
+`mise activate` を使う場合は以下のように設定します。
+
+```fish
+# config.fish.tmpl（activate 方式）
+$HOME/.local/bin/mise activate fish | source
 ```
 
 `mise activate` はシェルの `chpwd` フック（ディレクトリ移動時に呼ばれる関数）を登録します。ディレクトリを移動するたびに、そのディレクトリの `.tool-versions` や `config.toml` を読み取り、PATH を更新します。
@@ -53,6 +62,32 @@ eval "$(mise activate zsh)"
 ```
 
 shim 方式と違ってコマンド実行時のオーバーヘッドがないので、体感的にも速いです。
+
+### shims モードによる起動高速化
+
+`mise activate` は便利ですが、シェルの起動時に **100〜140ms のオーバーヘッド**があります。シェルの起動速度を重視する場合は、activate の代わりに **shims モード**を使うことで、起動コストをほぼゼロにできます。
+
+```fish
+# activate 方式（起動時に ~135ms）
+$HOME/.local/bin/mise activate fish | source
+
+# shims モード（起動時に ~1ms）
+fish_add_path $HOME/.local/share/mise/shims
+```
+
+shims モードでは、`~/.local/share/mise/shims/` にある shim スクリプト経由でツールが実行されます。PATH にこのディレクトリを追加するだけなので、シェルの hook 登録やバージョン解決が起動時に走りません。
+
+:::message alert
+**shims モードのトレードオフ**
+
+shims モードでは `cd` 時にバージョンが自動で切り替わりません。プロジェクトごとに異なるバージョンを使い分けている場合は、以下の点に注意してください。
+
+- **新しいツールをインストールした後**: `mise reshim` を実行して shim を再生成する必要があります
+- **ディレクトリ移動時のバージョン切替**: shim 経由の実行時に `.tool-versions` / `config.toml` を読むため、コマンド実行時には正しいバージョンが使われます。ただし、`which node` 等で表示されるパスは shim のパスになります
+- **`mise env` / `mise hook-env` が走らない**: 環境変数の動的設定（`GOROOT` 等）が自動で行われないため、必要に応じて手動でキャッシュする必要があります
+
+筆者の環境では、複数バージョンを頻繁に切り替えるケースが少ないため shims モードを採用しています。プロジェクトごとにバージョンを厳密に管理したい場合は activate 方式の方が安全です。
+:::
 
 ### trust モデル
 
@@ -140,14 +175,14 @@ shfmt = "latest"
 
 mise には複数のインストールバックエンドがあります。どれを使うかで安定性や速度が変わるので、使い分けの基準を整理しておきます。
 
-| バックエンド | 書き方の例 | 特徴 |
-|------------|-----------|------|
-| レジストリ（デフォルト） | `eza = "latest"` | mise チームが検証済みのメタデータを使用。高速 |
-| `github:` | `"github:owner/repo"` | GitHub Releases から直接ダウンロード |
-| `npm:` | `"npm:pyright"` | npm パッケージとしてインストール |
-| `cargo:` | `"cargo:tool"` | Rust の cargo でビルド・インストール |
-| `pipx:` | `"pipx:tool"` | Python パッケージとしてインストール |
-| `aqua:` | `"aqua:owner/repo"` | aqua レジストリを明示的に指定 |
+| バックエンド             | 書き方の例            | 特徴                                          |
+| ------------------------ | --------------------- | --------------------------------------------- |
+| レジストリ（デフォルト） | `eza = "latest"`      | mise チームが検証済みのメタデータを使用。高速 |
+| `github:`                | `"github:owner/repo"` | GitHub Releases から直接ダウンロード          |
+| `npm:`                   | `"npm:pyright"`       | npm パッケージとしてインストール              |
+| `cargo:`                 | `"cargo:tool"`        | Rust の cargo でビルド・インストール          |
+| `pipx:`                  | `"pipx:tool"`         | Python パッケージとしてインストール           |
+| `aqua:`                  | `"aqua:owner/repo"`   | aqua レジストリを明示的に指定                 |
 
 **原則: レジストリに登録されているツールは、ツール名だけ（bare name）で書く。**
 
@@ -236,13 +271,13 @@ chezmoi apply
 
 ### 日常の操作
 
-| やりたいこと | コマンド |
-|------------|---------|
-| インストール済みツールの一覧を見る | `mise ls` |
-| 各ツールの現在のバージョンを確認する | `mise current` |
-| 全ツールを最新に更新する | `mise upgrade` |
-| 特定のツールを更新する | `mise upgrade node` |
-| 設定ファイルを信頼する | `mise trust` |
+| やりたいこと                         | コマンド            |
+| ------------------------------------ | ------------------- |
+| インストール済みツールの一覧を見る   | `mise ls`           |
+| 各ツールの現在のバージョンを確認する | `mise current`      |
+| 全ツールを最新に更新する             | `mise upgrade`      |
+| 特定のツールを更新する               | `mise upgrade node` |
+| 設定ファイルを信頼する               | `mise trust`        |
 
 ### ツールを追加・変更したいとき
 

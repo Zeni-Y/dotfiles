@@ -18,11 +18,11 @@ edit → diff → apply → test → commit → push
 
 ```bash
 # chezmoi edit で編集（推奨）
-chezmoi edit ~/.zshrc
+chezmoi edit ~/.config/fish/config.fish
 
 # または直接ソースディレクトリで編集
 chezmoi cd
-vim dot_zshrc
+vim dot_config/fish/config.fish.tmpl
 ```
 
 ### 2. diff — 差分を確認
@@ -48,10 +48,10 @@ chezmoi apply
 
 ```bash
 # 新しいシェルを起動して確認
-zsh
+fish
 
-# zsh の起動時間を確認
-time zsh -i -c exit
+# fish の起動時間を確認
+fish --profile-startup /tmp/fish-profile -c exit
 ```
 
 ### 5. commit & push
@@ -65,12 +65,12 @@ git push
 
 ## chezmoi diff / apply の使い分け
 
-| コマンド | 用途 |
-|---------|------|
-| `chezmoi diff` | 変更内容の確認（読み取り専用） |
-| `chezmoi apply --dry-run` | apply のシミュレーション |
-| `chezmoi apply` | 変更の適用 |
-| `chezmoi apply --verbose` | 適用内容を詳細表示 |
+| コマンド                  | 用途                           |
+| ------------------------- | ------------------------------ |
+| `chezmoi diff`            | 変更内容の確認（読み取り専用） |
+| `chezmoi apply --dry-run` | apply のシミュレーション       |
+| `chezmoi apply`           | 変更の適用                     |
+| `chezmoi apply --verbose` | 適用内容を詳細表示             |
 
 :::message
 `chezmoi diff` は `apply` する前に必ず実行する習慣をつけましょう。特にテンプレートファイルの場合、意図しない展開結果になることがあります。
@@ -125,7 +125,7 @@ watchexec -w ~/.local/share/chezmoi/home -- chezmoi apply
       ↓ chezmoi init --apply が実行され、dotfiles が適用される
       ↓ この時点でエラーが出れば新規マシンでも同じ問題が起きる
 3. docker run -it でコンテナに入って動作確認
-      ↓ zsh が起動し、プラグインやツールが正しく動くか確認
+      ↓ fish が起動し、プラグインやツールが正しく動くか確認
 ```
 
 ### Dockerfile の例
@@ -136,7 +136,7 @@ FROM ubuntu:24.04
 RUN apt-get update && apt-get install -y curl git sudo
 
 # テスト用ユーザー作成
-RUN useradd -m -s /bin/zsh testuser && \
+RUN useradd -m -s /bin/fish testuser && \
     echo "testuser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 USER testuser
@@ -153,7 +153,7 @@ RUN sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply username
 docker build -t dotfiles-test .
 
 # コンテナに入って動作確認
-docker run -it dotfiles-test zsh
+docker run -it dotfiles-test fish
 ```
 
 ビルドが成功すれば、新しい Ubuntu マシンでも `chezmoi init --apply` が正しく動作することが確認できます。
@@ -164,8 +164,8 @@ docker run -it dotfiles-test zsh
 
 ```bash
 # tests/test_aliases.bats
-@test "ls abbreviation uses eza" {
-    run grep 'abbr.*ls=.*eza' ~/.config/zsh-abbr/user-abbreviations
+@test "ls alias uses eza" {
+    run grep 'alias.*ls.*eza' ~/.config/fish/config.fish
     [ "$status" -eq 0 ]
 }
 
@@ -180,24 +180,23 @@ docker run -it dotfiles-test zsh
 bats tests/
 ```
 
-## zsh 起動時間ベンチマーク
+## fish 起動時間ベンチマーク
 
-dotfiles のパフォーマンスを定量的に評価するには、zsh の起動時間を計測します。
+dotfiles のパフォーマンスを定量的に評価するには、fish の起動時間を計測します。
 
 ```bash
 # 基本的な計測
-time zsh -i -c exit
+time fish -c exit
 
 # 10回計測して平均を取る
-for i in {1..10}; do time zsh -i -c exit; done 2>&1 | grep real
+for i in (seq 10); time fish -c exit; end
 
-# zprof でプロファイリング
-# .zshrc の先頭に追加: zmodload zsh/zprof
-# .zshrc の末尾に追加: zprof
-zsh -i -c exit
+# --profile-startup でプロファイリング
+fish --profile-startup /tmp/fish-profile -c exit
+cat /tmp/fish-profile
 ```
 
-zsh-defer を使用している場合、起動時間は通常 **100ms 以下** になるはずです。遅くなってきたら `zprof` でボトルネックを調べましょう。
+fish は組み込みのシンタックスハイライトやオートサジェスチョンを持ちながら、起動時間は通常 **50ms 以下** になるはずです。遅くなってきたら `--profile-startup` でボトルネックを調べましょう。
 
 ## カスタム開発コマンド
 
@@ -235,6 +234,7 @@ function git-delete-merged-branches() {
 ```
 
 ポイント:
+
 1. `git remote show origin` でデフォルトブランチを自動判定（main / master 対応）
 2. `git commit-tree` でブランチのツリーをデフォルトブランチ上に仮コミットし、`git cherry` で既にマージ済みか判定
 3. squash-merge でコミットハッシュが変わっていても、ツリーの内容で一致を検出
@@ -262,13 +262,13 @@ function uv_format() {
 
 コミットメッセージは [Conventional Commits](https://www.conventionalcommits.org/) 形式を推奨します。
 
-| プレフィックス | 用途 | 例 |
-|--------------|------|-----|
-| `feat:` | 新機能 | `feat: add fzf preview configuration` |
-| `fix:` | バグ修正 | `fix: correct fd symlink path` |
-| `docs:` | ドキュメント | `docs: update README` |
-| `refactor:` | リファクタリング | `refactor: split plugins.toml` |
-| `chore:` | その他 | `chore: update mise version` |
+| プレフィックス | 用途             | 例                                    |
+| -------------- | ---------------- | ------------------------------------- |
+| `feat:`        | 新機能           | `feat: add fzf preview configuration` |
+| `fix:`         | バグ修正         | `fix: correct fd symlink path`        |
+| `docs:`        | ドキュメント     | `docs: update README`                 |
+| `refactor:`    | リファクタリング | `refactor: split config.fish.tmpl`    |
+| `chore:`       | その他           | `chore: update mise version`          |
 
 ```bash
 git commit -m "feat: add bat preview to fzf Ctrl+T"
@@ -287,7 +287,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
-      CI: true  # age 暗号化を無効化
+      CI: true # age 暗号化を無効化
     steps:
       - uses: actions/checkout@v4
       - name: Install chezmoi
@@ -326,4 +326,4 @@ dotfiles リポジトリ
 └── install/       # インストールスクリプト
 ```
 
-dotfiles の管理とドキュメントの公開を1つのリポジトリで完結させています。
+dotfiles の管理とドキュメントの公開を 1 つのリポジトリで完結させています。

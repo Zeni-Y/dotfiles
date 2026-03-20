@@ -15,18 +15,18 @@ dotfiles をただコピーするだけなら前章の知識で十分です。�
 1. **環境ごとに設定を変えたい** — macOS と Linux でパスが違う、client と server で読み込むプラグインが違う
 2. **新しいマシンのセットアップを自動化したい** — chezmoi apply だけで必要なツールがすべてインストールされてほしい
 3. **外部リソースを自動取得したい** — フォントやプラグインを GitHub から自動ダウンロードしたい
-4. **設定ファイルが肥大化するのを防ぎたい** — 1ファイルに全環境の分岐を詰め込むと見通しが悪くなる
+4. **設定ファイルが肥大化するのを防ぎたい** — 1 ファイルに全環境の分岐を詰め込むと見通しが悪くなる
 
-2 について補足します。前章で chezmoi が管理しているファイルを見ると、sheldon の `plugins.toml` や mise の `config.toml` といった**設定ファイル**は管理されていますが、sheldon や mise **そのもの**はインストールされません。chezmoi はあくまで dotfiles（設定ファイル）を配置するツールなので、ツール本体のインストールは守備範囲外です。新しいマシンで `chezmoi apply` すると設定ファイルは配置されるのに、肝心のツールが入っていない — この課題を `run_once` スクリプトで解決します。
+2 について補足します。前章で chezmoi が管理しているファイルを見ると、fisher の `fish_plugins` や mise の `config.toml` といった**設定ファイル**は管理されていますが、fish や mise **そのもの**はインストールされません。chezmoi はあくまで dotfiles（設定ファイル）を配置するツールなので、ツール本体のインストールは守備範囲外です。新しいマシンで `chezmoi apply` すると設定ファイルは配置されるのに、肝心のツールが入っていない — この課題を `run_once` スクリプトで解決します。
 
 chezmoi はこれらの課題を以下の仕組みで解決しています:
 
-| 課題 | chezmoi の仕組み | このリポジトリでの活用 |
-|------|-----------------|---------------------|
-| 環境ごとの出し分け | **Go template** (`.tmpl` ファイル) | OS / system による条件分岐 |
-| セットアップ自動化 | **`run_once` スクリプト** | mise, fd 等の自動インストール |
-| 外部リソース取得 | **`.chezmoiexternal`** | Nerd Font の自動ダウンロード |
-| 設定の分割管理 | **`.chezmoitemplates/`** | ignore / external の分割 |
+| 課題               | chezmoi の仕組み                   | このリポジトリでの活用        |
+| ------------------ | ---------------------------------- | ----------------------------- |
+| 環境ごとの出し分け | **Go template** (`.tmpl` ファイル) | OS / system による条件分岐    |
+| セットアップ自動化 | **`run_once` スクリプト**          | mise, fd 等の自動インストール |
+| 外部リソース取得   | **`.chezmoiexternal`**             | Nerd Font の自動ダウンロード  |
+| 設定の分割管理     | **`.chezmoitemplates/`**           | ignore / external の分割      |
 
 ### chezmoi apply の全体フロー
 
@@ -49,7 +49,7 @@ chezmoi apply
   │     → .chezmoiignore に一致するファイルはスキップ
   │
   └─ 4. run_once_after_* スクリプトを実行（番号順）
-        → mise install、sheldon インストール等
+        → mise install、fish + fisher セットアップ等
 ```
 
 この全体フローを頭に入れた上で、各仕組みの詳細を見ていきましょう。
@@ -115,8 +115,7 @@ JavaScript でいう `data.chezmoi.os` のようなものですが、Go template
 ```yaml
 # quote なし — そのまま展開される
 data:
-    email: user@example.com
-
+  email: user@example.com
 # YAML パーサーはこれをどう解釈する？
 # → email の値は "user@example.com" ... ではなく、エラーになることがある
 #   YAML では : の後にスペースがあるとキーと値の区切りと解釈されるなど、
@@ -126,8 +125,7 @@ data:
 ```yaml
 # quote あり — 安全にクォートされる
 data:
-    email: "user@example.com"
-
+  email: "user@example.com"
 # → 確実に文字列として解釈される
 ```
 
@@ -174,6 +172,7 @@ data:
 ```
 
 ポイント:
+
 - `hasKey` で既に設定済みか確認し、なければ `promptString` でユーザーに入力を求める
 - macOS は自動的に `client` に設定される
 - `| quote` で YAML の値を安全にクォートする
@@ -184,14 +183,14 @@ data:
 
 chezmoi が自動的に提供するビルトイン変数:
 
-| 変数 | 値の例 | 説明 |
-|------|--------|------|
-| `.chezmoi.os` | `"linux"`, `"darwin"` | OS 種別 |
-| `.chezmoi.osRelease.id` | `"ubuntu"`, `"debian"` | ディストリビューション ID |
-| `.chezmoi.osRelease.idLike` | `"debian"` | 互換ディストリビューション |
-| `.chezmoi.hostname` | `"myhost"` | ホスト名 |
-| `.chezmoi.username` | `"user"` | ユーザー名 |
-| `.chezmoi.homeDir` | `"/home/user"` | ホームディレクトリ |
+| 変数                        | 値の例                 | 説明                       |
+| --------------------------- | ---------------------- | -------------------------- |
+| `.chezmoi.os`               | `"linux"`, `"darwin"`  | OS 種別                    |
+| `.chezmoi.osRelease.id`     | `"ubuntu"`, `"debian"` | ディストリビューション ID  |
+| `.chezmoi.osRelease.idLike` | `"debian"`             | 互換ディストリビューション |
+| `.chezmoi.hostname`         | `"myhost"`             | ホスト名                   |
+| `.chezmoi.username`         | `"user"`               | ユーザー名                 |
+| `.chezmoi.homeDir`          | `"/home/user"`         | ホームディレクトリ         |
 
 ```bash
 # 利用可能な変数を確認
@@ -206,21 +205,21 @@ chezmoi では `.chezmoiscripts/` 以下にスクリプトを配置して、`che
 
 ### スクリプトの種類
 
-| プレフィックス | 実行タイミング |
-|--------------|--------------|
-| `run_once_before_` | apply の**前**に1度だけ |
-| `run_once_after_` | apply の**後**に1度だけ |
-| `run_before_` | apply の前に**毎回** |
-| `run_after_` | apply の後に**毎回** |
+| プレフィックス     | 実行タイミング            |
+| ------------------ | ------------------------- |
+| `run_once_before_` | apply の**前**に 1 度だけ |
+| `run_once_after_`  | apply の**後**に 1 度だけ |
+| `run_before_`      | apply の前に**毎回**      |
+| `run_after_`       | apply の後に**毎回**      |
 
 :::message
-`run_once` の「1度だけ」は `chezmoi init` 限定ではありません。`chezmoi apply` でも実行されます。chezmoi はスクリプトの内容のハッシュ値を内部データベースに記録しており、**同じ内容のスクリプトは2回目以降スキップする**という仕組みです。つまり:
+`run_once` の「1 度だけ」は `chezmoi init` 限定ではありません。`chezmoi apply` でも実行されます。chezmoi はスクリプトの内容のハッシュ値を内部データベースに記録しており、**同じ内容のスクリプトは 2 回目以降スキップする**という仕組みです。つまり:
 
 - 初回の `chezmoi apply` → スクリプトを実行し、ハッシュを記録
-- 2回目以降の `chezmoi apply` → ハッシュが一致するのでスキップ
+- 2 回目以降の `chezmoi apply` → ハッシュが一致するのでスキップ
 - スクリプトの内容を変更 → ハッシュが変わるので再実行される
 
-「1度だけ」とは「同じ内容に対して1度だけ」という意味です。スクリプトを書き換えれば再度実行されるので、インストール手順の更新にも対応できます。
+「1 度だけ」とは「同じ内容に対して 1 度だけ」という意味です。スクリプトを書き換えれば再度実行されるので、インストール手順の更新にも対応できます。
 :::
 
 ### 実行順序の制御
@@ -236,6 +235,7 @@ chezmoi では `.chezmoiscripts/` 以下にスクリプトを配置して、`che
 ```
 
 番号が小さいほど先に実行されます。このリポジトリでは:
+
 - `01` — mise のインストール（他のツールの前提）
 - `20` — fd-find のインストール（mise が必要）
 
@@ -313,7 +313,7 @@ function install_fd() {
 ```
 
 :::message
-`command -v` で既にインストール済みかチェックし、`if [ ! -L ]` でシンボリックリンクの存在を確認しています。これにより2回目以降の実行では何も行いません。
+`command -v` で既にインストール済みかチェックし、`if [ ! -L ]` でシンボリックリンクの存在を確認しています。これにより 2 回目以降の実行では何も行いません。
 :::
 
 ## .chezmoitemplates/ による分割管理
@@ -322,7 +322,7 @@ function install_fd() {
 
 ### `.d` ディレクトリの命名規則
 
-`chezmoiignore.d/` や `chezmoiexternal.d/` のように末尾に `.d` が付いたディレクトリ名は、**Linux/Unix の慣習的な命名パターン**です。`.d` は "directory" の略で、「このディレクトリ内のファイルを集めて、1つの設定として統合する」ことを意味します。
+`chezmoiignore.d/` や `chezmoiexternal.d/` のように末尾に `.d` が付いたディレクトリ名は、**Linux/Unix の慣習的な命名パターン**です。`.d` は "directory" の略で、「このディレクトリ内のファイルを集めて、1 つの設定として統合する」ことを意味します。
 
 Linux システムでも同じパターンが広く使われています:
 
@@ -330,7 +330,7 @@ Linux システムでも同じパターンが広く使われています:
 - `/etc/apt/sources.list.d/` — APT ソースの断片を格納
 - `/etc/sudoers.d/` — sudoers 設定の断片を格納
 
-chezmoi でもこの慣習に従い、1つの設定ファイルの内容を**複数ファイルに分割**して管理しています。
+chezmoi でもこの慣習に従い、1 つの設定ファイルの内容を**複数ファイルに分割**して管理しています。
 
 ### テンプレート構成パターン
 
@@ -369,9 +369,6 @@ home/
 OS と system の組み合わせで除外ファイルを切り替えています。各テンプレートには除外対象のパスだけを記述します。
 
 ```
-# chezmoiignore.d/common
-.config/sheldon/plugin_sources
-
 # chezmoiignore.d/ubuntu/client
 .local/bin/server
 
@@ -380,6 +377,7 @@ OS と system の組み合わせで除外ファイルを切り替えています
 ```
 
 `{{ include }}` との違い:
+
 - `{{ include }}` — ファイルパスを指定（相対パス可）
 - `{{ template }}` — `.chezmoitemplates/` 内のファイル名を指定
 
@@ -457,40 +455,21 @@ OS ごとに必要な外部依存を分離し、条件分岐で結合してい�
 
 このリポジトリでは `.chezmoitemplates/chezmoiignore.d/` に分割して管理しています（前述の `.chezmoitemplates/` パターン）。
 
-### 実用例: sheldon plugin_sources の除外
+### 実用例: fish 設定の条件分岐
 
-[sheldon](https://github.com/rossmacarthur/sheldon) は Rust 製の zsh プラグインマネージャーです（詳しくは後の章で解説します）。設定ファイルは `~/.config/sheldon/plugins.toml` で、どのプラグインを読み込むかを定義します。
-
-このリポジトリでは、sheldon の設定を client/server で分岐させるために、テンプレート分割のパターンを使っています。
-
-```
-home/dot_config/sheldon/
-├── plugins.toml.tmpl          # ← chezmoi が展開して ~/.config/sheldon/plugins.toml を生成
-└── plugin_sources/            # ← テンプレートの部品（include 用）
-    ├── common.toml            #    全環境共通のプラグイン定義
-    ├── client.toml            #    client 環境のみのプラグイン定義
-    └── server.toml            #    server 環境のみのプラグイン定義
-```
-
-`plugins.toml.tmpl` の中身はこうなっています。
+このリポジトリでは、fish shell の設定を `config.fish.tmpl` で管理しており、client/server の分岐は Go template の条件分岐を直接 `config.fish.tmpl` 内に記述しています。別ファイルを結合する必要がないため、シンプルな構成になっています。
 
 ```go
-{{ include "dot_config/sheldon/plugin_sources/common.toml" }}
-{{- if eq .system "client" }}
-{{ include "dot_config/sheldon/plugin_sources/client.toml" }}
-{{- else if eq .system "server" }}
-{{ include "dot_config/sheldon/plugin_sources/server.toml" }}
-{{- end -}}
+# config.fish.tmpl 内での分岐例
+{{ if eq .system "client" -}}
+# client 環境のみの設定
+set -x BROWSER firefox
+{{- else if eq .system "server" -}}
+# server 環境のみの設定
+{{- end }}
 ```
 
-chezmoi がテンプレートを展開すると、`common.toml` + 環境に応じた toml が結合された1つの `plugins.toml` が生成されます。
-
-ここで問題になるのが `plugin_sources/` ディレクトリです。chezmoi はデフォルトで source directory 内の全ファイルをホームディレクトリに配置しようとするため、何もしなければ `~/.config/sheldon/plugin_sources/` も作られてしまいます。しかし `plugin_sources/` はテンプレート結合の部品であり、sheldon が実際に読むのは結合後の `plugins.toml` だけです。不要なファイルがホームに散らばるのを防ぐため、`.chezmoiignore` で除外します。
-
-```
-# chezmoiignore.d/common
-.config/sheldon/plugin_sources
-```
+Go template の条件分岐を使うことで、1 つのファイルに全環境の設定をまとめつつ、展開後は環境に応じた `config.fish` が生成されます。テンプレートの部品ファイルが不要なので、`.chezmoiignore` への追加も不要です。
 
 ### 実用例: system による bin ディレクトリの分離
 

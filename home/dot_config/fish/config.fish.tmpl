@@ -38,24 +38,44 @@ set -gx TRANSFORMERS_CACHE "$HF_HOME/hub"
 {{ end -}}
 
 #
-# starship プロンプト
+# コマンド出力キャッシュ用ディレクトリ
+# バージョンをキーにキャッシュし、バージョン変更時のみ再生成
+#
+set -l _cache_dir ~/.cache/fish
+
+#
+# starship プロンプト（キャッシュ）
 #
 if type -q starship
-    starship init fish | source
+    set -l _ver (starship --version 2>/dev/null | string split ' ')[2]
+    set -l _cache $_cache_dir/starship_init_$_ver.fish
+    if not test -f $_cache
+        mkdir -p $_cache_dir
+        starship init fish >$_cache
+    end
+    source $_cache
 end
 
 #
-# mise ランタイムバージョン管理
+# mise ランタイムバージョン管理（shims モード）
+# activate 方式の代わりに shims PATH を追加することで起動を高速化
+# トレードオフ: cd 時の自動バージョン切替なし（mise reshim が必要）
 #
 if test -x $HOME/.local/bin/mise
-    $HOME/.local/bin/mise activate fish | source
+    fish_add_path $HOME/.local/share/mise/shims
 end
 
 #
-# fzf
+# fzf（キャッシュ）
 #
 if type -q fzf
-    fzf --fish | source
+    set -l _ver (fzf --version 2>/dev/null | string split ' ')[1]
+    set -l _cache $_cache_dir/fzf_init_$_ver.fish
+    if not test -f $_cache
+        mkdir -p $_cache_dir
+        fzf --fish >$_cache
+    end
+    source $_cache
     set -gx FZF_DEFAULT_OPTS "--reverse"
 end
 
@@ -63,10 +83,15 @@ end
 # 言語環境
 #
 
-# Go
+# Go（GOROOT をキャッシュ。Go バージョン変更時は ~/.cache/fish/goroot を削除）
 if type -q go
     set -gx GOPATH "$HOME/ghq"
-    set -gx GOROOT (go env GOROOT)
+    set -l _cache $_cache_dir/goroot
+    if not test -f $_cache
+        mkdir -p $_cache_dir
+        go env GOROOT >$_cache
+    end
+    set -gx GOROOT (cat $_cache)
     fish_add_path $GOPATH/bin
     fish_add_path $HOME/.go/bin
 end
@@ -92,7 +117,7 @@ alias ll "eza -la --long --group --header --binary --time-style=long-iso --icons
 #
 # SSH Agent (サーバー)
 #
-set -l _keychain_env "$HOME/.keychain/"(hostname)"-fish"
+set -l _keychain_env "$HOME/.keychain/$hostname-fish"
 if test -f $_keychain_env
     source $_keychain_env
 end

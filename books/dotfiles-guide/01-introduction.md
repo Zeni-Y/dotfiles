@@ -10,13 +10,13 @@ title: "はじめに"
 
 ### 主要ツール
 
-| 役割 | 採用ツール |
-|------|-----------|
-| dotfiles 管理 | [chezmoi](https://www.chezmoi.io/) |
-| Shell | Zsh |
-| Zsh プラグイン管理 | [sheldon](https://sheldon.cli.rs/) |
-| ランタイム・ツール管理 | [mise](https://mise.jdx.dev/) |
-| プロンプト | [starship](https://starship.rs/) |
+| 役割                   | 採用ツール                                       |
+| ---------------------- | ------------------------------------------------ |
+| dotfiles 管理          | [chezmoi](https://www.chezmoi.io/)               |
+| Shell                  | fish                                             |
+| プラグイン管理         | [fisher](https://github.com/jorgebucaran/fisher) |
+| ランタイム・ツール管理 | [mise](https://mise.jdx.dev/)                    |
+| プロンプト             | [starship](https://starship.rs/)                 |
 
 これ以外にも [eza](https://github.com/eza-community/eza)、[bat](https://github.com/sharkdp/bat)、[fd](https://github.com/sharkdp/fd)、[ripgrep](https://github.com/BurntSushi/ripgrep) などのモダン CLI ツールを活用していますが、それらについてはチャプターの中で触れていきます。
 
@@ -43,7 +43,7 @@ title: "はじめに"
 
 ## 前提知識
 
-- シェル（bash / zsh）の基本操作
+- シェル（bash / zsh / fish）の基本操作
 - Git の基本操作（clone, commit, push）
 - テキストエディタの操作
 
@@ -51,23 +51,23 @@ title: "はじめに"
 
 基礎概念 → 管理ツール → シェル環境 → CLI ツール → エディタ → ワークフロー の順で、外側のレイヤーから内側へ解説していきます。
 
-| チャプター | 内容 |
-|-----------|------|
-| ターミナル・シェル・エディタの基礎知識 | 各ツールの違いと選び方 |
-| dotfiles とは何か | dotfiles の基礎と管理手法の比較 |
-| chezmoi 入門 | 基本コマンドとファイル構造 |
-| chezmoi テンプレートと応用 | Go template、スクリプト、高度な機能 |
-| クロスプラットフォーム対応 | OS / system 別の分岐管理 |
-| セキュリティと暗号化 | age による秘密情報管理 |
-| Git コミット署名 | SSH 署名の設定 |
-| zsh と sheldon | プラグイン管理と遅延読み込み |
-| mise によるランタイム管理 | 言語・ツールのバージョン管理 |
-| モダン CLI ツール群 | eza, bat, fd, ripgrep, starship 等 |
-| fzf でインタラクティブ検索 | ファジー検索とカスタマイズ |
-| Zed エディタ | 設定・キーバインド・WSL 連携 |
-| Zellij | ターミナルマルチプレクサ |
-| 開発ワークフロー | 変更サイクルとテスト手法 |
-| リファレンス | コマンドチートシート・参考リンク |
+| チャプター                             | 内容                                |
+| -------------------------------------- | ----------------------------------- |
+| ターミナル・シェル・エディタの基礎知識 | 各ツールの違いと選び方              |
+| dotfiles とは何か                      | dotfiles の基礎と管理手法の比較     |
+| chezmoi 入門                           | 基本コマンドとファイル構造          |
+| chezmoi テンプレートと応用             | Go template、スクリプト、高度な機能 |
+| クロスプラットフォーム対応             | OS / system 別の分岐管理            |
+| セキュリティと暗号化                   | age による秘密情報管理              |
+| Git コミット署名                       | SSH 署名の設定                      |
+| fish と fisher                         | プラグイン管理と起動高速化          |
+| mise によるランタイム管理              | 言語・ツールのバージョン管理        |
+| モダン CLI ツール群                    | eza, bat, fd, ripgrep, starship 等  |
+| fzf でインタラクティブ検索             | ファジー検索とカスタマイズ          |
+| Zed エディタ                           | 設定・キーバインド・WSL 連携        |
+| Zellij                                 | ターミナルマルチプレクサ            |
+| 開発ワークフロー                       | 変更サイクルとテスト手法            |
+| リファレンス                           | コマンドチートシート・参考リンク    |
 
 :::message
 この Book で紹介する設定はすべて筆者の dotfiles リポジトリで実際に動作しているものです。リポジトリを参照しながら読むとより理解が深まると思います。

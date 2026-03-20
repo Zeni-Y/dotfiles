@@ -10,10 +10,10 @@ title: "starship — クロスシェル対応のモダンプロンプト"
 
 この章では、プロンプトツールの選定理由と設定方法を解説します。
 
-| 課題 | 解決するツール | アプローチ |
-|------|--------------|-----------|
-| プロンプトに開発情報を表示したい | **starship** | TOML で宣言的に設定。80 以上のモジュールが文脈に応じて自動表示 |
-| シェルを変えても同じプロンプトを使いたい | **starship** | Bash, Zsh, Fish, PowerShell, Nushell 等 10 種のシェルに対応 |
+| 課題                                     | 解決するツール | アプローチ                                                     |
+| ---------------------------------------- | -------------- | -------------------------------------------------------------- |
+| プロンプトに開発情報を表示したい         | **starship**   | TOML で宣言的に設定。80 以上のモジュールが文脈に応じて自動表示 |
+| シェルを変えても同じプロンプトを使いたい | **starship**   | Bash, Zsh, Fish, PowerShell, Nushell 等 10 種のシェルに対応    |
 
 ## starship とは
 
@@ -21,13 +21,13 @@ title: "starship — クロスシェル対応のモダンプロンプト"
 
 ### starship の特徴
 
-| 特徴 | 説明 |
-|------|------|
-| **クロスシェル** | Bash, Fish, Zsh, PowerShell, Nushell 等 10 種のシェルで同じ設定が使える |
-| **高速** | Rust 製バイナリで、プロンプト表示のオーバーヘッドが小さい |
-| **文脈対応** | カレントディレクトリの内容に応じてモジュールが自動で表示/非表示になる |
-| **TOML 設定** | `~/.config/starship.toml` 1ファイルで宣言的に設定。dotfiles 管理と相性が良い |
-| **80+ モジュール** | Git, Python, Node.js, Rust, Go, Docker, AWS, Kubernetes 等を標準サポート |
+| 特徴               | 説明                                                                          |
+| ------------------ | ----------------------------------------------------------------------------- |
+| **クロスシェル**   | Bash, Fish, Zsh, PowerShell, Nushell 等 10 種のシェルで同じ設定が使える       |
+| **高速**           | Rust 製バイナリで、プロンプト表示のオーバーヘッドが小さい                     |
+| **文脈対応**       | カレントディレクトリの内容に応じてモジュールが自動で表示/非表示になる         |
+| **TOML 設定**      | `~/.config/starship.toml` 1 ファイルで宣言的に設定。dotfiles 管理と相性が良い |
+| **80+ モジュール** | Git, Python, Node.js, Rust, Go, Docker, AWS, Kubernetes 等を標準サポート      |
 
 ## powerlevel10k との比較
 
@@ -45,15 +45,15 @@ zsh のプロンプトといえば [powerlevel10k](https://github.com/romkatv/po
 
 ### 機能比較
 
-| 比較項目 | starship | powerlevel10k |
-|---------|----------|---------------|
-| 開発状況 | 活発に開発中 | メンテナンス限定（事実上停止） |
-| 対応シェル | 10 種（Bash, Fish, Zsh, PowerShell 等） | **Zsh のみ** |
-| 実装言語 | Rust | Zsh スクリプト |
-| 設定方式 | TOML ファイルを直接編集 | ウィザード（`p10k configure`）で生成 |
-| 設定ファイル | `starship.toml`（数十行〜） | `~/.p10k.zsh`（1,000 行超の生成ファイル） |
-| Instant Prompt | なし（Rust バイナリで十分速い） | あり（プラグイン読み込み前にプロンプトを表示） |
-| Transient Prompt | なし | あり（過去のプロンプトを折りたたむ） |
+| 比較項目         | starship                                | powerlevel10k                                  |
+| ---------------- | --------------------------------------- | ---------------------------------------------- |
+| 開発状況         | 活発に開発中                            | メンテナンス限定（事実上停止）                 |
+| 対応シェル       | 10 種（Bash, Fish, Zsh, PowerShell 等） | **Zsh のみ**                                   |
+| 実装言語         | Rust                                    | Zsh スクリプト                                 |
+| 設定方式         | TOML ファイルを直接編集                 | ウィザード（`p10k configure`）で生成           |
+| 設定ファイル     | `starship.toml`（数十行〜）             | `~/.p10k.zsh`（1,000 行超の生成ファイル）      |
+| Instant Prompt   | なし（Rust バイナリで十分速い）         | あり（プラグイン読み込み前にプロンプトを表示） |
+| Transient Prompt | なし                                    | あり（過去のプロンプトを折りたたむ）           |
 
 ### dotfiles 管理の観点から
 
@@ -67,17 +67,25 @@ p10k の設定ファイルはウィザードが生成する 1,000 行超のフ�
 
 ## このリポジトリでの starship 設定
 
-### sheldon での初期化
+### config.fish.tmpl での初期化
 
-starship の初期化は sheldon の `common.toml` で行っています。client / server 共通なので、1 箇所で管理しています。
+starship の初期化は `config.fish.tmpl` で行っています。バージョンごとにキャッシュを生成することで、シェル起動のたびに初期化スクリプトを再生成するコストを省いています。
 
-```toml
-[plugins.starship]
-inline = 'eval "$(starship init zsh)"'
+```fish
+# config.fish.tmpl
+if type -q starship
+    set -l _ver (starship --version 2>/dev/null | string split ' ')[2]
+    set -l _cache $_cache_dir/starship_init_$_ver.fish
+    if not test -f $_cache
+        mkdir -p $_cache_dir
+        starship init fish >$_cache
+    end
+    source $_cache
+end
 ```
 
 :::message
-starship はプロンプト自体の初期化なので、`defer`（遅延読み込み）は使いません。プロンプトは最初から表示される必要があるためです。
+starship の初期化スクリプトはバージョンが変わらない限り変化しないため、バージョン番号をキャッシュファイル名に含めて再利用しています。バージョンアップ時は新しいキャッシュが自動生成されます。
 :::
 
 ### starship.toml の設定
@@ -98,11 +106,11 @@ only_attached = true
 
 starship のデフォルト設定は十分に実用的なので、カスタマイズは少なくて済みます。ここでは以下の 3 点だけ変更しています:
 
-| 設定 | 内容 |
-|------|------|
-| `right_format` | 右プロンプトに chezmoi 更新通知を表示（後述） |
-| `python_binary` | Python バージョン検出に `python` を使用 |
-| `git_branch.only_attached` | detached HEAD 状態では Git ブランチを非表示 |
+| 設定                       | 内容                                          |
+| -------------------------- | --------------------------------------------- |
+| `right_format`             | 右プロンプトに chezmoi 更新通知を表示（後述） |
+| `python_binary`            | Python バージョン検出に `python` を使用       |
+| `git_branch.only_attached` | detached HEAD 状態では Git ブランチを非表示   |
 
 ### chezmoi 更新通知との連携
 
@@ -117,7 +125,7 @@ style = "bold red"
 format = "[$symbol$output]($style) "
 ```
 
-未適用の更新が 3 件ある場合、プロンプトの右側に `dotfiles ⇣3` のように表示されます。通知の仕組み自体（バックグラウンドでの `git fetch` とキャッシュ管理）は [zsh と sheldon プラグイン管理](09-zsh-and-sheldon) の chezmoi-notify セクションで解説しています。
+未適用の更新が 3 件ある場合、プロンプトの右側に `dotfiles ⇣3` のように表示されます。通知の仕組み自体（バックグラウンドでの `git fetch` とキャッシュ管理）は [fish と fisher プラグイン管理](09-fish-and-fisher) の chezmoi-notify セクションで解説しています。
 
 ## p10k から starship への移行
 
@@ -138,18 +146,23 @@ mise use -g starship
 
 ### Step 2: シェル設定の変更
 
-`.zshrc` から p10k 関連の設定を削除し、starship の初期化に置き換えます。
+`config.fish.tmpl` から p10k 関連の設定を削除し、starship の初期化に置き換えます。
 
-```bash
+```fish
 # 削除するもの
 # source ~/powerlevel10k/powerlevel10k.zsh-theme
-# [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-# 追加するもの
-eval "$(starship init zsh)"
+# 追加するもの（config.fish.tmpl）
+if type -q starship
+    set -l _ver (starship --version 2>/dev/null | string split ' ')[2]
+    set -l _cache $_cache_dir/starship_init_$_ver.fish
+    if not test -f $_cache
+        mkdir -p $_cache_dir
+        starship init fish >$_cache
+    end
+    source $_cache
+end
 ```
-
-このリポジトリのように sheldon を使っている場合は、`plugins.toml` の該当プラグインを変更するだけです。
 
 ### Step 3: starship.toml の作成
 
@@ -165,4 +178,4 @@ mkdir -p ~/.config && touch ~/.config/starship.toml
 
 [^1]: [romkatv/powerlevel10k — GitHub README](https://github.com/romkatv/powerlevel10k) — メンテナンス状況に関する記載
 [^2]: [starship/starship — GitHub](https://github.com/starship/starship) — starship 公式リポジトリ
-[^3]: [Powerlevel10kからStarshipへ — scribble.washo3.com](https://scribble.washo3.com/powerlevel2starship/) — 移行手順の参考記事
+[^3]: [Powerlevel10k から Starship へ — scribble.washo3.com](https://scribble.washo3.com/powerlevel2starship/) — 移行手順の参考記事

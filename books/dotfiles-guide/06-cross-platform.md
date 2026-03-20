@@ -12,27 +12,27 @@ dotfiles を複数のマシンで共有していると、「同じ設定ファ�
 - デスクトップとサーバーで**必要なツールが違う**（サーバーに GUI ツールは不要）
 - Ubuntu と他の Linux で**パッケージ名が違う**（`fd` vs `fdfind`）
 
-「全部別々のリポジトリにする」のは管理が大変です。chezmoi では **1つのリポジトリに全環境の設定をまとめつつ、テンプレートの条件分岐で環境ごとに出し分ける** ことでこの問題を解決しています。
+「全部別々のリポジトリにする」のは管理が大変です。chezmoi では **1 つのリポジトリに全環境の設定をまとめつつ、テンプレートの条件分岐で環境ごとに出し分ける** ことでこの問題を解決しています。
 
 ポイントは、分岐を**どの粒度で、どこに書くか**のルールを決めておくことです。場当たり的に `if` を入れていくとすぐにカオスになるので、この章ではこのリポジトリの分岐モデルとその配置ルールを解説します。
 
 ## 対象環境
 
-この dotfiles は以下の3つの環境を想定しています。
+この dotfiles は以下の 3 つの環境を想定しています。
 
-| 環境 | OS | system | 用途 |
-|------|-----|--------|------|
-| macOS | darwin | client | 開発用PC |
-| Ubuntu Desktop | linux | client | 開発用PC |
-| Ubuntu Server | linux | server | リモートサーバー |
+| 環境           | OS     | system | 用途             |
+| -------------- | ------ | ------ | ---------------- |
+| macOS          | darwin | client | 開発用 PC        |
+| Ubuntu Desktop | linux  | client | 開発用 PC        |
+| Ubuntu Server  | linux  | server | リモートサーバー |
 
-ここでの **client** と **server** は、自分が直接操作する手元のマシン（ノートPC・デスクトップ）か、SSH 等でリモート接続して使うマシンかという区分です。
-serverの方では、CUDAやHuggingFaceなどの実験を行うための設定ファイルやツールを追加しています。
-clientの方では、editorやターミナル関係の設定を追加しています。
+ここでの **client** と **server** は、自分が直接操作する手元のマシン（ノート PC・デスクトップ）か、SSH 等でリモート接続して使うマシンかという区分です。
+server の方では、CUDA や HuggingFace などの実験を行うための設定ファイルやツールを追加しています。
+client の方では、editor やターミナル関係の設定を追加しています。
 
-## 3層の分岐モデル
+## 3 層の分岐モデル
 
-環境ごとの差異は3つのレベルで管理しています。
+環境ごとの差異は 3 つのレベルで管理しています。
 
 ### 1. OS レベル — `.chezmoi.os`
 
@@ -59,6 +59,7 @@ clientの方では、editorやターミナル関係の設定を追加してい�
 ```
 
 `.system` の値は `.chezmoi.yaml.tmpl` で決定されます:
+
 - macOS → 自動的に `"client"`
 - Linux → 初回セットアップ時に `promptString` でユーザーに確認
 
@@ -115,11 +116,11 @@ install/
 
 ### エイリアス — OS 分岐なし
 
-エイリアス（abbreviation）は OS による差異がないため、分岐せず全環境共通の1ファイルで管理しています。詳しくは [zsh と sheldon](09-zsh-and-sheldon) の章で解説します。
+エイリアス（abbreviation）は OS による差異がないため、分岐せず全環境共通の 1 ファイルで管理しています。詳しくは [fish と fisher](09-fish-and-fisher) の章で解説します。
 
 ### テンプレート — `{{ if }}` で条件分岐
 
-1ファイル内で少しだけ分岐する場合は、テンプレートの条件分岐を使います。
+1 ファイル内で少しだけ分岐する場合は、テンプレートの条件分岐を使います。
 
 ```go
 # .chezmoiscripts/ubuntu/run_once_20-install-fd.sh.tmpl
@@ -130,28 +131,28 @@ install/
 {{ end -}}
 ```
 
-## sheldon plugins の OS 別分割パターン
+## config.fish.tmpl の条件分岐パターン
 
-[shunk031/dotfiles](https://github.com/shunk031/dotfiles) では、sheldon の plugins.toml を `.chezmoitemplates/` で OS 別に分割しています。
+このリポジトリでは `config.fish.tmpl` 内で Go template の `{{ if }}` を使って OS や system による条件分岐を直接記述しています。
 
+```fish
+# config.fish.tmpl
+{{ if eq .system "client" -}}
+# client 環境のみ読み込む設定
+set -x BROWSER firefox
+{{- else if eq .system "server" -}}
+# server 環境のみ読み込む設定
+{{- end }}
+
+{{ if eq .chezmoi.os "darwin" -}}
+# macOS 固有の設定
+eval "$(/opt/homebrew/bin/brew shellenv)"
+{{- else if eq .chezmoi.os "linux" -}}
+# Linux 固有の設定
+{{- end }}
 ```
-.chezmoitemplates/
-├── sheldon-common.toml      # 全 OS 共通プラグイン
-├── sheldon-darwin.toml      # macOS 固有プラグイン
-└── sheldon-linux.toml       # Linux 固有プラグイン
-```
 
-```go
-# dot_config/sheldon/plugins.toml.tmpl
-{{ template "sheldon-common.toml" . }}
-{{ if eq .chezmoi.os "darwin" }}
-{{ template "sheldon-darwin.toml" . }}
-{{ else if eq .chezmoi.os "linux" }}
-{{ template "sheldon-linux.toml" . }}
-{{ end }}
-```
-
-このリポジトリでは plugins.toml を `plugin_sources/` で common/client/server に分割していますが、OS レベルでの分割が必要になった場合はこのパターンも参考になります。
+`config.fish.tmpl` は chezmoi がテンプレート展開して `~/.config/fish/config.fish` を生成します。OS や system の組み合わせごとに適切な内容が 1 つのファイルにまとまるため、別ファイルへの分割が不要でシンプルに管理できます。
 
 ## クロスプラットフォーム対応のコツ
 
@@ -180,6 +181,7 @@ fi
 ### 3. Ubuntu の罠に注意
 
 Ubuntu 固有の問題は最初ハマりがちです:
+
 - `fd` が `fdfind` という名前でインストールされる → シンボリックリンクで対応
 - `bat` が `batcat` という名前の場合がある → 同様にシンボリックリンク
 - `apt` と `apt-get` の違い → スクリプトでは `apt-get` を使う（自動化向き）

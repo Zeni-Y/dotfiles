@@ -53,11 +53,11 @@ MIT の「The Missing Semester of Your CS Education」[^2]では、シェルを�
 
 ### 用語の整理
 
-| 用語 | 意味 | 具体例 |
-|------|------|-------|
-| **コンソール** | もともとは物理的な入出力装置（キーボード + モニター） | 昔のメインフレームの操作卓 |
-| **ターミナル** | コンソールをソフトウェアで再現したもの（＝ターミナルエミュレータ） | Windows Terminal, iTerm2 |
-| **シェル** | コマンドを解釈・実行するプログラム | bash, zsh, fish |
+| 用語           | 意味                                                               | 具体例                     |
+| -------------- | ------------------------------------------------------------------ | -------------------------- |
+| **コンソール** | もともとは物理的な入出力装置（キーボード + モニター）              | 昔のメインフレームの操作卓 |
+| **ターミナル** | コンソールをソフトウェアで再現したもの（＝ターミナルエミュレータ） | Windows Terminal, iTerm2   |
+| **シェル**     | コマンドを解釈・実行するプログラム                                 | bash, zsh, fish            |
 
 :::message
 現代では「コンソール」と「ターミナル」はほぼ同じ意味で使われます[^1]。この Book では「ターミナル」で統一します。
@@ -71,8 +71,8 @@ MIT の「The Missing Semester of Your CS Education」[^2]では、シェルを�
 ┌──────────────────────────────────────────────┐
 │        任意のターミナルエミュレータ              │
 │  ┌────────────────────────────────────────┐  │
-│  │  zsh（シェル）                          │  │
-│  │   + sheldon（プラグインマネージャ）       │  │
+│  │  fish（シェル）                         │  │
+│  │   + fisher（プラグインマネージャ）       │  │
 │  │   + starship（プロンプト）               │  │
 │  │   + mise（ランタイム管理）               │  │
 │  │   + eza, fzf, fd ...（モダン CLI ツール）│  │
@@ -84,15 +84,15 @@ MIT の「The Missing Semester of Your CS Education」[^2]では、シェルを�
 └──────────────────────────────────────────────┘
 ```
 
-| レイヤー | この dotfiles の選択 | 解説チャプター |
-|---------|---------------------|-------------|
-| シェル | **zsh** | [zsh と sheldon](./09-zsh-and-sheldon) |
-| プラグイン管理 | **sheldon**（zsh-defer で遅延読み込み） | [zsh と sheldon](./09-zsh-and-sheldon) |
-| プロンプト | **starship** | [モダン CLI ツール](./11-modern-cli-tools) |
-| ランタイム管理 | **mise** | [mise によるランタイム管理](./10-mise-runtime-management) |
-| エディタ | **Zed**（メイン）/ **vim**（サーバー用） | [Zed エディタ](./13-zed-editor) |
-| CLI ツール | **eza**, **fzf**, **fd**, **bat** 等 | [モダン CLI ツール](./11-modern-cli-tools) / [fzf](./12-fzf-and-search) |
-| ターミナルマルチプレクサ | **Zellij** | [Zellij](./14-zellij) |
+| レイヤー                 | この dotfiles の選択                     | 解説チャプター                                                          |
+| ------------------------ | ---------------------------------------- | ----------------------------------------------------------------------- |
+| シェル                   | **fish**                                 | [fish と fisher](./09-fish-and-fisher)                                  |
+| プラグイン管理           | **fisher**                               | [fish と fisher](./09-fish-and-fisher)                                  |
+| プロンプト               | **starship**                             | [モダン CLI ツール](./11-modern-cli-tools)                              |
+| ランタイム管理           | **mise**                                 | [mise によるランタイム管理](./10-mise-runtime-management)               |
+| エディタ                 | **Zed**（メイン）/ **vim**（サーバー用） | [Zed エディタ](./13-zed-editor)                                         |
+| CLI ツール               | **eza**, **fzf**, **fd**, **bat** 等     | [モダン CLI ツール](./11-modern-cli-tools) / [fzf](./12-fzf-and-search) |
+| ターミナルマルチプレクサ | **Zellij**                               | [Zellij](./14-zellij)                                                   |
 
 :::message
 ターミナルエミュレータは dotfiles では特に管理していません。OS のデフォルトターミナルや、好みのターミナルアプリを自由に使えます。シェルとターミナルは独立しているので、どのターミナルを選んでもこの dotfiles の設定はそのまま使えます。
@@ -104,7 +104,7 @@ MIT の「The Missing Semester of Your CS Education」[^2]では、シェルを�
 
 ### エディタの統合ターミナル vs 専用ターミナル
 
-最近のエディタ（Zed, VS Code 等）には**統合ターミナル**（integrated terminal）が内蔵されています。1つのプロジェクトに集中して作業する分にはこれで十分です。
+最近のエディタ（Zed, VS Code 等）には**統合ターミナル**（integrated terminal）が内蔵されています。1 つのプロジェクトに集中して作業する分にはこれで十分です。
 
 ただし、**複数のプロジェクトを行き来したい場合**や、**エディタとは独立したターミナルセッションが欲しい場合**は、専用のターミナルエミュレータを使う方が快適です。タブやペイン分割でプロジェクトを整理したり、ターミナルマルチプレクサ（Zellij, tmux）と組み合わせてセッションを維持したりできます。
 
@@ -112,15 +112,15 @@ MIT の「The Missing Semester of Your CS Education」[^2]では、シェルを�
 
 ### ターミナルエミュレータの比較
 
-| ターミナル | OS | GPU | 特徴 |
-|-----------|-----|-----|------|
-| [Tabby](https://tabby.sh/) | 全 OS | ✅ | SSH 管理内蔵、プラグイン拡張、クロスプラットフォーム |
-| [Windows Terminal](https://github.com/microsoft/terminal) | Win | ✅ | Windows 標準、WSL 連携が優秀 |
-| [iTerm2](https://iterm2.com/) | Mac | ❌ | macOS の定番、機能が豊富 |
-| [WezTerm](https://wezfurlong.org/wezterm/) | 全 OS | ✅ | Lua で設定、クロスプラットフォーム |
-| [Ghostty](https://ghostty.org/) | Mac/Linux | ✅ | Zig 製、ネイティブ UI で高速 |
-| [Alacritty](https://alacritty.org/) | 全 OS | ✅ | 最速、ただしタブ・分割なし |
-| [kitty](https://sw.kovidgoyal.net/kitty/) | Mac/Linux | ✅ | 画像表示対応、拡張性が高い |
+| ターミナル                                                | OS        | GPU | 特徴                                                 |
+| --------------------------------------------------------- | --------- | --- | ---------------------------------------------------- |
+| [Tabby](https://tabby.sh/)                                | 全 OS     | ✅  | SSH 管理内蔵、プラグイン拡張、クロスプラットフォーム |
+| [Windows Terminal](https://github.com/microsoft/terminal) | Win       | ✅  | Windows 標準、WSL 連携が優秀                         |
+| [iTerm2](https://iterm2.com/)                             | Mac       | ❌  | macOS の定番、機能が豊富                             |
+| [WezTerm](https://wezfurlong.org/wezterm/)                | 全 OS     | ✅  | Lua で設定、クロスプラットフォーム                   |
+| [Ghostty](https://ghostty.org/)                           | Mac/Linux | ✅  | Zig 製、ネイティブ UI で高速                         |
+| [Alacritty](https://alacritty.org/)                       | 全 OS     | ✅  | 最速、ただしタブ・分割なし                           |
+| [kitty](https://sw.kovidgoyal.net/kitty/)                 | Mac/Linux | ✅  | 画像表示対応、拡張性が高い                           |
 
 各ターミナルの詳細な比較は以下の記事が参考になります:
 
@@ -129,28 +129,23 @@ MIT の「The Missing Semester of Your CS Education」[^2]では、シェルを�
 
 ## シェル
 
-### なぜ zsh を選んだのか
+### なぜ fish を選んだのか
 
-この dotfiles では **zsh** を採用しています。理由はシンプルです:
+この dotfiles では **fish** を採用しています。理由はシンプルです:
 
-- **bash とほぼ互換** — bash のスクリプトや知識がそのまま活きる
-- **macOS のデフォルト** — Catalina 以降の標準シェル
-- **プラグインエコシステムが豊富** — sheldon + zsh-defer で起動も高速に保てる
-- **強力な補完** — あいまい補完（`/u/l/b` → `/usr/local/bin`）や再帰グロブ（`**/*.md`）
-
-```
-$ cd /u/l/b[TAB]      # → /usr/local/bin（あいまい補完）
-$ ls **/*.md           # 再帰グロブ（bash では shopt が必要）
-```
+- **組み込み機能が充実** — シンタックスハイライト、オートサジェスチョン、補完がプラグイン不要で使える
+- **ユーザーフレンドリーなデフォルト設定** — インストール直後から快適に使えるよう設計されている
+- **高速起動** — プラグインを最小限に抑えられるため、起動が速い
+- **POSIX 非互換のトレードオフ** — fish 独自構文のため、スクリプトは bash で書くのが現実的
 
 ### 他のシェルとの位置づけ
 
-| シェル | 一言で言うと | POSIX 互換 |
-|-------|-----------|-----------|
-| **bash** | どこにでもある標準。スクリプトの共通言語 | ✅ |
-| **zsh** | bash 上位互換 + 強力な補完とプラグイン ← **この dotfiles** | ✅ |
-| [fish](https://fishshell.com/) | 設定なしで便利、ただし独自構文 | ❌ |
-| [nushell](https://www.nushell.sh/) | データ指向の次世代シェル | ❌ |
+| シェル                             | 一言で言うと                                       | POSIX 互換 |
+| ---------------------------------- | -------------------------------------------------- | ---------- |
+| **bash**                           | どこにでもある標準。スクリプトの共通言語           | ✅         |
+| **zsh**                            | bash 上位互換 + 強力な補完とプラグイン             | ✅         |
+| [fish](https://fishshell.com/)     | 設定なしで便利、ただし独自構文 ← **この dotfiles** | ❌         |
+| [nushell](https://www.nushell.sh/) | データ指向の次世代シェル                           | ❌         |
 
 :::message
 どのシェルを選んでも、**bash の基本構文は覚えておくべき**です。CI/CD、Docker、サーバー管理ではほぼ bash が前提です。日常の対話シェルは好きなものを、スクリプトは bash で書く、という使い分けが現実的です。
@@ -185,23 +180,23 @@ SSH 先でもそのまま使える              マウスで直感的に操作
 
 ### この dotfiles のエディタ構成
 
-| 用途 | エディタ | 理由 |
-|------|---------|------|
-| メイン開発 | **Zed** | Rust 製で高速、AI 統合、VS Code ライクな操作感 |
-| サーバーでのちょっとした編集 | **vim** | SSH 先でもすぐ使える、どこにでもある |
+| 用途                         | エディタ | 理由                                           |
+| ---------------------------- | -------- | ---------------------------------------------- |
+| メイン開発                   | **Zed**  | Rust 製で高速、AI 統合、VS Code ライクな操作感 |
+| サーバーでのちょっとした編集 | **vim**  | SSH 先でもすぐ使える、どこにでもある           |
 
 Zed の設定やキーバインドについては [Zed エディタ](./13-zed-editor) チャプターで詳しく解説しています。
 
 ### 他のエディタとの位置づけ
 
-| エディタ | 種類 | 一言で言うと |
-|---------|------|------------|
-| [VS Code](https://code.visualstudio.com/) | GUI | 拡張機能の王。情報量・コミュニティが最大 |
-| **[Zed](https://zed.dev/)** | GUI | 高速 + AI 統合。VS Code からの移行が楽 ← **この dotfiles** |
-| [Cursor](https://www.cursor.com/) | GUI | AI ファーストなエディタ |
-| **vim** | CUI | SSH 先で必須。モーダル編集 ← **この dotfiles（サブ）** |
-| [Neovim](https://neovim.io/) | CUI | vim のモダン版。Lua で設定、LSP 統合 |
-| [Helix](https://helix-editor.com/) | CUI | Rust 製のモダン CUI エディタ |
+| エディタ                                  | 種類 | 一言で言うと                                               |
+| ----------------------------------------- | ---- | ---------------------------------------------------------- |
+| [VS Code](https://code.visualstudio.com/) | GUI  | 拡張機能の王。情報量・コミュニティが最大                   |
+| **[Zed](https://zed.dev/)**               | GUI  | 高速 + AI 統合。VS Code からの移行が楽 ← **この dotfiles** |
+| [Cursor](https://www.cursor.com/)         | GUI  | AI ファーストなエディタ                                    |
+| **vim**                                   | CUI  | SSH 先で必須。モーダル編集 ← **この dotfiles（サブ）**     |
+| [Neovim](https://neovim.io/)              | CUI  | vim のモダン版。Lua で設定、LSP 統合                       |
+| [Helix](https://helix-editor.com/)        | CUI  | Rust 製のモダン CUI エディタ                               |
 
 エディタの選択は好みや開発スタイルによるところが大きいです。以下のリソースが選択の参考になります:
 
@@ -239,7 +234,7 @@ Zed の設定やキーバインドについては [Zed エディタ](./13-zed-ed
 │ レイヤー      │ この dotfiles の構成                   │
 ├──────────────┼──────────────────────────────────────┤
 │ ターミナル    │ 好みのものを自由に                     │
-│ シェル        │ zsh + sheldon + starship              │
+│ シェル        │ fish + fisher + starship              │
 │ エディタ      │ Zed（メイン）/ vim（サーバー用）        │
 │ マルチプレクサ │ Zellij                                │
 │ ランタイム管理 │ mise                                 │

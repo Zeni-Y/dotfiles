@@ -30,7 +30,7 @@ fzf 単体では「絞り込み UI」でしかありません。しかし、**�
 
 ## 環境変数による設定
 
-このリポジトリの `.zshrc` では以下の環境変数を設定しています。
+このリポジトリの `config.fish.tmpl` では以下の環境変数を設定しています。
 
 ### FZF_DEFAULT_OPTS
 
@@ -38,11 +38,11 @@ fzf 単体では「絞り込み UI」でしかありません。しかし、**�
 export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border'
 ```
 
-| オプション | 効果 |
-|-----------|------|
-| `--height 40%` | ターミナルの下部 40% を使って表示 |
+| オプション         | 効果                                         |
+| ------------------ | -------------------------------------------- |
+| `--height 40%`     | ターミナルの下部 40% を使って表示            |
 | `--layout=reverse` | 結果を上から下に表示（デフォルトは下から上） |
-| `--border` | 枠線を表示 |
+| `--border`         | 枠線を表示                                   |
 
 ### FZF_DEFAULT_COMMAND
 
@@ -51,6 +51,7 @@ export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
 ```
 
 fzf がファイル一覧を取得する際のデフォルトコマンドです。`find` の代わりに [fd](https://github.com/sharkdp/fd) を使うことで:
+
 - `.gitignore` に含まれるファイルを自動除外
 - 隠しファイルも検索対象に含める（`--hidden`）
 - シンボリックリンクをたどる（`--follow`）
@@ -70,10 +71,10 @@ export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 export FZF_CTRL_T_OPTS="--preview 'bat -n --color=always {}' --bind 'ctrl-/:change-preview-window(hidden|)'"
 ```
 
-| オプション | 効果 |
-|-----------|------|
+| オプション               | 効果                                                                      |
+| ------------------------ | ------------------------------------------------------------------------- |
 | `--preview 'bat -n ...'` | 選択中のファイルを [bat](https://github.com/sharkdp/bat) でプレビュー表示 |
-| `--bind 'ctrl-/:...'` | `Ctrl+/` でプレビューの表示/非表示を切り替え |
+| `--bind 'ctrl-/:...'`    | `Ctrl+/` でプレビューの表示/非表示を切り替え                              |
 
 ### FZF_ALT_C_COMMAND
 
@@ -85,7 +86,7 @@ export FZF_ALT_C_COMMAND='fd --type d --hidden --follow --exclude .git'
 
 ## キーバインド
 
-fzf は [Oh My Zsh](https://ohmyz.sh/) の fzf プラグイン経由で以下のキーバインドを提供します。
+fzf は [PatrickF1/fzf.fish](https://github.com/PatrickF1/fzf.fish) プラグイン経由で以下のキーバインドを提供します。
 
 ### Ctrl+T — ファイル検索
 
@@ -158,20 +159,20 @@ fd . src/ | fzf
 
 ## カスタム cd 関数
 
-このリポジトリでは `cd` コマンドをカスタマイズして、ディレクトリ移動時に自動で `ls` を実行しています。
+fish では `cd` 後に自動で `ls` を実行したい場合、`functions/` ディレクトリに関数ファイルを置きます。fish の関数は `cd` をオーバーライドできます。
 
-```bash
-# .zshrc
-cd() {
-  builtin cd "$@" && ls
-}
+```fish
+# ~/.config/fish/functions/cd.fish
+function cd
+    builtin cd $argv && ls
+end
 ```
 
-`builtin cd` で zsh 組み込みの `cd` を呼び出し、成功したら `ls`（= eza abbreviation）を実行します。ディレクトリを移動するたびに内容が表示されるので、「今どこにいるか」がすぐ分かります。
+`builtin cd` で fish 組み込みの `cd` を呼び出し、成功したら `ls`（= eza alias）を実行します。ディレクトリを移動するたびに内容が表示されるので、「今どこにいるか」がすぐ分かります。
 
 ## カスタム fzf スクリプト
 
-このリポジトリでは fzf を活用した**カスタムコマンド**を `~/.local/bin/common/` に配置しています。sheldon の `autoload` で必要な時だけ読み込まれます。
+このリポジトリでは fzf を活用した**カスタムコマンド**を fish の `functions/` ディレクトリに配置しています。fish は `~/.config/fish/functions/` 以下のファイルを自動的に読み込みます。
 
 ### dev — ghq + fzf でリポジトリ移動
 
@@ -186,19 +187,18 @@ $ dev
 
 内部の実装:
 
-```bash
-function dev() {
-    local moveto
-    moveto=$(ghq list --full-path | fzf) || return 0
-    cd -- "$moveto" || exit 1
+```fish
+# ~/.config/fish/functions/dev.fish
+function dev
+    set moveto (ghq list --full-path | fzf); or return 0
+    cd -- $moveto; or return 1
 
     # tmux 内であればセッション名をリポジトリ名にリネーム
-    if [[ -n ${TMUX} ]]; then
-        local repo_name
-        repo_name="${moveto##*/}"
-        tmux rename-session "${repo_name//./-}"
-    fi
-}
+    if set -q TMUX
+        set repo_name (basename $moveto)
+        tmux rename-session (string replace -a '.' '-' $repo_name)
+    end
+end
 ```
 
 ### fgc — fzf で git ブランチチェックアウト
@@ -211,10 +211,11 @@ $ fgc
 # → 選択したブランチに git checkout
 ```
 
-```bash
-function fgc() {
-    git checkout "$(git for-each-ref refs/heads/ --format='%(refname:short)' | fzf)"
-}
+```fish
+# ~/.config/fish/functions/fgc.fish
+function fgc
+    git checkout (git for-each-ref refs/heads/ --format='%(refname:short)' | fzf)
+end
 ```
 
 ブランチが多いリポジトリで、名前を正確に覚えていなくても素早く切り替えられます。
@@ -229,15 +230,16 @@ $ cdgwq
 # → 選択した worktree に cd
 ```
 
-```bash
-function cdgwq() {
-    if ! git rev-parse --is-inside-work-tree &> /dev/null; then
+```fish
+# ~/.config/fish/functions/cdgwq.fish
+function cdgwq
+    if not git rev-parse --is-inside-work-tree &>/dev/null
         echo "Not inside a git repository."
         return 1
-    fi
-    moveto=$(gwq list --json | jq -r '.[].path' | fzf)
+    end
+    set moveto (gwq list --json | jq -r '.[].path' | fzf)
     cd $moveto
-}
+end
 ```
 
 :::message
@@ -248,11 +250,11 @@ function cdgwq() {
 
 fzf 単体でも便利ですが、fd や bat と組み合わせることで真価を発揮します。
 
-| 組み合わせ | 効果 |
-|-----------|------|
-| fd + fzf | 高速なファイル検索 + インタラクティブ選択 |
-| bat + fzf | プレビュー付きファイル選択 |
-| ghq + fzf | リポジトリ間の高速移動 |
-| history + fzf | コマンド履歴のファジー検索 |
+| 組み合わせ    | 効果                                      |
+| ------------- | ----------------------------------------- |
+| fd + fzf      | 高速なファイル検索 + インタラクティブ選択 |
+| bat + fzf     | プレビュー付きファイル選択                |
+| ghq + fzf     | リポジトリ間の高速移動                    |
+| history + fzf | コマンド履歴のファジー検索                |
 
 fzf のキーバインドは最初は覚えるのが大変ですが、上の表をチートシートとして手元に置いておけばすぐ慣れます。`Ctrl+R`（履歴検索）と `Ctrl+T`（ファイル検索）だけでも覚えておけば、日常的に使うことになると思います。
