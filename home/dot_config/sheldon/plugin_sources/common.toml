@@ -95,6 +95,7 @@ apply = ['defer']
 
 [plugins.zsh-history-on-success]
 github = 'nyoungstudios/zsh-history-on-success'
+apply = ['defer']
 
 # =============================================================================
 # Oh My Zsh の部分的利用
@@ -183,7 +184,6 @@ path+=(
 # fish shell 風の abbreviation を提供
 # 入力時に展開され、履歴にはフルコマンドが残る
 
-# zsh-abbr は初期化が重い (~166ms) ため無効化
 [plugins.zsh-abbr]
 github = "olets/zsh-abbr"
 apply = ['defer']
