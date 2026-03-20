@@ -143,3 +143,8 @@ chezmoi data           # template data を確認
 7. **冪等性**: インストールスクリプトは既にインストール済みの場合はスキップするように設計
 8. **セキュリティ**: 秘密鍵や認証情報は `private_` prefix + age encryption で管理。`.env` やパスワードを平文でコミットしない
 9. **コミットメッセージ**: Conventional Commits 形式を推奨 (`feat:`, `fix:`, `docs:`, `refactor:`, `chore:` 等)
+10. **`fish -c` 禁止（フォークボム防止）**: fish の設定ファイル（`config.fish`, `conf.d/`, `functions/`）およびインストールスクリプトから `fish -c "..."` でサブシェルを起動してはならない。`fish -c` は `config.fish` を再帰的に読み込み、プロセスが無限増殖するフォークボムを引き起こす。代替手段:
+    - 外部コマンド実行: `command <cmd>` を使う（fish サブシェルを経由しない）
+    - バックグラウンド処理: `command sh -c '...'` を使う（POSIX sh は fish config を読み込まない）
+    - fisher セットアップ等でどうしても fish が必要な場合: `fish --no-config -c '...'` を使う
+    - 参考: コミット `0273501` で keychain の同様のバグを修正済み

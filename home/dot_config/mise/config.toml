@@ -10,6 +10,7 @@ bun = "latest"
 uv = "latest"
 
 # シェル / ターミナル
+"github:fish-shell/fish-shell" = "latest"
 starship = "latest"
 yazi = "latest"
 
