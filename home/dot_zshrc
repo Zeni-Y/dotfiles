@@ -3,7 +3,6 @@
 #
 # Path settings
 #
-
 typeset -gU path fpath
 path=(
     $path

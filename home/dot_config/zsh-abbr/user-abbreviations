@@ -1,4 +1,0 @@
-abbr "cz"="chezmoi"
-abbr "gm"="git checkout \$(git symbolic-ref refs/remotes/origin/HEAD | sed \"s@^refs/remotes/origin/@@\")"
-abbr "ls"="eza --long --group --header --binary --time-style=long-iso --icons"
-abbr "ll"="eza -la --long --group --header --binary --time-style=long-iso --icons"

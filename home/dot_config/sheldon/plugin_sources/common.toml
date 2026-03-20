@@ -48,7 +48,7 @@ inline = 'autoload -Uz dev cdgwq cdw fgc chezmoi-cd git-delete-merged-branches u
 
 [plugins.fzf]
 github = 'junegunn/fzf'
-apply = ['fzf-path']
+apply = ['fzf-path', 'fzf-source']
 hooks.post = '''
 export FZF_DEFAULT_OPTS="--reverse"
 '''
@@ -88,7 +88,7 @@ use = [
     'lib/completion.zsh',
     'lib/history.zsh',
     'lib/termsupport.zsh',
-    'plugins/fzf/fzf.plugin.zsh',
+    'plugins/globalias/globalias.plugin.zsh',
 ]
 
 [plugins.zsh-history-shell-options]
@@ -143,14 +143,17 @@ path+=(
 '''
 
 # =============================================================================
-# zsh-abbr（エイリアスの代替）
+# エイリアス定義
 # =============================================================================
-# fish shell 風の abbreviation を提供
-# 入力時に展開され、履歴にはフルコマンドが残る
+# globalias プラグイン（oh-my-zsh）により Space キーで展開される
 
-[plugins.zsh-abbr]
-github = "olets/zsh-abbr"
-apply = ['source']
+[plugins.aliases]
+inline = '''
+alias cz="chezmoi"
+alias gm='git checkout $(git symbolic-ref refs/remotes/origin/HEAD | sed "s@^refs/remotes/origin/@@")'
+alias ls="eza --long --group --header --binary --time-style=long-iso --icons"
+alias ll="eza -la --long --group --header --binary --time-style=long-iso --icons"
+'''
 
 # =============================================================================
 # zsh-you-should-use
