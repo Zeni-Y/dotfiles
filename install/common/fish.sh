@@ -8,38 +8,34 @@ if [ "${DOTFILES_DEBUG:-}" ]; then
     set -x
 fi
 
+FISH_VERSION="4.5.0"
+
 function install_fish() {
+    # バージョン比較で冪等性を確保
     if command -v fish &>/dev/null; then
-        echo "fish is already installed"
-        return 0
+        local current
+        current="$(fish --version 2>/dev/null | sed 's/fish, version //')"
+        if [ "${current}" = "${FISH_VERSION}" ]; then
+            echo "fish ${FISH_VERSION} is already installed"
+            return 0
+        fi
+        echo "fish ${current} found, upgrading to ${FISH_VERSION}..."
     fi
 
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        case "${ID}" in
-            ubuntu)
-                # apt-add-repository コマンドがなければ software-properties-common をインストール
-                if ! command -v apt-add-repository &>/dev/null; then
-                    sudo apt-get update -qq
-                    sudo apt-get install -y -qq software-properties-common
-                fi
-                sudo apt-add-repository -y ppa:fish-shell/release-4
-                sudo apt-get update -qq
-                sudo apt-get install -y -qq fish
-                ;;
-            debian)
-                sudo apt-get update -qq
-                sudo apt-get install -y -qq fish
-                ;;
-            *)
-                echo "Unsupported distro: ${ID}"
-                return 1
-                ;;
-        esac
-    elif [ "$(uname)" = "Darwin" ]; then
+    if [ "$(uname)" = "Darwin" ]; then
         brew install fish
+    elif [ "$(uname)" = "Linux" ]; then
+        local arch
+        arch="$(uname -m)"
+        local url="https://github.com/fish-shell/fish-shell/releases/download/${FISH_VERSION}/fish-${FISH_VERSION}-linux-${arch}.tar.xz"
+
+        echo "Downloading fish ${FISH_VERSION} for ${arch}..."
+        mkdir -p "${HOME}/.local/bin"
+        curl -fsSL "${url}" | tar -xJ -C "${HOME}/.local/bin"
+        chmod +x "${HOME}/.local/bin/fish"
+        echo "fish ${FISH_VERSION} installed to ~/.local/bin/fish"
     else
-        echo "Unsupported OS"
+        echo "Unsupported OS: $(uname)"
         return 1
     fi
 }
