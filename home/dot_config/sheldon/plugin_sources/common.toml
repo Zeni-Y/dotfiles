@@ -8,14 +8,6 @@ shell = "zsh"
 # =============================================================================
 
 [templates]
-defer = """
-{{ hooks?.pre | nl }}
-{% for file in files %}
-zsh-defer source "{{ file }}"
-{% endfor %}
-{{ hooks?.post | nl }}
-"""
-
 fzf-path = """
 {{ hooks?.pre | nl }}
 path=($path {{ dir }}/bin(N-/))
@@ -32,30 +24,18 @@ fzf-source = "source <(fzf --zsh)"
 inline = 'eval "$(starship init zsh)"'
 
 # =============================================================================
-# zsh-defer（遅延読み込みの基盤）
-# =============================================================================
-
-[plugins.zsh-defer]
-github = 'romkatv/zsh-defer'
-apply = ['source']
-
-# =============================================================================
 # 自動ロードと補完の初期化
 # =============================================================================
 
 [plugins.compinit]
 inline = '''
-function _compinit() {
-    autoload -Uz compinit
-    # .zcompdump が1日以上古い場合のみ完全再構築、それ以外はキャッシュ利用
-    local zcompdump="${ZDOTDIR:-$HOME}/.zcompdump"
-    if [[ -f "$zcompdump" && $(date +'%j') == $(date -r "$zcompdump" +'%j' 2>/dev/null) ]]; then
-        compinit -C
-    else
-        compinit
-    fi
-}
-zsh-defer _compinit
+autoload -Uz compinit
+local zcompdump="${ZDOTDIR:-$HOME}/.zcompdump"
+if [[ -f "$zcompdump" && $(date +'%j') == $(date -r "$zcompdump" +'%j' 2>/dev/null) ]]; then
+    compinit -C
+else
+    compinit
+fi
 '''
 
 # カスタムコマンドを autoload で登録
@@ -79,23 +59,23 @@ export FZF_DEFAULT_OPTS="--reverse"
 
 [plugins.zsh-autosuggestions]
 github = 'zsh-users/zsh-autosuggestions'
-apply = ['defer']
+apply = ['source']
 
 [plugins.zsh-completions]
 github = 'zsh-users/zsh-completions'
-apply = ['defer']
+apply = ['source']
 
 [plugins.zsh-syntax-highlighting]
 github = 'zsh-users/zsh-syntax-highlighting'
-apply = ['defer']
+apply = ['source']
 
 [plugins.zsh-autopair]
 github = 'hlissner/zsh-autopair'
-apply = ['defer']
+apply = ['source']
 
 [plugins.zsh-history-on-success]
 github = 'nyoungstudios/zsh-history-on-success'
-apply = ['defer']
+apply = ['source']
 
 # =============================================================================
 # Oh My Zsh の部分的利用
@@ -122,50 +102,34 @@ setopt INC_APPEND_HISTORY
 # =============================================================================
 
 [plugins.mise]
-inline = '''
-function _mise() {
-    eval "$(~/.local/bin/mise activate zsh)"
-}
-zsh-defer _mise
-'''
+inline = 'eval "$(~/.local/bin/mise activate zsh)"'
 
 # =============================================================================
 # 言語環境の設定
 # =============================================================================
 
 [plugins.lang]
-inline = '''
-function _lang() {
-    export LANG='en_US.UTF-8'
-}
-zsh-defer _lang
-'''
+inline = "export LANG='en_US.UTF-8'"
 
 [plugins.go]
 inline = '''
-function _go() {
-    export GOPATH="${HOME}/ghq"
-    export GOROOT=$(go env GOROOT)
-    typeset -gU path
-    path=(
-        $path
-        ${GOPATH}/bin(N-/)
-        ${HOME}/.go/bin(N-/)
-    )
-}
-zsh-defer _go
+export GOPATH="${HOME}/ghq"
+export GOROOT=$(go env GOROOT)
+typeset -gU path
+path=(
+    $path
+    ${GOPATH}/bin(N-/)
+    ${HOME}/.go/bin(N-/)
+)
 '''
 
 [plugins.rust]
 inline = '''
-function _rust() {
-    typeset -gU path
-    path=(
-        $path
-        ${HOME}/.cargo/bin(N-/)
-    )
-}
-zsh-defer _rust
+typeset -gU path
+path=(
+    $path
+    ${HOME}/.cargo/bin(N-/)
+)
 '''
 
 [plugins.bun]
@@ -175,7 +139,7 @@ typeset -gU path
 path+=(
     $BUN_INSTALL/bin(N-/)
 )
-[ -s "$HOME/.bun/_bun" ] && zsh-defer "$HOME/.bun/_bun"
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 '''
 
 # =============================================================================
@@ -186,7 +150,7 @@ path+=(
 
 [plugins.zsh-abbr]
 github = "olets/zsh-abbr"
-apply = ['defer']
+apply = ['source']
 
 # =============================================================================
 # zsh-you-should-use
@@ -194,7 +158,7 @@ apply = ['defer']
 
 [plugins.zsh-you-should-use]
 github = "MichaelAquilina/zsh-you-should-use"
-apply = ['defer']
+apply = ['source']
 
 # =============================================================================
 # GPG
@@ -219,11 +183,8 @@ local = "~/.config/zsh/plugins/chezmoi-notify"
 
 [plugins.private-dotfiles]
 inline = '''
-function _private_dotfiles() {
-    local filepath="${HOME}/.workrc"
-    if [ -f "$filepath" ]; then
-        source "$filepath"
-    fi
-}
-zsh-defer _private_dotfiles
+local filepath="${HOME}/.workrc"
+if [ -f "$filepath" ]; then
+    source "$filepath"
+fi
 '''
