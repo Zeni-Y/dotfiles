@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# fish shell 起動プロファイリングツール
+# fish --profile-startup を使って起動時の各コマンドの実行時間を計測・表示する
+
+set -euo pipefail
+
+show_usage() {
+  cat <<'USAGE'
+Usage: fish-time [OPTIONS] [N]
+
+fish shell の起動プロファイルを取得し、遅いコマンドを表示する。
+
+Arguments:
+  N          表示する上位件数 (デフォルト: 20)
+
+Options:
+  --full     全プロファイル出力を表示
+  -h, --help ヘルプを表示
+USAGE
+}
+
+# 引数パース
+FULL=false
+TOP_N=20
+
+for arg in "$@"; do
+  case "$arg" in
+    --full)
+      FULL=true
+      ;;
+    -h|--help)
+      show_usage
+      exit 0
+      ;;
+    *)
+      if [[ "$arg" =~ ^[0-9]+$ ]]; then
+        TOP_N="$arg"
+      else
+        echo "Error: 不明な引数 '$arg'" >&2
+        show_usage >&2
+        exit 1
+      fi
+      ;;
+  esac
+done
+
+# 一時ファイル作成
+tmpfile=$(mktemp /tmp/fish-profile.XXXXXX)
+trap 'rm -f "$tmpfile"' EXIT
+
+echo "=== Fish Shell Startup Time ==="
+echo ""
+
+# time コマンドでウォールクロック時間を計測
+{ time fish --profile-startup "$tmpfile" -c exit ; } 2>&1
+
+echo ""
+
+if [ "$FULL" = true ]; then
+  echo "=== Full Profile Output ==="
+  echo ""
+  cat "$tmpfile"
+else
+  echo "=== Top $TOP_N Slowest Commands ==="
+  echo ""
+  # プロファイル出力: Time\tSum\tCommand の形式
+  # ヘッダー行をスキップし、Time (マイクロ秒) でソートして上位 N 件を表示
+  tail -n +2 "$tmpfile" \
+    | sort -t$'\t' -k1 -nr \
+    | head -n "$TOP_N" \
+    | awk -F'\t' 'BEGIN {
+        printf "%-12s %-12s %s\n", "Time (us)", "Sum (us)", "Command"
+        printf "%-12s %-12s %s\n", "----------", "----------", "-------"
+      }
+      {
+        printf "%-12s %-12s %s\n", $1, $2, $3
+      }'
+fi

@@ -1,0 +1,83 @@
+name: fish startup benchmark
+
+on:
+  push:
+    paths:
+      - "home/dot_config/fish/**"
+      - "home/dot_config/starship.toml*"
+  pull_request:
+    paths:
+      - "home/dot_config/fish/**"
+      - "home/dot_config/starship.toml*"
+  schedule:
+    # 毎週月曜 9:00 JST (日曜 24:00 UTC)
+    - cron: "0 0 * * 1"
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install fish shell
+        run: |
+          sudo apt-add-repository -y ppa:fish-shell/release-4
+          sudo apt-get update
+          sudo apt-get install -y fish
+
+      - name: Install chezmoi
+        run: |
+          sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Apply dotfiles
+        env:
+          CI: "true"
+        run: |
+          chezmoi init --source="$GITHUB_WORKSPACE" --apply
+
+      - name: Install starship
+        run: |
+          curl -sS https://starship.rs/install.sh | sh -s -- --yes
+
+      - name: Install mise
+        run: |
+          curl https://mise.run | sh
+          "$HOME/.local/bin/mise" install --yes 2>/dev/null || true
+
+      - name: Run fish startup benchmark (10 runs)
+        run: |
+          tmpfile=$(mktemp)
+          total=0
+
+          for i in $(seq 1 10); do
+            # --profile-startup でプロファイル取得し、合計時間を算出
+            fish --profile-startup "$tmpfile" -c exit
+            # Sum 列の最大値 = 起動完了までの合計時間 (マイクロ秒)
+            elapsed_us=$(tail -n +2 "$tmpfile" | awk -F'\t' 'BEGIN{max=0} {if($2+0>max) max=$2+0} END{print max}')
+            elapsed_ms=$((elapsed_us / 1000))
+            echo "Run $i: ${elapsed_ms}ms"
+            total=$((total + elapsed_ms))
+          done
+
+          avg=$((total / 10))
+          echo ""
+          echo "Average startup time: ${avg}ms"
+          echo "avg_ms=$avg" >> "$GITHUB_ENV"
+
+      - name: Check threshold
+        run: |
+          threshold=300
+          echo "## Fish Startup Benchmark" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Metric | Value | Threshold |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|--------|-------|-----------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Average startup | ${avg_ms}ms | ${threshold}ms |" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$avg_ms" -gt "$threshold" ]; then
+            echo "::warning::Average startup time ${avg_ms}ms exceeds threshold ${threshold}ms"
+            exit 1
+          fi
+
+          echo "Startup time ${avg_ms}ms is within threshold ${threshold}ms"
