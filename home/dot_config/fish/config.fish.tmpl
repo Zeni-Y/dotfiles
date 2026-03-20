@@ -79,7 +79,9 @@ set -gx BUN_INSTALL "$HOME/.bun"
 fish_add_path $BUN_INSTALL/bin
 
 #
-# エイリアス（fish abbreviations）
+# エイリアス
+# - abbr: 実行時に展開表示される（短いコマンド向け）
+# - alias: 展開せずそのまま実行（展開後が長いコマンド向け）
 #
 abbr -a cz chezmoi
 abbr -a gm 'git checkout (git symbolic-ref refs/remotes/origin/HEAD | sed "s@^refs/remotes/origin/@@")'

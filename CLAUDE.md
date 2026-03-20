@@ -116,6 +116,11 @@ fish の組み込み機能で zsh プラグイン相当を実現:
 - オートペア: `jorgebucaran/autopair.fish`
 - 成功時のみ履歴記録: `meaningful-ooo/sponge`
 
+abbr と alias の使い分け:
+
+- `abbr` — 実行時にコマンドラインで展開表示される。展開後が短いコマンドに使用
+- `alias` — 展開せずそのまま実行される。展開後が長くなるコマンド（`eza` のオプション列等）に使用
+
 ## Common Commands
 
 ```bash
