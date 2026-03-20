@@ -38,9 +38,7 @@ jobs:
         env:
           CI: "true"
         run: |
-          chezmoi init --source="$GITHUB_WORKSPACE" --apply \
-            --promptString="email=ci@example.com" \
-            --promptString="system=server"
+          chezmoi init --source="$GITHUB_WORKSPACE" --apply
 
       - name: Install sheldon
         run: |
