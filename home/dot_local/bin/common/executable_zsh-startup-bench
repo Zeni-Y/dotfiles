@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+# zsh 起動速度のベンチマーク
+# zsh-bench (romkatv/zsh-bench) を使って起動パフォーマンスを計測する
+
+set -euo pipefail
+
+ZSH_BENCH_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/zsh-bench"
+ZSH_BENCH_BIN="$ZSH_BENCH_DIR/zsh-bench"
+
+# zsh-bench がなければ取得
+if [[ ! -x "$ZSH_BENCH_BIN" ]]; then
+    echo "Installing zsh-bench..."
+    git clone --depth=1 https://github.com/romkatv/zsh-bench "$ZSH_BENCH_DIR" 2>/dev/null
+fi
+
+# 閾値 (ms)
+THRESHOLD_FIRST_PROMPT=${ZSH_BENCH_THRESHOLD_FIRST_PROMPT:-500}
+THRESHOLD_FIRST_COMMAND=${ZSH_BENCH_THRESHOLD_FIRST_COMMAND:-500}
+THRESHOLD_COMMAND_LAG=${ZSH_BENCH_THRESHOLD_COMMAND_LAG:-200}
+THRESHOLD_INPUT_LAG=${ZSH_BENCH_THRESHOLD_INPUT_LAG:-50}
+
+# ベンチマーク実行
+echo "=== zsh startup benchmark ==="
+echo ""
+
+result=$("$ZSH_BENCH_BIN" 2>&1)
+echo "$result"
+echo ""
+
+# 結果をパース
+parse_value() {
+    echo "$result" | grep "^$1=" | cut -d= -f2
+}
+
+first_prompt=$(parse_value "first_prompt_lag_ms")
+first_command=$(parse_value "first_command_lag_ms")
+command_lag=$(parse_value "command_lag_ms")
+input_lag=$(parse_value "input_lag_ms")
+
+# 閾値チェック
+exit_code=0
+
+check_threshold() {
+    local name=$1 value=$2 threshold=$3
+    # 小数点を含む比較
+    if awk "BEGIN {exit !($value > $threshold)}"; then
+        echo "FAIL: $name = ${value}ms (threshold: ${threshold}ms)"
+        exit_code=1
+    else
+        echo "OK:   $name = ${value}ms (threshold: ${threshold}ms)"
+    fi
+}
+
+echo "=== threshold check ==="
+check_threshold "first_prompt_lag" "$first_prompt" "$THRESHOLD_FIRST_PROMPT"
+check_threshold "first_command_lag" "$first_command" "$THRESHOLD_FIRST_COMMAND"
+check_threshold "command_lag" "$command_lag" "$THRESHOLD_COMMAND_LAG"
+check_threshold "input_lag" "$input_lag" "$THRESHOLD_INPUT_LAG"
+
+exit $exit_code

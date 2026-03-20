@@ -41,4 +41,11 @@ zsh-defer _server_cuda_path
 #
 
 [plugins.server-ssh-agent]
-inline = "eval $(keychain --eval --agents ssh ~/.ssh/id_ed25519)"
+inline = '''
+# キャッシュファイルを直接 source して即座に SSH_AUTH_SOCK を設定
+local _keychain_env="$HOME/.keychain/$(hostname)-sh"
+[[ -f "$_keychain_env" ]] && source "$_keychain_env"
+
+# バックグラウンドで agent の生存確認と必要なら再起動
+(keychain --quiet --nolock --quick --agents ssh ~/.ssh/id_ed25519 &>/dev/null &)
+'''

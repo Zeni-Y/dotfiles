@@ -24,4 +24,5 @@ chapters:
   - 17-setup-script
   - 18-comparison-with-others
   - 19-claude-code
+  - 20-zsh-performance
   - 99-reference

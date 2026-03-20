@@ -1,0 +1,102 @@
+name: zsh startup benchmark
+
+on:
+  push:
+    paths:
+      - "home/dot_zshrc"
+      - "home/dot_zprofile"
+      - "home/dot_config/sheldon/**"
+      - "home/dot_config/starship.toml*"
+  pull_request:
+    paths:
+      - "home/dot_zshrc"
+      - "home/dot_zshenv*"
+      - "home/dot_config/sheldon/**"
+      - "home/dot_config/starship.toml*"
+  schedule:
+    # 毎週月曜 9:00 JST (日曜 24:00 UTC)
+    - cron: "0 0 * * 1"
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zsh
+
+      - name: Install chezmoi
+        run: |
+          sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Apply dotfiles
+        env:
+          CI: "true"
+        run: |
+          chezmoi init --source="$GITHUB_WORKSPACE" --apply \
+            --promptString="email=ci@example.com" \
+            --promptString="system=server"
+
+      - name: Install sheldon
+        run: |
+          curl --proto '=https' -fLsS https://rossmacarthur.github.io/install/crate.sh \
+            | bash -s -- --repo rossmacarthur/sheldon --to "$HOME/.local/bin"
+
+      - name: Install starship
+        run: |
+          curl -sS https://starship.rs/install.sh | sh -s -- --yes
+
+      - name: Install mise
+        run: |
+          curl https://mise.run | sh
+          "$HOME/.local/bin/mise" install --yes 2>/dev/null || true
+
+      - name: Install zsh-bench
+        run: |
+          git clone --depth=1 https://github.com/romkatv/zsh-bench /tmp/zsh-bench
+
+      - name: Run zsh-bench
+        run: |
+          /tmp/zsh-bench/zsh-bench 2>&1 | tee /tmp/zsh-bench-result.txt
+
+      - name: Check thresholds
+        run: |
+          result=$(cat /tmp/zsh-bench-result.txt)
+
+          parse_value() {
+            echo "$result" | grep "^$1=" | cut -d= -f2
+          }
+
+          first_prompt=$(parse_value "first_prompt_lag_ms")
+          first_command=$(parse_value "first_command_lag_ms")
+          command_lag=$(parse_value "command_lag_ms")
+          input_lag=$(parse_value "input_lag_ms")
+
+          echo "## zsh-bench Results" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Metric | Value | Threshold |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|--------|-------|-----------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| first_prompt_lag | ${first_prompt}ms | 500ms |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| first_command_lag | ${first_command}ms | 500ms |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| command_lag | ${command_lag}ms | 200ms |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| input_lag | ${input_lag}ms | 50ms |" >> "$GITHUB_STEP_SUMMARY"
+
+          exit_code=0
+          check() {
+            if awk "BEGIN {exit !($2 > $3)}"; then
+              echo "::warning::$1 = ${2}ms exceeds threshold ${3}ms"
+              exit_code=1
+            fi
+          }
+
+          check "first_prompt_lag" "$first_prompt" "500"
+          check "first_command_lag" "$first_command" "500"
+          check "command_lag" "$command_lag" "200"
+          check "input_lag" "$input_lag" "50"
+
+          exit $exit_code

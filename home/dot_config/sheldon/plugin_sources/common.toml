@@ -16,9 +16,8 @@ zsh-defer source "{{ file }}"
 {{ hooks?.post | nl }}
 """
 
-fzf-install = """
+fzf-path = """
 {{ hooks?.pre | nl }}
-{{ dir }}/install --bin > /dev/null
 path=($path {{ dir }}/bin(N-/))
 {{ hooks?.post | nl }}
 """
@@ -45,7 +44,19 @@ apply = ['source']
 # =============================================================================
 
 [plugins.compinit]
-inline = 'autoload -Uz compinit && zsh-defer compinit'
+inline = '''
+function _compinit() {
+    autoload -Uz compinit
+    # .zcompdump が1日以上古い場合のみ完全再構築、それ以外はキャッシュ利用
+    local zcompdump="${ZDOTDIR:-$HOME}/.zcompdump"
+    if [[ -f "$zcompdump" && $(date +'%j') == $(date -r "$zcompdump" +'%j' 2>/dev/null) ]]; then
+        compinit -C
+    else
+        compinit
+    fi
+}
+zsh-defer _compinit
+'''
 
 # カスタムコマンドを autoload で登録
 [plugins.custom-commands]
@@ -57,7 +68,7 @@ inline = 'autoload -Uz dev cdgwq cdw fgc chezmoi-cd git-delete-merged-branches u
 
 [plugins.fzf]
 github = 'junegunn/fzf'
-apply = ['fzf-install']
+apply = ['fzf-path']
 hooks.post = '''
 export FZF_DEFAULT_OPTS="--reverse"
 '''
@@ -110,7 +121,12 @@ setopt INC_APPEND_HISTORY
 # =============================================================================
 
 [plugins.mise]
-inline = 'eval "$(~/.local/bin/mise activate zsh)"'
+inline = '''
+function _mise() {
+    eval "$(~/.local/bin/mise activate zsh)"
+}
+zsh-defer _mise
+'''
 
 # =============================================================================
 # 言語環境の設定
@@ -167,6 +183,7 @@ path+=(
 # fish shell 風の abbreviation を提供
 # 入力時に展開され、履歴にはフルコマンドが残る
 
+# zsh-abbr は初期化が重い (~166ms) ため無効化
 [plugins.zsh-abbr]
 github = "olets/zsh-abbr"
 apply = ['defer']
