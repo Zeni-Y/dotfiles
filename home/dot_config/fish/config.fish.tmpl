@@ -97,7 +97,7 @@ if test -f $_keychain_env
     source $_keychain_env
 end
 # バックグラウンドで agent の生存確認と必要なら再起動
-fish -c 'keychain --quiet --nolock --quick --agents ssh ~/.ssh/id_ed25519 &>/dev/null' &
+command keychain --quiet --nolock --quick --agents ssh ~/.ssh/id_ed25519 &>/dev/null &
 disown
 {{ end -}}
 
