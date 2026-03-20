@@ -46,7 +46,6 @@ title: "リファレンス"
 | `.chezmoiscripts/common/run_once_after_01-install-mise.sh.tmpl`         | apply 後 1 回      | mise インストール                   |
 | `.chezmoiscripts/common/run_once_after_02-install-fish.sh.tmpl`         | apply 後 1 回      | fish + fisher セットアップ          |
 | `.chezmoiscripts/common/run_onchange_after_10-setup-zed-keymap.sh.tmpl` | keymap.json 変更時 | WSL → Windows に keymap.json を配置 |
-| `.chezmoiscripts/ubuntu/run_once_20-install-fd.sh.tmpl`                 | apply 後 1 回      | fd-find インストール (Ubuntu)       |
 
 ### インストールスクリプト
 
@@ -55,7 +54,6 @@ title: "リファレンス"
 | `install/common/mise.sh`       | mise のインストールとツール展開                 |
 | `install/common/fish.sh`       | fish shell のインストールと fisher セットアップ |
 | `install/common/zed-keymap.sh` | WSL 環境で keymap.json を Windows 側に配置      |
-| `install/ubuntu/common/fd.sh`  | fd-find のインストールとシンボリックリンク作成  |
 
 ### テンプレート部品
 

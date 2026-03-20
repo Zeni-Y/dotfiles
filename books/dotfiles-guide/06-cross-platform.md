@@ -10,7 +10,7 @@ dotfiles を複数のマシンで共有していると、「同じ設定ファ�
 
 - macOS と Linux で**パスが違う**（Homebrew のパス、フォントの配置先）
 - デスクトップとサーバーで**必要なツールが違う**（サーバーに GUI ツールは不要）
-- Ubuntu と他の Linux で**パッケージ名が違う**（`fd` vs `fdfind`）
+- Ubuntu と他の Linux で**パッケージ名が違う**（`bat` vs `batcat`）
 
 「全部別々のリポジトリにする」のは管理が大変です。chezmoi では **1 つのリポジトリに全環境の設定をまとめつつ、テンプレートの条件分岐で環境ごとに出し分ける** ことでこの問題を解決しています。
 
@@ -69,7 +69,7 @@ Linux ディストリビューション固有の差異（パッケージ名の�
 
 ```go
 {{ if eq .chezmoi.osRelease.idLike "debian" }}
-  apt-get install fd-find
+  apt-get install -y batcat
 {{ end }}
 ```
 
@@ -84,7 +84,7 @@ home/.chezmoiscripts/
 ├── common/                          # 全 OS 共通
 │   └── run_once_after_01-install-mise.sh.tmpl
 └── ubuntu/                          # Ubuntu 固有
-    └── run_once_20-install-fd.sh.tmpl
+    └── run_once_after_03-install-keychain.sh.tmpl
 ```
 
 OS 固有のスクリプトは `.chezmoiscripts/<os>/` に配置します。chezmoi は適切なスクリプトだけを実行します。
@@ -97,7 +97,7 @@ install/
 │   └── mise.sh
 └── ubuntu/
     └── common/             # Ubuntu の全 system 共通
-        └── fd.sh
+        └── keychain.sh
 ```
 
 将来的には以下のような構造も可能です:
@@ -123,10 +123,10 @@ install/
 1 ファイル内で少しだけ分岐する場合は、テンプレートの条件分岐を使います。
 
 ```go
-# .chezmoiscripts/ubuntu/run_once_20-install-fd.sh.tmpl
+# .chezmoiscripts/ubuntu/run_once_after_03-install-keychain.sh.tmpl
 {{ if eq .chezmoi.os "linux" -}}
 {{   if eq .chezmoi.osRelease.idLike "debian" -}}
-{{     include "../install/ubuntu/common/fd.sh" }}
+{{     include "../install/ubuntu/common/keychain.sh" }}
 {{   end -}}
 {{ end -}}
 ```
@@ -182,6 +182,6 @@ fi
 
 Ubuntu 固有の問題は最初ハマりがちです:
 
-- `fd` が `fdfind` という名前でインストールされる → シンボリックリンクで対応
-- `bat` が `batcat` という名前の場合がある → 同様にシンボリックリンク
+- `bat` が `batcat` という名前でインストールされる → シンボリックリンクで対応
 - `apt` と `apt-get` の違い → スクリプトでは `apt-get` を使う（自動化向き）
+- `fd` や `eza` などは mise 経由でインストールすれば OS の差異を吸収できる

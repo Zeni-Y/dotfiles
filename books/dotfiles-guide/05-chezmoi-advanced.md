@@ -228,16 +228,17 @@ chezmoi では `.chezmoiscripts/` 以下にスクリプトを配置して、`che
 
 ```
 .chezmoiscripts/
-├── common/
-│   └── run_once_after_01-install-mise.sh.tmpl    # after の中で最初に実行
-└── ubuntu/
-    └── run_once_20-install-fd.sh.tmpl             # mise の後に実行
+└── common/
+    ├── run_once_after_01-install-mise.sh.tmpl    # after の中で最初に実行
+    ├── run_once_after_02-install-fish.sh.tmpl    # fish + fisher セットアップ
+    └── run_once_after_03-install-keychain.sh.tmpl # keychain インストール
 ```
 
 番号が小さいほど先に実行されます。このリポジトリでは:
 
 - `01` — mise のインストール（他のツールの前提）
-- `20` — fd-find のインストール（mise が必要）
+- `02` — fish shell のインストール
+- `03` — keychain のインストール
 
 依存関係を番号で表現しているので、後から見返しても実行順序がすぐ分かります。
 
@@ -246,15 +247,6 @@ chezmoi では `.chezmoiscripts/` 以下にスクリプトを配置して、`che
 ```bash
 # .chezmoiscripts/common/run_once_after_01-install-mise.sh.tmpl
 {{ include "../install/common/mise.sh" }}
-```
-
-```bash
-# .chezmoiscripts/ubuntu/run_once_20-install-fd.sh.tmpl
-{{ if eq .chezmoi.os "linux" -}}
-{{   if eq .chezmoi.osRelease.idLike "debian" -}}
-{{     include "../install/ubuntu/common/fd.sh" }}
-{{   end -}}
-{{ end -}}
 ```
 
 ## install/ ディレクトリと {{ include }} パターン
@@ -269,10 +261,11 @@ chezmoi では `.chezmoiscripts/` 以下にスクリプトを配置して、`che
         ↓
 install/（どうやってインストールするか）
   ├── common/
-  │   └── mise.sh          # mise インストールスクリプト
+  │   ├── mise.sh          # mise インストールスクリプト
+  │   └── fish.sh          # fish shell インストールスクリプト
   └── ubuntu/
       └── common/
-          └── fd.sh         # fd-find インストールスクリプト
+          └── keychain.sh   # keychain インストールスクリプト
 ```
 
 `.chezmoiscripts/` からは `{{ include }}` で参照します。
@@ -292,23 +285,23 @@ install/（どうやってインストールするか）
 インストールスクリプトは**何度実行しても同じ結果になる**ように設計します。これがすごく大事です。
 
 ```bash
-# install/ubuntu/common/fd.sh
-function install_fd() {
-    # 既にインストール済みならスキップ
-    if ! command -v fdfind &> /dev/null; then
-        echo "Installing fd-find..."
-        sudo apt-get update
-        sudo apt-get install -y fd-find
-    else
-        echo "fd-find is already installed."
+# install/common/keychain.sh
+function install_keychain() {
+    # バージョン比較で冪等性を確保
+    if command -v keychain &>/dev/null; then
+        local current
+        current="$(keychain --version 2>&1 | head -1 | awk '{print $NF}')"
+        if [ "${current}" = "${KEYCHAIN_VERSION}" ]; then
+            echo "keychain ${KEYCHAIN_VERSION} is already installed"
+            return 0
+        fi
+        echo "keychain ${current} found, upgrading to ${KEYCHAIN_VERSION}..."
     fi
 
-    # シンボリックリンクの作成（存在チェック付き）
-    local link_path="${HOME}/.local/bin/fd"
-    if [ ! -L "$link_path" ]; then
-        mkdir -p "${HOME}/.local/bin"
-        ln -s "$(which fdfind)" "$link_path"
-    fi
+    # GitHub Releases からバイナリをダウンロード
+    mkdir -p "${HOME}/.local/bin"
+    curl -fsSL -o "${HOME}/.local/bin/keychain" "${url}"
+    chmod +x "${HOME}/.local/bin/keychain"
 }
 ```
 

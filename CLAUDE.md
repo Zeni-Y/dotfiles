@@ -29,7 +29,7 @@ home/                # chezmoi source directory (= chezmoiroot)
     mise/config.toml   # ランタイムバージョン管理 (Go, Node, Python, Rust, etc.)
 install/             # .chezmoiscripts から include されるインストールスクリプト
   common/            # mise, fish インストール等
-  ubuntu/common/     # fd-find インストール等
+  ubuntu/common/     # Ubuntu 固有インストール等
 books/               # Zenn Book
   dotfiles-guide/    # chezmoi dotfiles 解説 Book
 ```

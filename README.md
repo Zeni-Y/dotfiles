@@ -4,14 +4,14 @@
 
 ## 前提ツール
 
-| ツール | 用途 |
-|--------|------|
-| [chezmoi](https://www.chezmoi.io/) | dotfiles 管理 |
-| [mise](https://mise.jdx.dev/) | ランタイムバージョン管理 |
-| [sheldon](https://github.com/rossmacarthur/sheldon) | zsh プラグインマネージャ |
-| [starship](https://starship.rs/) | プロンプト |
-| [age](https://github.com/FiloSottile/age) | ファイル暗号化 |
-| [zsh-abbr](https://zsh-abbr.olets.dev/) | エイリアスの代替（abbreviation） |
+| ツール                                              | 用途                             |
+| --------------------------------------------------- | -------------------------------- |
+| [chezmoi](https://www.chezmoi.io/)                  | dotfiles 管理                    |
+| [mise](https://mise.jdx.dev/)                       | ランタイムバージョン管理         |
+| [sheldon](https://github.com/rossmacarthur/sheldon) | zsh プラグインマネージャ         |
+| [starship](https://starship.rs/)                    | プロンプト                       |
+| [age](https://github.com/FiloSottile/age)           | ファイル暗号化                   |
+| [zsh-abbr](https://zsh-abbr.olets.dev/)             | エイリアスの代替（abbreviation） |
 
 ## セットアップ
 
@@ -24,6 +24,7 @@ sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply Zeni-Y
 chezmoi のインストールから dotfiles の取得・適用まで、このワンライナーですべて完了する。
 
 初回実行時に以下の情報を対話的に聞かれる:
+
 - **Email address** — git 等で使用するメールアドレス
 - **System** — `client` (デスクトップ) or `server` (macOS は自動で `client`)
 
@@ -189,35 +190,35 @@ home/                     # chezmoi source directory
 │   └── uv-format        # ruff format + check
 install/                  # インストールスクリプト群
 ├── common/               # mise, sheldon, zed-keymap
-└── ubuntu/common/        # fd-find 等
+└── ubuntu/common/        # Ubuntu 固有インストール等
 books/                    # Zenn Book
 └── dotfiles-guide/       # chezmoi dotfiles 解説 Book
 ```
 
 ### chezmoi のファイル命名規則
 
-| Prefix/Suffix | 意味 | 例 |
-|---------------|------|-----|
-| `dot_` | `.` に変換 | `dot_zshrc` → `.zshrc` |
-| `private_` | パーミッション 0600 | `private_dot_ssh/` |
-| `encrypted_` | age で暗号化 | `encrypted_private_dot_env` |
-| `.tmpl` | Go テンプレートとして処理 | `.chezmoi.yaml.tmpl` |
-| `executable_` | 実行権限付き | `executable_dev` |
-| `run_once_` | 一度だけ実行するスクリプト | `run_once_install.sh` |
-| `run_once_after_` | apply 後に一度だけ実行 | `run_once_after_01-install-mise.sh.tmpl` |
-| `run_onchange_after_` | 内容変更時に実行 | `run_onchange_after_10-setup-zed-keymap.sh.tmpl` |
+| Prefix/Suffix         | 意味                       | 例                                               |
+| --------------------- | -------------------------- | ------------------------------------------------ |
+| `dot_`                | `.` に変換                 | `dot_zshrc` → `.zshrc`                           |
+| `private_`            | パーミッション 0600        | `private_dot_ssh/`                               |
+| `encrypted_`          | age で暗号化               | `encrypted_private_dot_env`                      |
+| `.tmpl`               | Go テンプレートとして処理  | `.chezmoi.yaml.tmpl`                             |
+| `executable_`         | 実行権限付き               | `executable_dev`                                 |
+| `run_once_`           | 一度だけ実行するスクリプト | `run_once_install.sh`                            |
+| `run_once_after_`     | apply 後に一度だけ実行     | `run_once_after_01-install-mise.sh.tmpl`         |
+| `run_onchange_after_` | 内容変更時に実行           | `run_onchange_after_10-setup-zed-keymap.sh.tmpl` |
 
 ## カスタムコマンド
 
-| コマンド | 機能 |
-|---------|------|
-| `dev` | ghq + fzf でリポジトリに移動、tmux セッション名をリネーム |
-| `cdgwq` | gwq worktree を fzf で選択して移動 |
-| `cdw` | 最新の gwq worktree に移動 |
-| `fgc` | fzf で git branch をチェックアウト |
-| `chezmoi-cd` | chezmoi ソースディレクトリに移動 |
-| `git-delete-merged-branches` | squash-merge 済みブランチを削除 |
-| `uv-format` | ruff format + ruff check を実行 |
+| コマンド                     | 機能                                                      |
+| ---------------------------- | --------------------------------------------------------- |
+| `dev`                        | ghq + fzf でリポジトリに移動、tmux セッション名をリネーム |
+| `cdgwq`                      | gwq worktree を fzf で選択して移動                        |
+| `cdw`                        | 最新の gwq worktree に移動                                |
+| `fgc`                        | fzf で git branch をチェックアウト                        |
+| `chezmoi-cd`                 | chezmoi ソースディレクトリに移動                          |
+| `git-delete-merged-branches` | squash-merge 済みブランチを削除                           |
+| `uv-format`                  | ruff format + ruff check を実行                           |
 
 ## 管理ツール一覧
 

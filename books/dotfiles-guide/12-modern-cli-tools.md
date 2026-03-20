@@ -98,14 +98,9 @@ fd -e md
 - **スマートなデフォルト**: `.gitignore` を自動的に尊重、隠しファイルはデフォルトで除外
 - **カラー出力**: 検索結果を見やすく表示
 
-### Ubuntu での注意点
+### インストール
 
-Ubuntu では `fd` ではなく `fdfind` という名前でインストールされます。このリポジトリではインストールスクリプトでシンボリックリンクを作成しています。
-
-```bash
-# install/ubuntu/common/fd.sh
-ln -s "$(which fdfind)" "${HOME}/.local/bin/fd"
-```
+このリポジトリでは mise 経由でインストールしています。OS のパッケージマネージャの差異（Ubuntu では `fdfind` という名前になる等）を気にせず、どの環境でも `fd` コマンドとして使えます。
 
 ## [ripgrep (rg)](https://github.com/BurntSushi/ripgrep) — grep の代替
 
