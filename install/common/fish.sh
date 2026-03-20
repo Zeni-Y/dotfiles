@@ -17,7 +17,17 @@ function install_fish() {
     if [ -f /etc/os-release ]; then
         . /etc/os-release
         case "${ID}" in
-            ubuntu|debian)
+            ubuntu)
+                # apt-add-repository コマンドがなければ software-properties-common をインストール
+                if ! command -v apt-add-repository &>/dev/null; then
+                    sudo apt-get update -qq
+                    sudo apt-get install -y -qq software-properties-common
+                fi
+                sudo apt-add-repository -y ppa:fish-shell/release-4
+                sudo apt-get update -qq
+                sudo apt-get install -y -qq fish
+                ;;
+            debian)
                 sudo apt-get update -qq
                 sudo apt-get install -y -qq fish
                 ;;
