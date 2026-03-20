@@ -1,0 +1,117 @@
+# fish shell 設定
+
+#
+# Path settings
+#
+fish_add_path /usr/local/bin /usr/local/sbin
+fish_add_path $HOME/.local/bin
+fish_add_path $HOME/.local/bin/common
+{{ if eq .system "client" -}}
+fish_add_path $HOME/.local/bin/client
+{{ else if eq .system "server" -}}
+fish_add_path $HOME/.local/bin/server
+{{ end -}}
+
+#
+# XDG 規格の環境変数
+#
+set -gx CLAUDE_CONFIG_DIR "$HOME/.config/claude"
+set -gx CODEX_HOME "$HOME/.config/codex"
+set -gx CLAUDE_MEM_DATA_DIR "$HOME/.config/claude-mem"
+set -gx LANG en_US.UTF-8
+set -gx GPG_TTY (tty)
+
+{{ if eq .system "server" -}}
+#
+# サーバー用環境変数
+#
+
+# CUDA
+set -gx CUDA_HOME /usr/local/cuda
+set -gx LD_LIBRARY_PATH "$CUDA_HOME/lib64"
+fish_add_path $CUDA_HOME/bin
+
+# Hugging Face
+set -gx HF_HOME "$HOME/.cache/huggingface"
+set -gx HF_DATASETS_CACHE "$HF_HOME/datasets"
+set -gx TRANSFORMERS_CACHE "$HF_HOME/hub"
+{{ end -}}
+
+#
+# starship プロンプト
+#
+if type -q starship
+    starship init fish | source
+end
+
+#
+# mise ランタイムバージョン管理
+#
+if test -x $HOME/.local/bin/mise
+    $HOME/.local/bin/mise activate fish | source
+end
+
+#
+# fzf
+#
+if type -q fzf
+    fzf --fish | source
+    set -gx FZF_DEFAULT_OPTS "--reverse"
+end
+
+#
+# 言語環境
+#
+
+# Go
+if type -q go
+    set -gx GOPATH "$HOME/ghq"
+    set -gx GOROOT (go env GOROOT)
+    fish_add_path $GOPATH/bin
+    fish_add_path $HOME/.go/bin
+end
+
+# Rust
+fish_add_path $HOME/.cargo/bin
+
+# Bun
+set -gx BUN_INSTALL "$HOME/.bun"
+fish_add_path $BUN_INSTALL/bin
+
+#
+# エイリアス（fish abbreviations）
+#
+abbr -a cz chezmoi
+abbr -a gm 'git checkout (git symbolic-ref refs/remotes/origin/HEAD | sed "s@^refs/remotes/origin/@@")'
+alias ls "eza --long --group --header --binary --time-style=long-iso --icons"
+alias ll "eza -la --long --group --header --binary --time-style=long-iso --icons"
+
+{{ if eq .system "server" -}}
+#
+# SSH Agent (サーバー)
+#
+set -l _keychain_env "$HOME/.keychain/"(hostname)"-fish"
+if test -f $_keychain_env
+    source $_keychain_env
+end
+# バックグラウンドで agent の生存確認と必要なら再起動
+fish -c 'keychain --quiet --nolock --quick --agents ssh ~/.ssh/id_ed25519 &>/dev/null' &
+disown
+{{ end -}}
+
+#
+# プライベート設定
+#
+if test -f $HOME/.workrc.fish
+    source $HOME/.workrc.fish
+end
+
+#
+# fisher プラグインマネージャのブートストラップ
+#
+if not functions -q fisher
+    if type -q curl
+        curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
+        fisher install jorgebucaran/fisher 2>/dev/null
+    end
+end

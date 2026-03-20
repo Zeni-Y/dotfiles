@@ -1,4 +1,3 @@
-.config/sheldon/plugin_sources
 {{ if eq (env "CI") "true" -}}
 # CI 環境では暗号化ファイルをスキップ（暗号化未設定時は .age 拡張子付きで認識される）
 .ssh/authorized_keys
