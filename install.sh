@@ -63,8 +63,7 @@ function is_tty() {
 
 # CI 環境、またはパイプ経由の実行かを判定する
 # どちらもユーザーがキーボードから入力できない（= TTY がない）状態
-# age のパスフレーズ入力や chezmoi のプロンプトが使えないため、
-# --no-tty や暗号化ファイルの除外が必要になる
+# chezmoi のプロンプトが使えないため、--no-tty が必要になる
 function is_ci_or_not_tty() {
     is_ci || ! is_tty
 }
@@ -135,17 +134,8 @@ function run_chezmoi() {
         --use-builtin-git true \
         ${no_tty_option}
 
-    # CI/非TTY 環境では暗号化ファイルを除外する
-    # age はパスフレーズ入力に TTY を必要とするため、
-    # TTY がない環境では encrypted_ prefix のファイルを事前に削除して
-    # chezmoi apply で復号が走らないようにする
-    if is_ci_or_not_tty; then
-        info "CI/非TTY 環境を検出: 暗号化ファイルを除外します"
-        find "$("${chezmoi_cmd}" source-path)" -type f -name "encrypted_*" -exec rm -fv {} +
-    fi
-
     # chezmoi apply: ソースディレクトリの内容をホームディレクトリに適用する
-    # この中で .chezmoiscripts が実行され、mise, sheldon, starship 等がインストールされる
+    # この中で .chezmoiscripts が実行され、mise, fish, starship 等がインストールされる
     info "chezmoi apply を実行中..."
     "${chezmoi_cmd}" apply ${no_tty_option}
 

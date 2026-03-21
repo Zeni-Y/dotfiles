@@ -6,7 +6,7 @@
 2. **冪等性**: スクリプトは何度実行しても同じ結果になるように設計（`run_once_*` の活用）
 3. **テンプレート分割**: `install/` に再利用可能なロジックを分離し `{{ include }}` で結合。1 ファイルの肥大化を防ぐ
 4. **クロスプラットフォーム**: OS (`darwin`/`linux`) × system (`client`/`server`) の組み合わせで分岐管理
-5. **セキュリティ**: age encryption で秘密情報を暗号化管理。`.workrc.fish` 等の非追跡ファイルで個人設定を分離
+5. **セキュリティ**: SSH agent forwarding を活用。`.workrc.fish` 等の非追跡ファイルで個人設定を分離
 6. **Rust ベースモダンツール**: starship, mise, eza 等の高速ツールを積極採用
 
 ## Repository Structure
@@ -14,7 +14,7 @@
 ```
 .chezmoiroot         # source root を home/ に設定
 home/                # chezmoi source directory (= chezmoiroot)
-  .chezmoi.yaml.tmpl # chezmoi config template (email, system, age encryption)
+  .chezmoi.yaml.tmpl # chezmoi config template (email, system)
   .chezmoiscripts/   # chezmoi apply 時に実行されるスクリプト
     common/          # 全OS共通スクリプト
     ubuntu/          # Ubuntu固有スクリプト
@@ -89,10 +89,11 @@ books/               # Zenn Book
 | エイリアス | `config.fish.tmpl` 内で `abbr` / `alias` で定義 |
 | テンプレート | `.tmpl` 内で `{{ if }}` 条件分岐 |
 
-### Encryption
+### SSH
 
-- age encryption を使用 (`~/.config/age/key.txt`)
-- CI 環境 (`CI=true`) では暗号化を無効化
+- SSH agent forwarding を利用し、秘密鍵・公開鍵は chezmoi で管理しない
+- `authorized_keys` のみ平文で管理（`private_dot_ssh/private_authorized_keys`）
+- client（ローカル PC）を新しくする場合は都度秘密鍵と公開鍵を作成
 
 ### Shell environment
 
@@ -141,7 +142,7 @@ chezmoi data           # template data を確認
 5. **シェルスクリプト**: `#!/usr/bin/env bash` を使い、コメントは日本語で記述
 6. **fish functions**: `~/.config/fish/functions/` に 1 関数 1 ファイルで配置
 7. **冪等性**: インストールスクリプトは既にインストール済みの場合はスキップするように設計
-8. **セキュリティ**: 秘密鍵や認証情報は `private_` prefix + age encryption で管理。`.env` やパスワードを平文でコミットしない
+8. **セキュリティ**: 認証情報は `.env` やパスワードを平文でコミットしない。SSH は agent forwarding を利用し、秘密鍵は chezmoi で管理しない
 9. **コミットメッセージ**: Conventional Commits 形式を推奨 (`feat:`, `fix:`, `docs:`, `refactor:`, `chore:` 等)
 10. **`fish -c` 禁止（フォークボム防止）**: fish の設定ファイル（`config.fish`, `conf.d/`, `functions/`）およびインストールスクリプトから `fish -c "..."` でサブシェルを起動してはならない。`fish -c` は `config.fish` を再帰的に読み込み、プロセスが無限増殖するフォークボムを引き起こす。代替手段:
     - 外部コマンド実行: `command <cmd>` を使う（fish サブシェルを経由しない）

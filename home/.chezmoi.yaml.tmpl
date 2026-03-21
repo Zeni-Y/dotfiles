@@ -29,10 +29,3 @@ data:
     email: {{ $email | quote }}
     system: {{ $system | quote }}
     is_wsl: {{ $isWsl }}
-
-{{ if ne (env "CI") "true" -}}
-encryption: "age"
-age:
-    identity: "~/.config/age/key.txt"
-    recipient: "age1n6p3ft8te0u5pqy08g9l6xe4httljlpygejuj7wmx96te67z63yscxd6pt"
-{{- end }}
