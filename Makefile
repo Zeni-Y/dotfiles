@@ -13,6 +13,7 @@ docker:
 			--build-arg USER_GID="$$(id -g)"; \
 	fi
 	docker run -it --rm \
+		-v "$$(pwd):/home/$$(whoami)/.local/share/chezmoi" \
 		--hostname dotfiles-test \
 		$(DOCKER_IMAGE_NAME) /bin/bash --login
 

@@ -27,4 +27,8 @@ RUN groupadd --gid $USER_GID $USERNAME && \
 
 # 以降はユーザー権限で実行
 USER $USERNAME
-WORKDIR /home/$USERNAME
+
+# chezmoi インストール（ユーザー権限、~/bin に配置）
+RUN sh -c "$(curl -fsLS get.chezmoi.io)"
+
+WORKDIR /home/$USERNAME/.local/share/chezmoi
