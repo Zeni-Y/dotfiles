@@ -158,6 +158,27 @@ docker run -it dotfiles-test fish
 
 ビルドが成功すれば、新しい Ubuntu マシンでも `chezmoi init --apply` が正しく動作することが確認できます。
 
+### GitHub API レート制限への対策
+
+mise や chezmoi の `gitHubLatestReleaseAssetURL` は GitHub API を使用するため、未認証の環境では **60 リクエスト/時間** のレート制限にかかることがあります。Docker でのデバッグ中は繰り返しビルド・適用を行うため、特に制限に引っかかりやすくなります。
+
+`GITHUB_TOKEN` を設定することでレート制限が **5,000 リクエスト/時間** に緩和されます。
+
+```bash
+# GitHub Personal Access Token を設定（権限は不要、レート制限緩和のみ）
+export GITHUB_TOKEN=ghp_xxxxx
+
+# Makefile 経由で Docker に自動的に渡される
+make docker
+make init
+```
+
+Makefile の `docker run` に `-e GITHUB_TOKEN` が設定されているため、ホスト側で環境変数を設定するだけでコンテナ内にも渡されます。mise のインストールスクリプトでは `GITHUB_TOKEN` を `MISE_GITHUB_TOKEN` に転送しています。
+
+:::message
+GitHub の Fine-grained personal access token は権限なし（Public Repositories read-only）で作成すれば十分です。
+:::
+
 ## bats によるシェルスクリプトテスト
 
 [bats (Bash Automated Testing System)](https://github.com/bats-core/bats-core) は、シェルスクリプト用のテストフレームワークです。mise で管理しています。
