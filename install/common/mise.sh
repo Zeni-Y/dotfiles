@@ -19,8 +19,8 @@ function install_mise() {
 }
 
 function run_mise_install() {
-    # npm パッケージは Node.js が必要なため、先に Node.js をインストール
-    mise install node
+    # npm パッケージは Node.js が必要なため、config.toml を参照せず直接インストール
+    mise install node@lts
     mise install
 }
 
