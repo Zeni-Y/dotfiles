@@ -1,10 +1,11 @@
 {{ $fontsPath := .chezmoi.os | replace "darwin" "Library/Fonts" | replace "linux" ".local/share/fonts" -}}
+{{ $nerdFontsVersion := "v3.4.0" -}}
 "{{ $fontsPath }}/RobotoMono":
   type: "archive"
-  url: {{ gitHubLatestReleaseAssetURL "ryanoasis/nerd-fonts" "RobotoMono.zip" | quote }}
+  url: "https://github.com/ryanoasis/nerd-fonts/releases/download/{{ $nerdFontsVersion }}/RobotoMono.zip"
   refreshPeriod: "720h"
 
 "{{ $fontsPath }}/Hack":
   type: "archive"
-  url: {{ gitHubLatestReleaseAssetURL "ryanoasis/nerd-fonts" "Hack.zip" | quote }}
+  url: "https://github.com/ryanoasis/nerd-fonts/releases/download/{{ $nerdFontsVersion }}/Hack.zip"
   refreshPeriod: "720h"
