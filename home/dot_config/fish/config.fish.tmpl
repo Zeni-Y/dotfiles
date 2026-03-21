@@ -113,21 +113,6 @@ abbr -a gm 'git checkout (git symbolic-ref refs/remotes/origin/HEAD | sed "s@^re
 alias ls "eza --long --group --header --binary --time-style=long-iso --icons"
 alias ll "eza -la --long --group --header --binary --time-style=long-iso --icons"
 
-{{ if eq .system "server" -}}
-#
-# SSH Agent (サーバー)
-#
-if type -q keychain
-    set -l _keychain_env "$HOME/.keychain/$hostname-fish"
-    if test -f $_keychain_env
-        source $_keychain_env
-    end
-    # バックグラウンドで agent の生存確認と必要なら再起動
-    command keychain --quiet --nolock --quick --agents ssh ~/.ssh/id_ed25519 &>/dev/null &
-    disown
-end
-{{ end -}}
-
 #
 # プライベート設定
 #

@@ -23,7 +23,7 @@ git config user.email "torvalds@linux-foundation.org"
 
 ## GPG 署名と SSH 署名
 
-コミット署名の方法は2つあります。
+コミット署名の方法は 2 つあります。
 
 ### GPG 署名（従来の方法）
 
@@ -42,17 +42,41 @@ private_dot_gnupg/
 
 ### SSH 署名（Git 2.34+ の新しい方法）
 
-Git 2.34（2021年リリース）から、**SSH 鍵でコミットに署名できる**ようになりました[^1]。SSH 鍵はほとんどの開発者が既に持っているので、新しい鍵を生成する必要がありません。
+Git 2.34（2021 年リリース）から、**SSH 鍵でコミットに署名できる**ようになりました[^1]。SSH 鍵はほとんどの開発者が既に持っているので、新しい鍵を生成する必要がありません。
 
-| | GPG 署名 | SSH 署名 |
-|---|---|---|
-| 必要な鍵 | GPG 鍵ペア（別途生成が必要） | SSH 鍵（既存のものを流用可） |
-| 設定の複雑さ | 高い（鍵生成、gpg-agent、pinentry 等） | シンプル（Git の設定3行） |
-| 管理するもの | `~/.gnupg/` 以下の複数ファイル | 既存の SSH 鍵をそのまま使う |
-| Git の対応 | 以前から対応 | Git 2.34+（2021年〜） |
-| GitHub 対応 | あり | あり |
+|              | GPG 署名                               | SSH 署名                     |
+| ------------ | -------------------------------------- | ---------------------------- |
+| 必要な鍵     | GPG 鍵ペア（別途生成が必要）           | SSH 鍵（既存のものを流用可） |
+| 設定の複雑さ | 高い（鍵生成、gpg-agent、pinentry 等） | シンプル（Git の設定 3 行）  |
+| 管理するもの | `~/.gnupg/` 以下の複数ファイル         | 既存の SSH 鍵をそのまま使う  |
+| Git の対応   | 以前から対応                           | Git 2.34+（2021 年〜）       |
+| GitHub 対応  | あり                                   | あり                         |
 
 SSH 鍵を既に chezmoi で管理しているなら、**追加の鍵管理なしで**署名を始められます。必要十分でシンプル。これが SSH 署名を選ぶ理由です。
+
+### SSH agent forwarding 環境での署名
+
+サーバーに SSH agent forwarding で接続している場合、秘密鍵も公開鍵もサーバー上にはファイルとして存在しません。そのため `user.signingkey = ~/.ssh/id_ed25519.pub` のようにファイルパスを指定する方法は使えません。
+
+さらに、複数のマシンから異なる鍵で同じサーバーに接続する場合、公開鍵をハードコードする `key::ssh-ed25519 AAAA...` 形式も特定のマシンに固定されてしまいます。
+
+Git はこのケースのために **`gpg.ssh.defaultKeyCommand`** という設定を用意しています[^3]。`user.signingKey` が未設定の場合、署名時にこのコマンドを実行し、その出力を署名鍵として使います。
+
+```toml
+[gpg "ssh"]
+	defaultKeyCommand = sh -c 'echo key::$(ssh-add -L | head -1)'
+```
+
+この設定により:
+
+- **署名のたびに** SSH agent から動的に公開鍵を取得する
+- `user.signingKey` の設定は**不要**（設定されていない場合にのみ `defaultKeyCommand` が使われる）
+- どのマシンから接続しても、**その時点の agent の鍵**で署名される
+- 秘密鍵も公開鍵もサーバー上にファイルとして存在する必要がない
+
+:::message
+`defaultKeyCommand` の出力は `key::` プレフィックス付きの公開鍵文字列である必要があります。`ssh-add -L` は `ssh-ed25519 AAAA... user@host` 形式で出力するので、`echo key::$(...)` で `key::` を付加しています。
+:::
 
 ### 設定名が `gpg` なのは歴史的経緯
 
@@ -72,26 +96,29 @@ chezmoi で管理している Git の設定ファイルに以下を追加しま�
 [user]
 	name = zenimoto
 	email = {{ .email | quote }}
-	signingkey = ~/.ssh/id_ed25519.pub
 [gpg]
 	format = ssh
+[gpg "ssh"]
+	defaultKeyCommand = sh -c 'echo key::$(ssh-add -L | head -1)'
 [commit]
 	gpgsign = true
 [tag]
 	gpgsign = true
 ```
 
-| 設定 | 値 | 説明 |
-|---|---|---|
-| `user.signingkey` | `~/.ssh/id_ed25519.pub` | 署名に使う SSH 公開鍵のパス |
-| `gpg.format` | `ssh` | 署名形式を SSH に指定 |
-| `commit.gpgsign` | `true` | 全コミットに自動で署名 |
-| `tag.gpgsign` | `true` | 全タグにも自動で署名 |
+| 設定                        | 値                                           | 説明                                      |
+| --------------------------- | -------------------------------------------- | ----------------------------------------- |
+| `gpg.format`                | `ssh`                                        | 署名形式を SSH に指定                     |
+| `gpg.ssh.defaultKeyCommand` | `sh -c 'echo key::$(ssh-add -L \| head -1)'` | 署名時に SSH agent から動的に公開鍵を取得 |
+| `commit.gpgsign`            | `true`                                       | 全コミットに自動で署名                    |
+| `tag.gpgsign`               | `true`                                       | 全タグにも自動で署名                      |
+
+`user.signingKey` は設定していません。代わりに `gpg.ssh.defaultKeyCommand` が署名のたびに SSH agent から公開鍵を取得します。これにより、ローカルに公開鍵ファイルが存在しない SSH agent forwarding 環境でも、また異なる鍵を持つ複数マシンからの接続でも、正しく署名できます。
 
 `commit.gpgsign = true` にしておくと、毎回 `git commit -S` を付けなくても自動で署名されるので楽です。
 
 :::message alert
-**`~/.gitconfig` が存在すると XDG ベースの設定が無視されます。** Git のグローバル設定ファイルは `~/.gitconfig` と `~/.config/git/config`（XDG ベース）の2箇所がありますが、`~/.gitconfig` が存在する場合、Git は XDG 側を読みません[^2]。chezmoi で `~/.config/git/config` に設定を管理している場合、`~/.gitconfig` が残っていると署名設定が丸ごと無視されてハマります。`~/.gitconfig` が残っていないか確認しましょう。
+**`~/.gitconfig` が存在すると XDG ベースの設定が無視されます。** Git のグローバル設定ファイルは `~/.gitconfig` と `~/.config/git/config`（XDG ベース）の 2 箇所がありますが、`~/.gitconfig` が存在する場合、Git は XDG 側を読みません[^2]。chezmoi で `~/.config/git/config` に設定を管理している場合、`~/.gitconfig` が残っていると署名設定が丸ごと無視されてハマります。`~/.gitconfig` が残っていないか確認しましょう。
 
 ```bash
 # ~/.gitconfig が存在するか確認
@@ -101,6 +128,7 @@ ls ~/.gitconfig
 cat ~/.gitconfig
 rm ~/.gitconfig
 ```
+
 :::
 
 ### GitHub に Signing Key を登録
@@ -136,3 +164,4 @@ git log --show-signature -1
 
 [^1]: [Git - git-config Documentation (gpg.format)](https://git-scm.com/docs/git-config#Documentation/git-config.txt-gpgformat) — SSH 署名の設定仕様
 [^2]: [Git - git-config Documentation (FILES)](https://git-scm.com/docs/git-config#FILES) — `~/.gitconfig` が存在する場合 `$XDG_CONFIG_HOME/git/config` は読み込まれない
+[^3]: [Git - Documentation/config/gpg.adoc](https://github.com/git/git/blob/master/Documentation/config/gpg.adoc) — `gpg.ssh.defaultKeyCommand` の公式ドキュメント
