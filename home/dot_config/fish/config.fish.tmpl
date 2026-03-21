@@ -1,5 +1,8 @@
 # fish shell 設定
 
+# グリーティングメッセージを無効化
+set -g fish_greeting
+
 #
 # Path settings
 #
@@ -45,11 +48,11 @@ set -l _cache_dir ~/.cache/fish
 
 #
 # starship プロンプト（キャッシュ）
+# バイナリ更新時のみ再生成（--version 呼び出しを回避して高速化）
 #
 if type -q starship
-    set -l _ver (starship --version 2>/dev/null | string split ' ')[2]
-    set -l _cache $_cache_dir/starship_init_$_ver.fish
-    if not test -f $_cache
+    set -l _cache $_cache_dir/starship_init.fish
+    if not test -f $_cache; or test (command -s starship) -nt $_cache
         mkdir -p $_cache_dir
         starship init fish >$_cache
     end
@@ -67,11 +70,11 @@ end
 
 #
 # fzf（キャッシュ）
+# バイナリ更新時のみ再生成（--version 呼び出しを回避して高速化）
 #
 if type -q fzf
-    set -l _ver (fzf --version 2>/dev/null | string split ' ')[1]
-    set -l _cache $_cache_dir/fzf_init_$_ver.fish
-    if not test -f $_cache
+    set -l _cache $_cache_dir/fzf_init.fish
+    if not test -f $_cache; or test (command -s fzf) -nt $_cache
         mkdir -p $_cache_dir
         fzf --fish >$_cache
     end
@@ -83,11 +86,11 @@ end
 # 言語環境
 #
 
-# Go（GOROOT をキャッシュ。Go バージョン変更時は ~/.cache/fish/goroot を削除）
+# Go（GOROOT をキャッシュ。go バイナリ更新時に自動再生成）
 if type -q go
     set -gx GOPATH "$HOME/ghq"
     set -l _cache $_cache_dir/goroot
-    if not test -f $_cache
+    if not test -f $_cache; or test (command -s go) -nt $_cache
         mkdir -p $_cache_dir
         go env GOROOT >$_cache
     end
