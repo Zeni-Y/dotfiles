@@ -258,7 +258,7 @@ chezmoi apply
   │     → Claude Code, pyright 等の npm パッケージ
   │
   └─ 3. 以降の run_once スクリプトで mise 経由のツールが使える
-        → 例: fish や keychain のインストールスクリプトが mise の存在を前提にできる
+        → 例: fish のインストールスクリプトが mise の存在を前提にできる
 ```
 
 新しいマシンで `chezmoi apply` を叩くだけで、言語ランタイムから CLI ツールまで全部揃います。

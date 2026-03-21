@@ -82,9 +82,9 @@ Linux ディストリビューション固有の差異（パッケージ名の�
 ```
 home/.chezmoiscripts/
 ├── common/                          # 全 OS 共通
-│   └── run_once_after_01-install-mise.sh.tmpl
+│   ├── run_once_after_01-install-mise.sh.tmpl
+│   └── run_once_after_02-install-fish.sh.tmpl
 └── ubuntu/                          # Ubuntu 固有
-    └── run_once_after_03-install-keychain.sh.tmpl
 ```
 
 OS 固有のスクリプトは `.chezmoiscripts/<os>/` に配置します。chezmoi は適切なスクリプトだけを実行します。
@@ -93,11 +93,9 @@ OS 固有のスクリプトは `.chezmoiscripts/<os>/` に配置します。chez
 
 ```
 install/
-├── common/                 # 全 OS 共通のインストール
-│   └── mise.sh
-└── ubuntu/
-    └── common/             # Ubuntu の全 system 共通
-        └── keychain.sh
+└── common/                 # 全 OS 共通のインストール
+    ├── mise.sh
+    └── fish.sh
 ```
 
 将来的には以下のような構造も可能です:
@@ -123,10 +121,10 @@ install/
 1 ファイル内で少しだけ分岐する場合は、テンプレートの条件分岐を使います。
 
 ```go
-# .chezmoiscripts/ubuntu/run_once_after_03-install-keychain.sh.tmpl
+# config.fish.tmpl 内での条件分岐例
 {{ if eq .chezmoi.os "linux" -}}
 {{   if eq .chezmoi.osRelease.idLike "debian" -}}
-{{     include "../install/ubuntu/common/keychain.sh" }}
+# Ubuntu 固有の設定
 {{   end -}}
 {{ end -}}
 ```

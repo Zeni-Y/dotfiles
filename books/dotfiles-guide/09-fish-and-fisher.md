@@ -114,9 +114,7 @@ fish 起動
   │
   ├─ 7. エイリアス定義（abbr / alias）
   │
-  ├─ 8. SSH keychain（server のみ）
-  │
-  └─ 9. プライベート設定（~/.workrc.fish）
+  └─ 8. プライベート設定（~/.workrc.fish）
 ```
 
 ## パフォーマンスキャッシュ戦略
@@ -361,34 +359,11 @@ fish 起動
 
 当初、`install/common/fish.sh` で `fish -c 'curl ... | source; fisher update'` としていたところフォークボムが発生しました。fisher.fish を curl でファイルとして先にダウンロードし、`fish --no-config -c 'source fisher.fish; fisher update'` とすることで解決しています。
 
-同様に、`config.fish` 内の keychain 呼び出しでも `fish -c "keychain ..."` としていた箇所を `command keychain ... &` に修正しています。
+同様に、過去には `config.fish` 内の keychain 呼び出しでも `fish -c "keychain ..."` としていた箇所を `command keychain ... &` に修正したケースがあります。
 :::
 
-## SSH keychain（サーバー）
-
-サーバー環境では SSH agent の管理に [keychain](https://github.com/funtoo/keychain) を使います。keychain は起動済みの SSH agent を検出して再利用するため、tmux の pane を開くたびにパスフレーズを求められる問題を回避できます。
-
-```fish
-{{ if eq .system "server" -}}
-#
-# SSH Agent (サーバー)
-#
-set -l _keychain_env "$HOME/.keychain/$hostname-fish"
-if test -f $_keychain_env
-    source $_keychain_env
-end
-# バックグラウンドで agent の生存確認と必要なら再起動
-command keychain --quiet --nolock --quick --agents ssh ~/.ssh/id_ed25519 &>/dev/null &
-disown
-{{ end -}}
-```
-
-`command keychain ...` のあとに `& disown` を付けることで、keychain の起動チェックをバックグラウンドに切り出しています。これにより fish セッションの起動をブロックしません。
-
-`command` プレフィックスを付けているのは、同名の fish 関数や abbr があった場合にバイパスして、必ず外部コマンドの `keychain` を呼ぶためです。
-
 :::message
-`disown` なしで `fish -c "keychain ..."` のように呼ぶと、fish がサブシェルを spawn し、そのサブシェルがさらに fish を起動するフォークボムになる危険があります。シェルスクリプト内から fish を呼ぶ場合は注意が必要です。
+**設計変更のお知らせ**: 当リポジトリでは以前 [keychain](https://github.com/funtoo/keychain) による SSH agent 管理を行っていましたが、現在は **SSH agent forwarding** に移行し、keychain は削除しています。SSH 鍵はローカル PC にのみ保持し、サーバーには agent forwarding で転送する方式を採用しています。keychain を削除した理由は、agent forwarding 環境で keychain がローカルの SSH agent を起動し `SSH_AUTH_SOCK` を上書きしてしまい、forwarded agent への接続が切れるためです。詳しくは「セキュリティと機密情報の管理」のチャプターを参照してください。
 :::
 
 ## プライベート設定

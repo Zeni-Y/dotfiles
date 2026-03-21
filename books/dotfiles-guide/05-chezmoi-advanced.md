@@ -44,7 +44,7 @@ chezmoi apply
   │
   ├─ 3. ファイルの展開・配置
   │     → .tmpl ファイルはテンプレート展開してからコピー
-  │     → encrypted_* は復号してから配置
+  │     → .tmpl ファイルはテンプレート展開してからコピー
   │     → .chezmoiexternal の外部リソースをダウンロード
   │     → .chezmoiignore に一致するファイルはスキップ
   │
@@ -230,15 +230,13 @@ chezmoi では `.chezmoiscripts/` 以下にスクリプトを配置して、`che
 .chezmoiscripts/
 └── common/
     ├── run_once_after_01-install-mise.sh.tmpl    # after の中で最初に実行
-    ├── run_once_after_02-install-fish.sh.tmpl    # fish + fisher セットアップ
-    └── run_once_after_03-install-keychain.sh.tmpl # keychain インストール
+    └── run_once_after_02-install-fish.sh.tmpl    # fish + fisher セットアップ
 ```
 
 番号が小さいほど先に実行されます。このリポジトリでは:
 
 - `01` — mise のインストール（他のツールの前提）
 - `02` — fish shell のインストール
-- `03` — keychain のインストール
 
 依存関係を番号で表現しているので、後から見返しても実行順序がすぐ分かります。
 
@@ -260,12 +258,9 @@ chezmoi では `.chezmoiscripts/` 以下にスクリプトを配置して、`che
         │ {{ include }} で参照
         ↓
 install/（どうやってインストールするか）
-  ├── common/
-  │   ├── mise.sh          # mise インストールスクリプト
-  │   └── fish.sh          # fish shell インストールスクリプト
-  └── ubuntu/
-      └── common/
-          └── keychain.sh   # keychain インストールスクリプト
+  └── common/
+      ├── mise.sh          # mise インストールスクリプト
+      └── fish.sh          # fish shell インストールスクリプト
 ```
 
 `.chezmoiscripts/` からは `{{ include }}` で参照します。
@@ -285,28 +280,19 @@ install/（どうやってインストールするか）
 インストールスクリプトは**何度実行しても同じ結果になる**ように設計します。これがすごく大事です。
 
 ```bash
-# install/common/keychain.sh
-function install_keychain() {
-    # バージョン比較で冪等性を確保
-    if command -v keychain &>/dev/null; then
-        local current
-        current="$(keychain --version 2>&1 | head -1 | awk '{print $NF}')"
-        if [ "${current}" = "${KEYCHAIN_VERSION}" ]; then
-            echo "keychain ${KEYCHAIN_VERSION} is already installed"
-            return 0
-        fi
-        echo "keychain ${current} found, upgrading to ${KEYCHAIN_VERSION}..."
+# install/common/mise.sh（冪等性の例）
+function install_mise() {
+    if command -v mise &>/dev/null; then
+        echo "mise is already installed"
+        return 0
     fi
 
-    # GitHub Releases からバイナリをダウンロード
-    mkdir -p "${HOME}/.local/bin"
-    curl -fsSL -o "${HOME}/.local/bin/keychain" "${url}"
-    chmod +x "${HOME}/.local/bin/keychain"
+    curl https://mise.run | sh
 }
 ```
 
 :::message
-`command -v` で既にインストール済みかチェックし、`if [ ! -L ]` でシンボリックリンクの存在を確認しています。これにより 2 回目以降の実行では何も行いません。
+`command -v` で既にインストール済みかチェックし、インストール済みの場合はスキップします。これにより 2 回目以降の実行では何も行いません。
 :::
 
 ## .chezmoitemplates/ による分割管理

@@ -6,7 +6,7 @@ ARG USER_GID=$USER_UID
 
 ENV TZ=Asia/Tokyo
 ENV DEBIAN_FRONTEND=noninteractive
-# chezmoi apply 時に age 暗号化をスキップ
+# CI=true で chezmoi の対話プロンプトをスキップ（email, system をデフォルト値で設定）
 ENV CI=true
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
@@ -15,14 +15,14 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         curl git sudo locales ca-certificates \
-        build-essential zsh && \
+        build-essential && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     locale-gen ja_JP.UTF-8
 
-# ユーザー作成（zsh をログインシェルに設定）
+# ユーザー作成
 RUN groupadd --gid $USER_GID $USERNAME && \
-    useradd --uid $USER_UID --gid $USER_GID -m $USERNAME -G sudo -s /bin/zsh && \
+    useradd --uid $USER_UID --gid $USER_GID -m $USERNAME -G sudo -s /bin/bash && \
     echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 # chezmoi インストール

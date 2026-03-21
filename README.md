@@ -4,14 +4,13 @@
 
 ## 前提ツール
 
-| ツール                                              | 用途                             |
-| --------------------------------------------------- | -------------------------------- |
-| [chezmoi](https://www.chezmoi.io/)                  | dotfiles 管理                    |
-| [mise](https://mise.jdx.dev/)                       | ランタイムバージョン管理         |
-| [sheldon](https://github.com/rossmacarthur/sheldon) | zsh プラグインマネージャ         |
-| [starship](https://starship.rs/)                    | プロンプト                       |
-| [age](https://github.com/FiloSottile/age)           | ファイル暗号化                   |
-| [zsh-abbr](https://zsh-abbr.olets.dev/)             | エイリアスの代替（abbreviation） |
+| ツール                                           | 用途                      |
+| ------------------------------------------------ | ------------------------- |
+| [chezmoi](https://www.chezmoi.io/)               | dotfiles 管理             |
+| [mise](https://mise.jdx.dev/)                    | ランタイムバージョン管理  |
+| [fish](https://fishshell.com/)                   | シェル                    |
+| [fisher](https://github.com/jorgebucaran/fisher) | fish プラグインマネージャ |
+| [starship](https://starship.rs/)                 | プロンプト                |
 
 ## セットアップ
 
@@ -28,16 +27,6 @@ chezmoi のインストールから dotfiles の取得・適用まで、この�
 - **Email address** — git 等で使用するメールアドレス
 - **System** — `client` (デスクトップ) or `server` (macOS は自動で `client`)
 
-### age 暗号化の準備
-
-暗号化ファイルを使用する場合:
-
-```bash
-mkdir -p ~/.config/age
-# 既存の鍵をコピーするか、新規生成
-age-keygen -o ~/.config/age/key.txt
-```
-
 ## chezmoi を使った dotfiles 管理のライフサイクル
 
 ### 1. ファイルを管理対象に追加する
@@ -48,9 +37,6 @@ chezmoi add ~/.config/starship.toml
 
 # テンプレートとして追加 (OS 分岐等が必要な場合)
 chezmoi add --template ~/.bashrc
-
-# 暗号化ファイルとして追加
-chezmoi add --encrypt ~/.ssh/config
 ```
 
 ### 2. 設定を編集する
@@ -125,7 +111,7 @@ chezmoi apply --force
 
 ## Docker でのテスト
 
-Docker を使ってクリーンな Ubuntu 環境で dotfiles の適用をテストできる。`CI=true` が設定されるため age 暗号化はスキップされる。
+Docker を使ってクリーンな Ubuntu 環境で dotfiles の適用をテストできる。`CI=true` が設定されるため対話プロンプトはスキップされる。
 
 ```bash
 # コンテナを起動（初回はイメージを自動ビルド）
@@ -159,27 +145,22 @@ home/                     # chezmoi source directory
 │   ├── chezmoiignore.d/  # ignore ルールの分割
 │   └── chezmoiexternal.d/ # external ルールの分割
 ├── .chezmoiscripts/      # apply 時に実行されるスクリプト
-│   ├── common/           # 全 OS 共通 (mise, sheldon, zed-keymap)
+│   ├── common/           # 全 OS 共通 (mise, fish, zed-keymap)
 │   └── ubuntu/           # Ubuntu 固有
-├── dot_zshrc             # → ~/.zshrc (PATH + sheldon source のみ)
-├── dot_zprofile          # → ~/.zprofile (mise 初期化)
 ├── dot_vimrc             # → ~/.vimrc
 └── dot_config/
     ├── git/
     │   ├── config.tmpl   # Git 設定 (テンプレート化)
     │   └── ignore        # グローバル gitignore
-    ├── sheldon/
-    │   ├── plugins.toml.tmpl  # テンプレート合成 (client/server 分岐)
-    │   └── plugin_sources/    # プラグイン定義の分割
-    │       ├── common.toml    # 共通プラグイン
-    │       ├── client.toml    # client 用
-    │       └── server.toml    # server 用
+    ├── fish/             # fish shell 設定
+    │   ├── config.fish.tmpl  # メイン設定 (テンプレート)
+    │   ├── fish_plugins      # fisher プラグインリスト
+    │   ├── conf.d/           # 自動読み込み設定
+    │   └── functions/        # カスタムコマンド
     ├── starship.toml     # プロンプト設定
     ├── mise/config.toml  # ランタイムバージョン管理
-    ├── zsh-abbr/user-abbreviations  # abbreviation 定義
     ├── gwq/config.toml   # gwq worktree 管理
-    ├── zed/              # Zed エディタ設定
-    └── zsh/plugins/chezmoi-notify/  # dotfiles 更新通知プラグイン
+    └── zed/              # Zed エディタ設定
 ├── dot_local/bin/common/ # カスタムコマンド群
 │   ├── dev              # ghq + fzf リポジトリ移動
 │   ├── cdgwq            # gwq worktree 移動
@@ -189,7 +170,7 @@ home/                     # chezmoi source directory
 │   ├── git-delete-merged-branches  # マージ済みブランチ削除
 │   └── uv-format        # ruff format + check
 install/                  # インストールスクリプト群
-├── common/               # mise, sheldon, zed-keymap
+├── common/               # mise, fish, zed-keymap
 └── ubuntu/common/        # Ubuntu 固有インストール等
 books/                    # Zenn Book
 └── dotfiles-guide/       # chezmoi dotfiles 解説 Book
@@ -199,9 +180,8 @@ books/                    # Zenn Book
 
 | Prefix/Suffix         | 意味                       | 例                                               |
 | --------------------- | -------------------------- | ------------------------------------------------ |
-| `dot_`                | `.` に変換                 | `dot_zshrc` → `.zshrc`                           |
+| `dot_`                | `.` に変換                 | `dot_config` → `.config`                         |
 | `private_`            | パーミッション 0600        | `private_dot_ssh/`                               |
-| `encrypted_`          | age で暗号化               | `encrypted_private_dot_env`                      |
 | `.tmpl`               | Go テンプレートとして処理  | `.chezmoi.yaml.tmpl`                             |
 | `executable_`         | 実行権限付き               | `executable_dev`                                 |
 | `run_once_`           | 一度だけ実行するスクリプト | `run_once_install.sh`                            |
@@ -226,6 +206,6 @@ books/                    # Zenn Book
 
 - **言語**: Go, Node.js (LTS), Rust, Python 3.12
 - **CLI**: aws-cli, gcloud, jq, yq, uv, bun, eza, yazi, hugo
-- **開発**: chezmoi, age, shellcheck, shfmt, pyright, bash-language-server
+- **開発**: chezmoi, shellcheck, shfmt, pyright, bash-language-server
 - **AI**: claude-code, codex
 - **Git**: gh (GitHub CLI), ghq, gwq

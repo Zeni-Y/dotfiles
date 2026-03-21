@@ -6,6 +6,8 @@ ARG USER_GID=$USER_UID
 
 ENV TZ=Asia/Tokyo
 ENV DEBIAN_FRONTEND=noninteractive
+# CI=true で chezmoi の対話プロンプトをスキップ（email, system をデフォルト値で設定）
+ENV CI=true
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 

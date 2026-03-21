@@ -15,7 +15,7 @@ docker:
 	docker run -it --rm \
 		-v "$$(pwd):/home/$$(whoami)/.local/share/chezmoi" \
 		--hostname dotfiles-test \
-		$(DOCKER_IMAGE_NAME) /bin/zsh --login
+		$(DOCKER_IMAGE_NAME) /bin/bash --login
 
 .PHONY: docker-rebuild
 docker-rebuild:

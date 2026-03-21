@@ -10,15 +10,15 @@ chezmoi を使った dotfiles 管理には「唯一の正解」はなく、リ�
 
 ## 3 つのリポジトリの概要
 
-|                      | twpayne/dotfiles[^1]                 | shunk031/dotfiles[^2]          | 当リポジトリ                |
-| -------------------- | ------------------------------------ | ------------------------------ | --------------------------- |
-| **方針**             | chezmoi の機能をフル活用した最小構成 | テスト可能性を重視した分離構成 | shunk031 ベースにシンプル化 |
-| **対象 OS**          | macOS / Linux / Windows              | macOS / Ubuntu                 | Ubuntu (Linux)              |
-| **秘密管理**         | 1Password CLI                        | age encryption                 | age encryption              |
-| **ブートストラップ** | `install.sh`（23 行）                | `setup.sh`（263 行）           | `install.sh`（190 行）      |
-| **テスト**           | なし                                 | Bats + kcov（カバレッジ計測）  | Docker による手動検証       |
-| **シェル**           | zsh (oh-my-zsh)                      | zsh / bash（system で分岐）    | fish (fisher)               |
-| **プラグイン管理**   | oh-my-zsh 内蔵                       | sheldon                        | fisher                      |
+|                      | twpayne/dotfiles[^1]                 | shunk031/dotfiles[^2]          | 当リポジトリ                        |
+| -------------------- | ------------------------------------ | ------------------------------ | ----------------------------------- |
+| **方針**             | chezmoi の機能をフル活用した最小構成 | テスト可能性を重視した分離構成 | shunk031 ベースにシンプル化         |
+| **対象 OS**          | macOS / Linux / Windows              | macOS / Ubuntu                 | Ubuntu (Linux)                      |
+| **秘密管理**         | 1Password CLI                        | age encryption                 | SSH agent forwarding + private repo |
+| **ブートストラップ** | `install.sh`（23 行）                | `setup.sh`（263 行）           | `install.sh`（190 行）              |
+| **テスト**           | なし                                 | Bats + kcov（カバレッジ計測）  | Docker による手動検証               |
+| **シェル**           | zsh (oh-my-zsh)                      | zsh / bash（system で分岐）    | fish (fisher)                       |
+| **プラグイン管理**   | oh-my-zsh 内蔵                       | sheldon                        | fisher                              |
 
 ## ディレクトリ構成の比較
 
@@ -142,7 +142,7 @@ shunk031 の記事[^3]では、このブートストラップスクリプトの�
 | chezmoi ダウンロード           | あり               | あり                 | あり               |
 | CI/非 TTY 対応                 | なし               | あり                 | あり               |
 | sudo keepalive                 | なし               | あり（macOS/Linux）  | あり（Linux のみ） |
-| 暗号化ファイル除外             | 不要（1Password）  | あり                 | あり               |
+| 暗号化ファイル除外             | 不要（1Password）  | あり                 | 不要（暗号化なし） |
 | ブートストラップ用バイナリ削除 | なし               | あり                 | あり               |
 | macOS 対応                     | 不要（別の仕組み） | あり                 | なし               |
 | private dotfiles               | なし               | あり（別リポジトリ） | なし               |
@@ -160,7 +160,7 @@ shunk031 の記事[^3]では、このブートストラップスクリプトの�
 
 ただし、1Password のサブスクリプションと CLI のセットアップが前提になります。
 
-### shunk031 / 当リポジトリ — age encryption
+### shunk031 — age encryption
 
 ```yaml
 # .chezmoi.yaml.tmpl
@@ -173,6 +173,18 @@ age:
 age の鍵ペアで暗号化し、パスフレーズ付きの秘密鍵（`.key.txt.age`）をリポジトリに含めます。新しいマシンでは `chezmoi apply` 時にパスフレーズを入力して秘密鍵を復号します。
 
 1Password のような外部サービスに依存しないのがメリットですが、CI 環境では TTY がないためパスフレーズ入力ができず、暗号化ファイルの除外が必要になるという課題があります。
+
+### 当リポジトリ — 暗号化を使わない方針
+
+当リポジトリでは age 暗号化を検討・導入した後、**暗号化を使用しない方針**に移行しました。機密情報は可能な限りリモートリポジトリに置かず、SSH 鍵は SSH agent forwarding で解決し、その他の機密情報は private repository から手動でダウンロードする設計を選択しています。
+
+| 機密情報の種類     | 管理方法                                                  |
+| ------------------ | --------------------------------------------------------- |
+| SSH 秘密鍵         | SSH agent forwarding（サーバーに鍵を置かない）            |
+| Git 署名鍵         | `gpg.ssh.defaultKeyCommand` で agent から動的取得         |
+| API キー・トークン | private repository から手動ダウンロード or `.workrc.fish` |
+
+暗号化の鍵管理コストを排除し、「機密情報はリモートに置かない」というシンプルな原則で運用しています。
 
 ## テンプレート構成の比較
 
@@ -306,7 +318,7 @@ shunk031/dotfiles には当リポジトリに含まれていない要素が多�
 | ccstatusline 設定  | `~/.ccstatusline/settings.json`                          | トークン使用量の可視化で無駄なコスト消費を防げる | chezmoi で直接配置                                                           |
 | claude-mem 設定    | `~/.claude-mem/settings.json`                            | 会話の学びを自動蓄積する補完ツール               | chezmoi で直接配置                                                           |
 | サーバー用環境変数 | CUDA, HF キャッシュ                                      | GPU サーバーでの開発に必要                       | `config.fish.tmpl` で chezmoi テンプレート分岐（`system = "server"` 時のみ） |
-| SSH agent          | keychain による agent 管理                               | agent forwarding が使えないサーバーで必要        | `config.fish.tmpl` + chezmoi スクリプトでインストール                        |
+| SSH agent          | SSH agent forwarding                                     | サーバーに秘密鍵を置かない設計                   | `config.fish.tmpl` の設定のみ（keychain は削除済み）                         |
 
 ### 採用しなかったもの
 

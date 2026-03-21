@@ -1,10 +1,14 @@
 ---
-title: "セキュリティと暗号化"
+title: "セキュリティと機密情報の管理"
 ---
 
-# セキュリティと暗号化
+# セキュリティと機密情報の管理
 
-## なぜ暗号化が必要か
+:::message alert
+**設計変更のお知らせ**: 当リポジトリでは当初 age による暗号化を採用していましたが、現在は **暗号化を使用しない方針** に移行しています。機密情報は可能な限りリモートリポジトリに置かず、SSH 鍵は SSH agent forwarding で解決し、その他の機密情報は private repository から手動でダウンロードする設計を選択しました。このチャプターでは chezmoi の暗号化機能の解説を参考情報として残しつつ、後半で現在の方針を説明します。
+:::
+
+## なぜ機密情報の管理が必要か
 
 dotfiles を Git で管理していると、「これもリポジトリに入れたいけど、公開していいのか...？」と悩む場面が出てきます。たとえば:
 
@@ -15,7 +19,7 @@ dotfiles を Git で管理していると、「これもリポジトリに入れ
 
 これらをそのままコミットしてしまうと、リポジトリを公開した瞬間にアウトですよね。かといって Git 管理外にすると、新しいマシンでのセットアップが面倒になります。
 
-chezmoi は暗号化機能を内蔵しているので、**秘密情報を暗号化したまま Git で管理**できます。暗号化ツールとして [age](https://github.com/FiloSottile/age) と [GPG (GNU Privacy Guard)](https://gnupg.org/) の 2 つに対応していますが、この Book では age を使います。
+chezmoi は暗号化機能を内蔵しているので、**秘密情報を暗号化したまま Git で管理**できます。暗号化ツールとして [age](https://github.com/FiloSottile/age) と [GPG (GNU Privacy Guard)](https://gnupg.org/) の 2 つに対応していますが、この Book では age を紹介します。
 
 ## age とは
 
@@ -389,108 +393,79 @@ chezmoi-private init --apply --ssh github-username/dotfiles-private
 
 個人利用なら `.workrc` で十分だと思いますが、複数マシンで職場設定を同期したい場合は非公開リポジトリの方が便利です。
 
+## 当リポジトリの現在の方針: 暗号化を使わない設計
+
+ここまで chezmoi + age による暗号化管理を紹介してきました。しかし、当リポジトリでは検討の結果、**暗号化を使用しない方針**を選択しています。
+
+### なぜ暗号化をやめたのか
+
+age による暗号化は技術的に健全なアプローチですが、運用面でいくつかの課題がありました。
+
+1. **機密情報はそもそもリモートに置きたくない** — たとえ暗号化していても、公開リポジトリに秘密鍵や API キーが存在すること自体がリスクです。暗号化アルゴリズムの将来的な脆弱性や、パスフレーズの漏洩を考えると、「置かない」のが最も安全です
+2. **SSH 鍵は SSH agent forwarding で解決できる** — サーバーに秘密鍵を配置する必要がそもそもありません。ローカル PC の SSH agent から鍵を転送すれば、サーバー上に秘密鍵のファイルは不要です
+3. **鍵管理の複雑さ** — age 秘密鍵の管理（パスフレーズ暗号化、バックアップ、ローテーション）が dotfiles 管理の本質的な複雑さを増していました
+
+### 現在の機密情報管理モデル
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Layer 1: 公開リポジトリ（暗号化なし）               │
+│  → config.fish, gitconfig 等の一般的な設定           │
+│  → 誰に見られても問題ないもの                        │
+├─────────────────────────────────────────────────────┤
+│  Layer 2: SSH agent forwarding                       │
+│  → SSH 秘密鍵はローカル PC にのみ存在               │
+│  → サーバーには agent forwarding で鍵を転送          │
+│  → Git 署名も gpg.ssh.defaultKeyCommand で動的に解決 │
+├─────────────────────────────────────────────────────┤
+│  Layer 3: private repository + .workrc               │
+│  → API キー、トークン等の機密情報                    │
+│  → private repository から手動でダウンロード         │
+│  → .workrc.fish で Git 管理外の設定を読み込み        │
+└─────────────────────────────────────────────────────┘
+```
+
+### Layer 2: SSH agent forwarding
+
+SSH agent forwarding を使えば、サーバーに秘密鍵を配置する必要がなくなります。
+
+```
+ローカル PC（秘密鍵あり）
+  └─ SSH agent forwarding ──→ サーバー（秘密鍵なし）
+                                 ├─ git push（認証は forwarded agent 経由）
+                                 └─ git commit -S（署名も forwarded agent 経由）
+```
+
+Git のコミット署名も、`gpg.ssh.defaultKeyCommand` を使って SSH agent から動的に公開鍵を取得することで、サーバーに公開鍵ファイルすら不要になります。詳しくは「Git コミット署名」のチャプターを参照してください。
+
+### Layer 3: private repository からの手動ダウンロード
+
+API キーやトークンなど、SSH agent forwarding では解決できない機密情報は、GitHub の private repository に保管し、必要な時に手動でダウンロードします。
+
+```bash
+# private repository から機密ファイルをダウンロード
+git clone git@github.com:username/dotfiles-private.git /tmp/dotfiles-private
+cp /tmp/dotfiles-private/.env ~/
+rm -rf /tmp/dotfiles-private
+```
+
+自動化よりも安全性を優先する判断です。頻繁に新しいマシンをセットアップするわけではないので、手動のコストは許容範囲内です。
+
 ## セキュリティのベストプラクティス
 
 ### やるべきこと
 
-1. **秘密鍵は age で暗号化して管理**する
-2. **`private_` プレフィックス**で適切なパーミッションを設定する
-3. **`.gitignore`** で秘密鍵ファイルを除外する
-4. **`.workrc`** でマシン固有の秘密設定を分離する
-5. **公開鍵のみ** `.chezmoi.yaml.tmpl` に記載する
+1. **`private_` プレフィックス**で適切なパーミッションを設定する
+2. **`.workrc`** でマシン固有の秘密設定を分離する
+3. **SSH agent forwarding** でサーバーに秘密鍵を置かない
+4. **機密情報は private repository** で別管理する
 
 ### やってはいけないこと
 
 1. **秘密鍵を平文でコミット**する
 2. **API キーやパスワードを設定ファイルに直接記述**する
-3. **age の秘密鍵を紛失**する（復号不可能になる）
+3. **公開リポジトリに機密情報を含める**（暗号化していても避ける）
 4. **信頼できないマシンに秘密鍵をコピー**する
-
-:::message alert
-age の秘密鍵を紛失すると、暗号化されたファイルを復号できなくなります。秘密鍵は安全な場所にバックアップしてください。
-:::
-
-## ライフサイクル
-
-### 初期セットアップ（初回のみ）
-
-新しいマシンでは `chezmoi apply` を実行するだけです。`run_once_before` スクリプトがパスフレーズを聞いて age 秘密鍵を復号し、その後の `encrypted_*` ファイルの復号が自動で行われます。
-
-### 日常の操作
-
-暗号化関連で日常的に操作することはほとんどありません。`chezmoi apply` / `chezmoi update` で暗号化ファイルの復号は自動的に行われます。
-
-### 暗号化ファイルを編集したいとき
-
-暗号化済みのファイル（`encrypted_*.age`）を編集したい場合、2 つの方法があります。
-
-#### 方法 A: `chezmoi edit`（推奨）
-
-```bash
-chezmoi edit ~/.ssh/config
-```
-
-chezmoi が自動で復号 → エディタで編集 → 保存時に再暗号化までやってくれます。一番シンプルで安全な方法です。
-
-#### 方法 B: ターゲット側を直接編集して `re-add`
-
-`~/.ssh/config` を直接編集してから、変更を chezmoi の source に書き戻す方法です。
-
-```bash
-# 1. ターゲットファイルを直接編集
-vim ~/.ssh/config
-
-# 2. 差分を確認
-chezmoi diff
-
-# 3. 変更を source に反映（自動で再暗号化される）
-chezmoi re-add ~/.ssh/config
-```
-
-`chezmoi re-add` は、既に管理対象のファイルについてターゲット側の変更を source に書き戻すコマンドです。暗号化対象のファイルなら自動で `.age` に再暗号化してくれます。
-
-どちらでもいいですが、`chezmoi edit` の方が「復号 → 編集 → 再暗号化」を 1 コマンドで完結できるので楽です。
-
-### 新しい秘密ファイルを追加したいとき
-
-```bash
-# 1. 対象ファイルのパーミッションを確認・修正
-#    （private_ を付けたい場合はディレクトリを 700 にしておく）
-chmod 700 ~/.ssh
-
-# 2. 暗号化して chezmoi に追加
-chezmoi add --encrypt ~/.ssh/id_ed25519
-
-# 3. ソースディレクトリで確認・コミット
-chezmoi cd
-git add -A
-git commit -m "feat: add encrypted ssh key"
-git push
-```
-
-### age 鍵を再生成したいとき
-
-鍵の漏洩が疑われる場合や、鍵をローテーションしたい場合の手順です。
-
-```bash
-# 1. 新しい鍵ペアを生成
-age-keygen -o ~/.config/age/key.txt
-
-# 2. 新しい公開鍵を .chezmoi.yaml.tmpl の recipient に記載
-chezmoi edit-config-template
-
-# 3. 既存の暗号化ファイルを再暗号化（古い鍵で復号 → 新しい鍵で暗号化）
-chezmoi re-add
-
-# 4. .key.txt.age も再暗号化
-age --encrypt --passphrase --output .key.txt.age ~/.config/age/key.txt
-
-# 5. コミット
-chezmoi cd
-git add -A
-git commit -m "chore: rotate age key"
-git push
-```
 
 ## 参考文献
 

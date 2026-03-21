@@ -304,12 +304,11 @@ CI で実行される流れはこうなっています。
 push / PR → GitHub Actions が起動
   │
   ├─ CI=true が設定される
-  │   → .chezmoi.yaml.tmpl の age 暗号化設定がスキップされる
-  │   → 秘密鍵がなくてもエラーにならない
+  │   → .chezmoi.yaml.tmpl の対話プロンプトがスキップされる
+  │   → email, system にデフォルト値が設定される
   │
   ├─ chezmoi init --apply --source .
   │   → リポジトリ自体をソースとして dotfiles を適用
-  │   → encrypted_* ファイルは暗号化無効のためスキップ
   │
   └─ bats tests/
       → シェルスクリプトのテストを実行
