@@ -19,6 +19,13 @@ function install_fisher() {
 
     echo "Downloading fisher.fish..."
     curl -sL "${FISHER_URL}" -o "${FUNCTIONS_DIR}/fisher.fish"
+
+    # fisher 自身を正式にインストール（fish_plugins との整合性を確保）
+    # curl でファイルを置いただけでは fisher update 時に競合エラーになる
+    fish --no-config -c '
+        source ~/.config/fish/functions/fisher.fish
+        fisher install jorgebucaran/fisher
+    '
 }
 
 function setup_plugins() {
