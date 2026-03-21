@@ -17,9 +17,8 @@ home/                # chezmoi source directory (= chezmoiroot)
   .chezmoi.yaml.tmpl # chezmoi config template (email, system)
   .chezmoiscripts/   # chezmoi apply 時に実行されるスクリプト
     common/          # 全OS共通スクリプト
-    ubuntu/          # Ubuntu固有スクリプト
-  dot_gitconfig      # ~/.gitconfig
-  dot_config/
+  dot_config/git/    # Git 設定 (config.tmpl, ignore)
+  dot_config/        # ※ git/ は上記参照
     fish/              # fish shell 設定
       config.fish.tmpl # メイン設定（テンプレート）
       fish_plugins     # fisher プラグインリスト
@@ -28,8 +27,7 @@ home/                # chezmoi source directory (= chezmoiroot)
     starship.toml      # プロンプト設定
     mise/config.toml   # ランタイムバージョン管理 (Go, Node, Python, Rust, etc.)
 install/             # .chezmoiscripts から include されるインストールスクリプト
-  common/            # mise, fish インストール等
-  ubuntu/common/     # Ubuntu 固有インストール等
+  common/            # mise, fish, zed-keymap, done
 books/               # Zenn Book
   dotfiles-guide/    # chezmoi dotfiles 解説 Book
 ```
@@ -84,8 +82,8 @@ books/               # Zenn Book
 分岐の配置ルール:
 | 対象 | 分岐方法 |
 |------|----------|
-| スクリプト | `.chezmoiscripts/<os>/` ディレクトリで分離 |
-| インストール | `install/<os>/<system or common>/` で分離 |
+| スクリプト | 現在は `.chezmoiscripts/common/` に集約。OS 固有が増えたら `<os>/` で分離 |
+| インストール | 現在は `install/common/` に集約。OS 固有が増えたら `<os>/<system or common>/` で分離 |
 | エイリアス | `config.fish.tmpl` 内で `abbr` / `alias` で定義 |
 | テンプレート | `.tmpl` 内で `{{ if }}` 条件分岐 |
 

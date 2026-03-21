@@ -145,8 +145,7 @@ home/                     # chezmoi source directory
 │   ├── chezmoiignore.d/  # ignore ルールの分割
 │   └── chezmoiexternal.d/ # external ルールの分割
 ├── .chezmoiscripts/      # apply 時に実行されるスクリプト
-│   ├── common/           # 全 OS 共通 (mise, fish, zed-keymap)
-│   └── ubuntu/           # Ubuntu 固有
+│   └── common/           # 全 OS 共通 (mise, fish, zed-keymap)
 ├── dot_vimrc             # → ~/.vimrc
 └── dot_config/
     ├── git/
@@ -161,17 +160,10 @@ home/                     # chezmoi source directory
     ├── mise/config.toml  # ランタイムバージョン管理
     ├── gwq/config.toml   # gwq worktree 管理
     └── zed/              # Zed エディタ設定
-├── dot_local/bin/common/ # カスタムコマンド群
-│   ├── dev              # ghq + fzf リポジトリ移動
-│   ├── cdgwq            # gwq worktree 移動
-│   ├── cdw              # 最新 worktree 移動
-│   ├── fgc              # fzf git branch チェックアウト
-│   ├── chezmoi-cd       # chezmoi ソース移動
-│   ├── git-delete-merged-branches  # マージ済みブランチ削除
-│   └── uv-format        # ruff format + check
+├── dot_local/bin/common/ # ユーティリティスクリプト
+│   └── fish-time        # fish 起動プロファイリングツール
 install/                  # インストールスクリプト群
-├── common/               # mise, fish, zed-keymap
-└── ubuntu/common/        # Ubuntu 固有インストール等
+└── common/               # mise, fish, zed-keymap, done
 books/                    # Zenn Book
 └── dotfiles-guide/       # chezmoi dotfiles 解説 Book
 ```
@@ -190,6 +182,8 @@ books/                    # Zenn Book
 
 ## カスタムコマンド
 
+fish functions (`dot_config/fish/functions/`) として実装:
+
 | コマンド                     | 機能                                                      |
 | ---------------------------- | --------------------------------------------------------- |
 | `dev`                        | ghq + fzf でリポジトリに移動、tmux セッション名をリネーム |
@@ -200,12 +194,27 @@ books/                    # Zenn Book
 | `git-delete-merged-branches` | squash-merge 済みブランチを削除                           |
 | `uv-format`                  | ruff format + ruff check を実行                           |
 
+シェルスクリプト (`dot_local/bin/common/`) として実装:
+
+| コマンド    | 機能                                  |
+| ----------- | ------------------------------------- |
+| `fish-time` | fish shell 起動プロファイリングツール |
+
 ## 管理ツール一覧
 
 `mise` で管理しているツール (`dot_config/mise/config.toml`):
 
 - **言語**: Go, Node.js (LTS), Rust, Python 3.12
-- **CLI**: aws-cli, gcloud, jq, yq, uv, bun, eza, yazi, hugo
-- **開発**: chezmoi, shellcheck, shfmt, pyright, bash-language-server
+- **シェル / ターミナル**: fish-shell, starship, yazi
+- **パッケージマネージャ**: bun, uv
+- **Git**: chezmoi, gh (GitHub CLI), ghq, gwq
+- **クラウド / インフラ**: aws-cli, gcloud
+- **データ処理**: jq, yq
+- **セキュリティ**: age, dotenvx
+- **Lint / フォーマッタ**: shellcheck, shfmt
+- **ファイル / ディレクトリ**: eza, fd
+- **Web / ドキュメント**: hugo-extended, blocc
+- **テスト**: bats
 - **AI**: claude-code, codex
-- **Git**: gh (GitHub CLI), ghq, gwq
+- **LSP / 開発ツール**: pyright, bash-language-server
+- **ネットワーク**: fast-cli

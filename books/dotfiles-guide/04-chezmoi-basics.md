@@ -242,7 +242,7 @@ dot_config/fish/config.fish.tmpl → テンプレート処理後に ~/.config/fi
 | --------------------------------------- | -------------------------------- |
 | `home/dot_config/fish/config.fish.tmpl` | `~/.config/fish/config.fish`     |
 | `home/dot_config/fish/fish_plugins`     | `~/.config/fish/fish_plugins`    |
-| `home/dot_gitconfig`                    | `~/.gitconfig`                   |
+| `home/dot_config/git/config.tmpl`       | `~/.config/git/config`           |
 | `home/dot_config/mise/config.toml`      | `~/.config/mise/config.toml`     |
 | `home/.chezmoi.yaml.tmpl`               | `~/.config/chezmoi/chezmoi.yaml` |
 

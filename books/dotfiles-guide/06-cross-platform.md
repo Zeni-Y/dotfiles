@@ -81,13 +81,14 @@ Linux ディストリビューション固有の差異（パッケージ名の�
 
 ```
 home/.chezmoiscripts/
-├── common/                          # 全 OS 共通
-│   ├── run_once_after_01-install-mise.sh.tmpl
-│   └── run_once_after_02-install-fish.sh.tmpl
-└── ubuntu/                          # Ubuntu 固有
+└── common/                          # 全 OS 共通
+    ├── run_once_after_01-install-mise.sh.tmpl
+    ├── run_once_after_02-install-fish.sh.tmpl
+    ├── run_once_after_99-done.sh.tmpl
+    └── run_onchange_after_10-setup-zed-keymap.sh.tmpl
 ```
 
-OS 固有のスクリプトは `.chezmoiscripts/<os>/` に配置します。chezmoi は適切なスクリプトだけを実行します。
+現在はすべてのスクリプトを `common/` に集約しています。OS 固有のスクリプトが増えた場合は `.chezmoiscripts/<os>/` ディレクトリで分離できます。
 
 ### インストールスクリプト — OS/system で分離
 
@@ -95,7 +96,9 @@ OS 固有のスクリプトは `.chezmoiscripts/<os>/` に配置します。chez
 install/
 └── common/                 # 全 OS 共通のインストール
     ├── mise.sh
-    └── fish.sh
+    ├── fish.sh
+    ├── zed-keymap.sh
+    └── done.sh
 ```
 
 将来的には以下のような構造も可能です:
