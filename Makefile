@@ -14,6 +14,7 @@ docker:
 	fi
 	docker run -it --rm \
 		-v "$$(pwd):/home/$$(whoami)/.local/share/chezmoi" \
+		-e GITHUB_TOKEN \
 		--hostname dotfiles-test \
 		$(DOCKER_IMAGE_NAME) /bin/bash --login
 

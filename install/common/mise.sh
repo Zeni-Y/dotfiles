@@ -8,6 +8,11 @@ fi
 
 export MISE_INSTALL_PATH="${HOME}/.local/bin/mise"
 
+# GITHUB_TOKEN が設定されていれば mise にも渡す（GitHub API レート制限回避）
+if [ -n "${GITHUB_TOKEN:-}" ]; then
+    export MISE_GITHUB_TOKEN="${GITHUB_TOKEN}"
+fi
+
 function install_mise() {
     curl https://mise.run | sh
     eval "$(~/.local/bin/mise activate bash)"
