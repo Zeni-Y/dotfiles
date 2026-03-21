@@ -25,10 +25,10 @@ RUN groupadd --gid $USER_GID $USERNAME && \
     useradd --uid $USER_UID --gid $USER_GID -m $USERNAME -G sudo -s /bin/bash && \
     echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
-# 以降はユーザー権限で実行
 USER $USERNAME
-
-# chezmoi インストール（ユーザー権限、~/bin に配置）
-RUN sh -c "$(curl -fsLS get.chezmoi.io)"
-
 WORKDIR /home/$USERNAME/.local/share/chezmoi
+
+RUN sudo sh -c "$(curl -fsLS get.chezmoi.io)" -- -b /usr/local/bin
+
+RUN mkdir -p ~/.local/share/fonts
+RUN mkdir -p /tmp
