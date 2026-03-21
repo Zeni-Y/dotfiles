@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# fish shell のセットアップ（mise でインストール済みの fish に対して fisher を設定）
+# fisher プラグインマネージャのインストール
 
 set -Eeuo pipefail
 
@@ -8,19 +8,33 @@ if [ "${DOTFILES_DEBUG:-}" ]; then
     set -x
 fi
 
-function setup_fisher() {
-    # fisher プラグインマネージャをインストールし、fish_plugins からプラグインを復元
+readonly FUNCTIONS_DIR="${HOME}/.config/fish/functions"
+readonly FISHER_URL="https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish"
+
+# mise でインストールした fish を PATH に通す
+eval "$(~/.local/bin/mise activate bash)"
+
+function install_fisher() {
+    mkdir -p "${FUNCTIONS_DIR}"
+
+    echo "Downloading fisher.fish..."
+    curl -sL "${FISHER_URL}" -o "${FUNCTIONS_DIR}/fisher.fish"
+}
+
+function setup_plugins() {
+    # fisher.fish を直接 source してプラグインを復元
     # --no-config: config.fish の再読み込みによるフォークボムを防止
     if [ -f "${HOME}/.config/fish/fish_plugins" ]; then
         fish --no-config -c '
-            curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
+            source ~/.config/fish/functions/fisher.fish
             fisher update
         '
     fi
 }
 
 function main() {
-    setup_fisher
+    install_fisher
+    setup_plugins
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then

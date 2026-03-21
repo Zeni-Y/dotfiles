@@ -116,9 +116,7 @@ fish 起動
   │
   ├─ 8. SSH keychain（server のみ）
   │
-  ├─ 9. プライベート設定（~/.workrc.fish）
-  │
-  └─ 10. fisher のブートストラップ
+  └─ 9. プライベート設定（~/.workrc.fish）
 ```
 
 ## パフォーマンスキャッシュ戦略
@@ -330,6 +328,42 @@ end
 
 未適用の更新がある場合、starship のカスタムコマンドモジュールがキャッシュファイルを読み取り、プロンプトに `dotfiles ⇣3` のように表示します。starship の設定詳細については [starship — クロスシェル対応のモダンプロンプト](10-starship) を参照してください。
 
+## fish -c フォークボムに注意
+
+fish の設定ファイル（`config.fish`, `conf.d/`, `functions/`）やインストールスクリプトから **`fish -c "..."`** でサブシェルを起動してはいけません。`fish -c` は通常の fish 起動と同様に `config.fish` を読み込むため、config.fish の中から `fish -c` を呼ぶとプロセスが無限増殖する**フォークボム**を引き起こします。
+
+### 再帰のメカニズム
+
+```
+fish 起動
+  → config.fish を読み込む
+    → fish -c "fisher update" を実行
+      → 新しい fish プロセスが起動
+        → config.fish を読み込む
+          → fish -c "fisher update" を実行
+            → ... (無限ループ)
+```
+
+`starship init fish` や `fzf --fish` などの**外部コマンド呼び出しは安全**です。これらは fish のサブシェルではなく独立したバイナリの実行なので、config.fish の再読み込みは発生しません。危険なのは `fish -c` で**新しい fish シェルを起動する**パターンだけです。
+
+### 安全な代替手段
+
+| やりたいこと          | NG                             | OK                                         |
+| --------------------- | ------------------------------ | ------------------------------------------ |
+| 外部コマンド実行      | `fish -c "command ..."`        | `command <cmd>`                            |
+| バックグラウンド処理  | `fish -c "..." &`              | `command sh -c '...' &`                    |
+| fisher セットアップ等 | `fish -c 'curl ... \| source'` | `fish --no-config -c 'source fisher.fish'` |
+
+`fish --no-config` は config.fish を一切読み込まずに fish を起動するオプションです。config.fish を経由しないため再帰が発生せず、安全に fish のビルトイン機能（`source` 等）を使えます。ただし PATH 等の環境変数も設定されないため、必要なコマンドにはフルパスを使うか、事前に PATH を通しておく必要があります。
+
+:::message alert
+**このリポジトリの実例**
+
+当初、`install/common/fish.sh` で `fish -c 'curl ... | source; fisher update'` としていたところフォークボムが発生しました。fisher.fish を curl でファイルとして先にダウンロードし、`fish --no-config -c 'source fisher.fish; fisher update'` とすることで解決しています。
+
+同様に、`config.fish` 内の keychain 呼び出しでも `fish -c "keychain ..."` としていた箇所を `command keychain ... &` に修正しています。
+:::
+
 ## SSH keychain（サーバー）
 
 サーバー環境では SSH agent の管理に [keychain](https://github.com/funtoo/keychain) を使います。keychain は起動済みの SSH agent を検出して再利用するため、tmux の pane を開くたびにパスフレーズを求められる問題を回避できます。
@@ -376,34 +410,28 @@ end
 
 ### 初期セットアップ
 
-`chezmoi apply` を実行すると、`install/common/fish.sh` が fish のインストールと fisher のセットアップを行います。
+`chezmoi apply` を実行すると、`install/common/fish.sh` が fisher のセットアップを行います。処理は 2 段階に分かれています。
 
 ```bash
-function setup_fisher() {
+function install_fisher() {
+    mkdir -p "${FUNCTIONS_DIR}"
+    curl -sL "${FISHER_URL}" -o "${FUNCTIONS_DIR}/fisher.fish"
+}
+
+function setup_plugins() {
     if [ -f "${HOME}/.config/fish/fish_plugins" ]; then
-        fish -c '
-            curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
+        fish --no-config -c '
+            source ~/.config/fish/functions/fisher.fish
             fisher update
         '
     fi
 }
 ```
 
-`fish_plugins` ファイルが配置済みであれば、fisher をブートストラップして `fisher update` で全プラグインをインストールします。
+1. **bash で fisher.fish をダウンロード** — curl でファイルとして保存するだけなので fish は不要
+2. **`fish --no-config` でプラグインを復元** — ダウンロード済みの fisher.fish を `source` してから `fisher update`
 
-また、`config.fish.tmpl` 内にも fisher のブートストラップコードが含まれており、万が一 fisher がインストールされていない状態でも初回起動時に自動インストールされます。
-
-```fish
-#
-# fisher プラグインマネージャのブートストラップ
-#
-if not functions -q fisher
-    if type -q curl
-        curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
-        fisher install jorgebucaran/fisher 2>/dev/null
-    end
-end
-```
+`--no-config` を使うのは、config.fish を読み込まないことでフォークボムを防ぐためです（詳しくは前述の「fish -c フォークボムに注意」を参照）。
 
 ### 日常の操作
 
