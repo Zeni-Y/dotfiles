@@ -14,6 +14,8 @@ function install_mise() {
 }
 
 function run_mise_install() {
+    # npm パッケージは Node.js が必要なため、先に Node.js をインストール
+    mise install node
     mise install
 }
 
@@ -29,4 +31,3 @@ function main() {
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     main
 fi
-
