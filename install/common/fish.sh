@@ -11,6 +11,19 @@ fi
 # mise でインストールした fish を PATH に通す
 eval "$(~/.local/bin/mise activate bash)"
 
+function setup_login_shell() {
+    local fish_path
+    fish_path="$HOME/.local/share/mise/shims/fish"
+
+    # /etc/shells に未登録なら追加
+    if ! grep -qxF "$fish_path" /etc/shells; then
+        echo "$fish_path" | sudo tee -a /etc/shells >/dev/null
+    fi
+
+    # ログインシェルを fish に変更
+    sudo chsh -s "$fish_path" "$USER"
+}
+
 function main() {
     # fisher を URL から直接メモリに読み込み、fish_plugins の全プラグインをインストール
     # ファイルに保存しないため fisher 自身との競合が発生しない
@@ -19,6 +32,8 @@ function main() {
         curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
         fisher update
     '
+
+    setup_login_shell
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
