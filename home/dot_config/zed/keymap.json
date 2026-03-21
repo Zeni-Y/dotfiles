@@ -1,15 +1,29 @@
 [
-  {
-    "context": "Editor",
-    "bindings": {
-      "ctrl-shift-k": "editor::DeleteLine",
-      "ctrl-shift-d": "editor::DuplicateLineDown"
+    {
+        "context": "Editor",
+        "bindings": {
+            "ctrl-shift-k": "editor::DeleteLine",
+            "ctrl-shift-d": "editor::DuplicateLineDown",
+            "alt-z": "editor::ToggleSoftWrap"
+        }
+    },
+    {
+        "context": "Terminal",
+        "bindings": {
+            // --- Zellij: モード切り替え (normal mode) ---
+            "ctrl-g": null,
+            "ctrl-p": null,
+            "ctrl-t": null,
+            "ctrl-n": null,
+            "ctrl-s": null,
+            "ctrl-o": null,
+            "ctrl-q": null,
+            // --- Zellij: スクロール操作 (scroll mode) ---
+            "ctrl-f": null,
+            "ctrl-b": null,
+            "ctrl-c": null,
+            "ctrl-d": null,
+            "ctrl-u": null
+        }
     }
-  },
-  {
-    "context": "Terminal",
-    "bindings": {
-      "ctrl-t": "workspace::NewTerminal"
-    }
-  }
 ]
