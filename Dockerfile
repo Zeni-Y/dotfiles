@@ -25,8 +25,6 @@ RUN groupadd --gid $USER_GID $USERNAME && \
     useradd --uid $USER_UID --gid $USER_GID -m $USERNAME -G sudo -s /bin/bash && \
     echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
-# chezmoi インストール
-RUN sh -c "$(curl -fsLS get.chezmoi.io)" -- -b /usr/local/bin
-
+# 以降はユーザー権限で実行
 USER $USERNAME
-WORKDIR /home/$USERNAME/.local/share/chezmoi
+WORKDIR /home/$USERNAME
