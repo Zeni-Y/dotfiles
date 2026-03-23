@@ -25,6 +25,7 @@ run:
 	docker run --gpus all -it --name "$(CONTAINER_NAME)" \
 		--ipc=host \
 		-v "$(HOME):/home/$(USER)/host" \
+		-v "$(HOME)/.cache:/home/$(USER)/.cache" \
 		-w "/home/$(USER)" \
 		-p "$(SSH_PORT):22" \
 		"$(IMAGE_NAME)"
