@@ -53,7 +53,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "npx ccstatusline@latest"
+    "command": "npx -y ccstatusline@latest"
   },
   "enabledPlugins": {
     "pyright-lsp@claude-plugins-official": true,
