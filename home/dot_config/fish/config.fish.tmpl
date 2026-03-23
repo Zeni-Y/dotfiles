@@ -48,13 +48,14 @@ set -l _cache_dir ~/.cache/fish
 
 #
 # starship プロンプト（キャッシュ）
-# バイナリ更新時のみ再生成（--version 呼び出しを回避して高速化）
+# バイナリ更新時のみ再生成（--print-full-init で展開済みコードをキャッシュ）
+# starship init fish は薄いラッパーで毎回プロセス起動するため、展開後をキャッシュする
 #
 if type -q starship
     set -l _cache $_cache_dir/starship_init.fish
     if not test -f $_cache; or test (command -s starship) -nt $_cache
         mkdir -p $_cache_dir
-        starship init fish >$_cache
+        starship init fish --print-full-init >$_cache
     end
     source $_cache
 end
@@ -94,7 +95,7 @@ if type -q go
         mkdir -p $_cache_dir
         go env GOROOT >$_cache
     end
-    set -gx GOROOT (cat $_cache)
+    read -gx GOROOT <$_cache
     fish_add_path $GOPATH/bin
     fish_add_path $HOME/.go/bin
 end
