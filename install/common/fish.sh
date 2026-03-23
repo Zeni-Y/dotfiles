@@ -8,12 +8,15 @@ if [ "${DOTFILES_DEBUG:-}" ]; then
     set -x
 fi
 
-# mise でインストールした fish を PATH に通す
-eval "$(~/.local/bin/mise activate bash)"
+# Nix の環境変数を読み込む
+if [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]; then
+    # shellcheck disable=SC1091
+    . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+fi
 
 function setup_login_shell() {
     local fish_path
-    fish_path="$HOME/.local/share/mise/shims/fish"
+    fish_path="$(command -v fish)"
 
     # /etc/shells に未登録なら追加
     if ! grep -qxF "$fish_path" /etc/shells; then

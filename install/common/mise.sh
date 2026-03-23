@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# mise のインストール（言語ランタイム管理用）
+# CLI ツールは Nix で管理するため、mise は言語ランタイムと
+# Nix で管理できないツールのみを担当
+
 # set -Eeuo pipefail
 
 if [ "${DOTFILES_DEBUG:-}" ]; then
@@ -19,13 +23,9 @@ function install_mise() {
 }
 
 function run_mise_install() {
-    # npm パッケージは Node.js が必要なため、config.toml を参照せず直接インストール
+    # npm パッケージは Node.js が必要なため、先に Node.js をインストール
     mise install node@lts
     mise install
-}
-
-function uninstall_mise() {
-    rm "${MISE_INSTALL_PATH}"
 }
 
 function main() {

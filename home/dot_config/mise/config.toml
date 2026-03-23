@@ -1,61 +1,18 @@
 [tools]
-# 言語ランタイム
+# 言語ランタイム（プロジェクト単位のバージョン切替が必要）
 go = "latest"
 node = "lts"
 python = "3.12"
 rust = "latest"
 
-# パッケージマネージャ / ビルドツール
-bun = "latest"
-uv = "latest"
-
-# シェル / ターミナル
-"github:fish-shell/fish-shell" = "latest"
-starship = "latest"
-yazi = "latest"
-
-# Git
-chezmoi = "latest"
-gh = "latest"
-ghq = "latest"
+# Nix で管理できないツール（nixpkgs 未収録）
 "github:d-kuro/gwq" = "latest"
-
-# クラウド / インフラ
-aws-cli = "latest"
-gcloud = "latest"
-
-# データ処理 / JSON / YAML
-jq = "latest"
-yq = "latest"
-
-# セキュリティ
-age = "latest"
+"github:shuntaka9576/blocc" = "latest"
 dotenvx = "latest"
 
-# Lint / フォーマッタ
-shellcheck = "latest"
-shfmt = "latest"
-
-# ファイル / ディレクトリ
-eza = "latest"
-fd = "latest"
-
-# Web / ドキュメント
-hugo-extended = "0.136.5"
-"github:shuntaka9576/blocc" = "latest"
-
-# テスト
-bats = "latest"
-
-# AI コーディング
+# AI コーディング（npm パッケージ、nixpkgs 未収録）
 "npm:@anthropic-ai/claude-code" = "latest"
 "npm:@openai/codex" = "latest"
-
-# LSP / 開発ツール (npm)
-"npm:bash-language-server" = "latest"
-"npm:pyright" = "latest"
-
-# ネットワーク
 "npm:fast-cli" = "latest"
 
 [settings]

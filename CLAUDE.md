@@ -1,22 +1,48 @@
-# Dotfiles (chezmoi)
+# Dotfiles (chezmoi + Nix)
 
 ## Design Philosophy
 
-1. **パフォーマンス重視**: fish shell の高速な起動と組み込み機能を活用
-2. **冪等性**: スクリプトは何度実行しても同じ結果になるように設計（`run_once_*` の活用）
-3. **テンプレート分割**: `install/` に再利用可能なロジックを分離し `{{ include }}` で結合。1 ファイルの肥大化を防ぐ
-4. **クロスプラットフォーム**: OS (`darwin`/`linux`) × system (`client`/`server`) の組み合わせで分岐管理
-5. **セキュリティ**: SSH agent forwarding を活用。`.workrc.fish` 等の非追跡ファイルで個人設定を分離
-6. **Rust ベースモダンツール**: starship, mise, eza 等の高速ツールを積極採用
+1. **宣言的パッケージ管理**: Nix flake で CLI ツールを宣言的にインストール。手続き的な chezmoiscripts を最小化
+2. **パフォーマンス重視**: fish shell の高速な起動と組み込み機能を活用
+3. **冪等性**: スクリプトは何度実行しても同じ結果になるように設計（`run_once_*` の活用）
+4. **テンプレート分割**: `install/` に再利用可能なロジックを分離し `{{ include }}` で結合。1 ファイルの肥大化を防ぐ
+5. **クロスプラットフォーム**: OS (`darwin`/`linux`) × system (`client`/`server`) の組み合わせで分岐管理
+6. **セキュリティ**: SSH agent forwarding を活用。`.workrc.fish` 等の非追跡ファイルで個人設定を分離
+7. **Rust ベースモダンツール**: starship, mise, eza 等の高速ツールを積極採用
+
+## Architecture
+
+### Nix + chezmoi の役割分担
+
+| 責務 | ツール | 説明 |
+|------|--------|------|
+| CLI ツール管理 | **Nix** (`flake.nix`) | fish, starship, eza, jq, gh 等を宣言的にインストール |
+| 言語ランタイム | **mise** (`config.toml`) | Go, Node, Python, Rust のバージョン管理（プロジェクト単位の切替） |
+| nixpkgs 未収録ツール | **mise** | gwq, blocc, dotenvx, npm パッケージ (claude-code 等) |
+| 設定ファイル管理 | **chezmoi** | テンプレート、クロスプラットフォーム分岐、SSH 等 |
+
+### パッケージの追加方法
+
+- **Nix で管理する場合**: `flake.nix` の `commonPackages` にパッケージを追加
+- **mise で管理する場合**: `home/dot_config/mise/config.toml` の `[tools]` に追加
+- 判断基準: nixpkgs に存在するツールは Nix、存在しないものやプロジェクト単位のバージョン切替が必要なものは mise
 
 ## Repository Structure
 
 ```
 .chezmoiroot         # source root を home/ に設定
+flake.nix            # Nix flake（CLI ツールの宣言的管理）
+flake.lock           # Nix 依存のロックファイル
 home/                # chezmoi source directory (= chezmoiroot)
   .chezmoi.yaml.tmpl # chezmoi config template (email, system)
   .chezmoiscripts/   # chezmoi apply 時に実行されるスクリプト
     common/          # 全OS共通スクリプト
+      00-install-nix          # Nix のインストール
+      01-install-nix-packages # flake.nix からパッケージインストール
+      02-install-mise         # mise + 言語ランタイム
+      03-install-fish         # fisher プラグイン + ログインシェル設定
+      10-setup-zed-keymap     # WSL 用 Zed キーマップ
+      99-done                 # 完了メッセージ
   dot_config/git/    # Git 設定 (config.tmpl, ignore)
   dot_config/        # ※ git/ は上記参照
     fish/              # fish shell 設定
@@ -25,9 +51,9 @@ home/                # chezmoi source directory (= chezmoiroot)
       conf.d/          # 自動読み込み設定
       functions/       # fish functions（カスタムコマンド）
     starship.toml      # プロンプト設定
-    mise/config.toml   # ランタイムバージョン管理 (Go, Node, Python, Rust, etc.)
+    mise/config.toml   # 言語ランタイム + nixpkgs 未収録ツール
 install/             # .chezmoiscripts から include されるインストールスクリプト
-  common/            # mise, fish, zed-keymap, done
+  common/            # nix, nix-packages, mise, fish, zed-keymap, done
 books/               # Zenn Book
   dotfiles-guide/    # chezmoi dotfiles 解説 Book
 ```
@@ -45,6 +71,14 @@ books/               # Zenn Book
 - `run_once_after_*` → chezmoi apply 後に一度だけ実行
 - スクリプトは番号で実行順序を制御 (e.g., `run_once_after_01-*`, `run_once_20-*`)
 - `.chezmoiroot` で source root を `home/` に設定している
+
+### Nix flake
+
+`flake.nix` で以下を定義:
+
+- `packages.default` — `buildEnv` で CLI ツールを束ねたパッケージセット
+- 対応プラットフォーム: `x86_64-linux`, `aarch64-linux`, `x86_64-darwin`, `aarch64-darwin`
+- パッケージの更新: `nix flake update` → `nix profile upgrade --all`
 
 ### Template data
 
@@ -64,7 +98,7 @@ books/               # Zenn Book
 テンプレートを分割して `{{ include }}` で結合するパターンを使用:
 
 ```
-# .chezmoiscripts/common/run_once_after_01-install-mise.sh.tmpl
+# .chezmoiscripts/common/run_once_after_02-install-mise.sh.tmpl
 {{ include "../install/common/mise.sh" }}
 ```
 
@@ -98,7 +132,8 @@ books/               # Zenn Book
 - Shell: **fish**
 - Plugin manager: **fisher**
 - Prompt: **starship**
-- Runtime manager: **mise**
+- Package manager: **Nix** (CLI ツール)
+- Runtime manager: **mise** (言語ランタイム)
 - ls replacement: **eza**
 
 ### fish shell 構成
@@ -123,12 +158,19 @@ abbr と alias の使い分け:
 ## Common Commands
 
 ```bash
+# chezmoi（設定ファイル管理）
 chezmoi apply          # dotfiles を適用
 chezmoi diff           # 差分を確認
 chezmoi add <file>     # ファイルを管理対象に追加
 chezmoi edit <file>    # source ファイルを編集
 chezmoi cd             # source directory に移動
 chezmoi data           # template data を確認
+
+# Nix（パッケージ管理）
+nix profile install .             # flake.nix のパッケージをインストール
+nix profile upgrade --all         # インストール済みパッケージを更新
+nix flake update                  # flake.lock を更新（nixpkgs の最新化）
+nix profile list                  # インストール済みパッケージを確認
 ```
 
 ## Rules for Editing
@@ -142,7 +184,8 @@ chezmoi data           # template data を確認
 7. **冪等性**: インストールスクリプトは既にインストール済みの場合はスキップするように設計
 8. **セキュリティ**: 認証情報は `.env` やパスワードを平文でコミットしない。SSH は agent forwarding を利用し、秘密鍵は chezmoi で管理しない
 9. **コミットメッセージ**: Conventional Commits 形式を推奨 (`feat:`, `fix:`, `docs:`, `refactor:`, `chore:` 等)
-10. **`fish -c` 禁止（フォークボム防止）**: fish の設定ファイル（`config.fish`, `conf.d/`, `functions/`）およびインストールスクリプトから `fish -c "..."` でサブシェルを起動してはならない。`fish -c` は `config.fish` を再帰的に読み込み、プロセスが無限増殖するフォークボムを引き起こす。代替手段:
+10. **パッケージ追加**: CLI ツールは `flake.nix` に追加。言語ランタイムや nixpkgs 未収録ツールは `mise/config.toml` に追加
+11. **`fish -c` 禁止（フォークボム防止）**: fish の設定ファイル（`config.fish`, `conf.d/`, `functions/`）およびインストールスクリプトから `fish -c "..."` でサブシェルを起動してはならない。`fish -c` は `config.fish` を再帰的に読み込み、プロセスが無限増殖するフォークボムを引き起こす。代替手段:
     - 外部コマンド実行: `command <cmd>` を使う（fish サブシェルを経由しない）
     - バックグラウンド処理: `command sh -c '...'` を使う（POSIX sh は fish config を読み込まない）
     - fisher セットアップ等でどうしても fish が必要な場合: `fish --no-config -c '...'` を使う

@@ -139,7 +139,7 @@ function run_chezmoi() {
     "${chezmoi_cmd}" apply ${no_tty_option}
 
     # ブートストラップ用 chezmoi バイナリを削除する
-    # chezmoi apply で mise がインストールされ、mise 経由で chezmoi もインストールされるため
+    # chezmoi apply で Nix がインストールされ、Nix 経由で chezmoi もインストールされるため
     # ダウンロードした chezmoi は不要になる（二重管理を防ぐ）
     info "ブートストラップ用 chezmoi を削除: ${chezmoi_cmd}"
     rm -fv "${chezmoi_cmd}"
