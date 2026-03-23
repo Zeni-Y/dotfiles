@@ -8,4 +8,7 @@ else
     chezmoi apply
 fi
 
+# SSH サーバー起動（特権ポート 22 のため sudo が必要）
+sudo service ssh start
+
 exec "$@"

@@ -14,14 +14,19 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 # 必要最小限のパッケージ（chezmoi が mise/sheldon 等をインストールする）
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        curl git sudo locales ca-certificates \
+        curl git sudo locales ca-certificates openssh-server \
         build-essential libssl-dev zlib1g-dev libbz2-dev \
         libreadline-dev libsqlite3-dev wget llvm \
         libncurses5-dev xz-utils tk-dev libxml2-dev \
         libxmlsec1-dev libffi-dev liblzma-dev && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
-    locale-gen ja_JP.UTF-8
+    locale-gen ja_JP.UTF-8 && \
+    # SSH サーバー設定（公開鍵認証のみ、agent forwarding 有効）
+    mkdir -p /var/run/sshd && \
+    sed -ri 's/^#?PasswordAuthentication\s+.*/PasswordAuthentication no/' /etc/ssh/sshd_config && \
+    sed -ri 's/^#?PubkeyAuthentication\s+.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config && \
+    sed -ri 's/^#?AllowAgentForwarding\s+.*/AllowAgentForwarding yes/' /etc/ssh/sshd_config
 
 # ユーザー作成
 RUN groupadd --gid $USER_GID $USERNAME && \
