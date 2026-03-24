@@ -467,6 +467,154 @@ rm -rf /tmp/dotfiles-private
 3. **公開リポジトリに機密情報を含める**（暗号化していても避ける）
 4. **信頼できないマシンに秘密鍵をコピー**する
 
+## API キー・トークンの管理方法
+
+ここまでは SSH 鍵などのファイル単位の機密情報を扱ってきました。しかし実際の開発では、**API キーやアクセストークン**の管理も大きな課題です。
+
+### なぜ `.workrc.fish` だけでは不十分なケースがあるか
+
+`.workrc.fish`（Git 管理外）に API キーを平文で書く方式は、シンプルで確実に動作します。しかし以下のようなケースでは不便さを感じることがあります。
+
+- **新しいマシンへの移行**: API キーを手動でコピーする必要がある。コピー忘れに気づかず、謎のエラーが出ることも
+- **複数マシンの同期**: 各マシンで別々に管理するため、更新が反映されるまでタイムラグが生じる
+- **チームでの共有**: `.workrc.fish` は完全にプライベートなので、必要なトークンのリストすら共有できない
+
+これらの課題を解決するアプローチとして、**1Password CLI** と **dotenvx** があります。
+
+### 比較表
+
+| 観点                     |        1Password CLI        |               dotenvx               | .workrc.fish（現状） |
+| ------------------------ | :-------------------------: | :---------------------------------: | :------------------: |
+| コスト                   |       有料（~$3/月）        |              無料・OSS              |         無料         |
+| 追加インストール         |         op CLI 必要         |            mise 導入済み            |         不要         |
+| 新マシン復元             |    自動（クラウド同期）     | .env.enc をリポジトリに含めれば自動 |      手動コピー      |
+| 秘密情報の所在           |     1Password クラウド      |           暗号化ファイル            |     ローカルのみ     |
+| 鍵管理の問題             |      マスター PW のみ       |    DOTENV_PRIVATE_KEY を別途管理    |     なし（平文）     |
+| chezmoi テンプレート統合 |        公式統合あり         |         テンプレート内不可          |     source のみ      |
+| fish との相性            | テンプレート展開 or op read |             eval が必要             |     最もシンプル     |
+| オフライン動作           |       キャッシュあり        |              完全対応               |       完全対応       |
+| トークンローテーション   |   1Password 上で一元管理    |           再暗号化が必要            |         手動         |
+
+### 1Password CLI の統合
+
+1Password を使用している場合、`op` CLI による統合が最もスムーズです。chezmoi には 1Password との公式統合機能が組み込まれています。
+
+#### chezmoi テンプレート統合
+
+`onepasswordRead` 関数を使うと、`chezmoi apply` 時にシークレットを 1Password から取得してファイルに展開できます。
+
+```yaml
+# .chezmoi.yaml.tmpl
+data:
+  github_token: '{{ onepasswordRead "op://Personal/GitHub Token/credential" | quote }}'
+```
+
+```fish
+# config.fish.tmpl
+set -gx GITHUB_TOKEN {{ .github_token }}
+```
+
+この方式は `chezmoi apply` 時に 1Password へのサインインが必要になりますが、生成されたファイルは平文になります。
+
+#### fish shell での都度参照
+
+`chezmoi apply` を介さず、シェル起動時に直接 1Password から値を取得する方式もあります。
+
+```fish
+# ~/.workrc.fish（または conf.d/ の設定ファイル）
+if command -q op
+    set -gx GITHUB_TOKEN (op read "op://Personal/GitHub Token/credential")
+    set -gx SLACK_TOKEN (op read "op://Work/Slack Bot Token/credential")
+end
+```
+
+この方式のメリット:
+
+- 1Password でトークンを更新すると、次のシェル起動時に自動的に最新値を取得する
+- 暗号化されたファイルが存在しない（平文のファイルにシークレットが書き出されない）
+- `op` コマンドが存在する場合のみ実行するため、`op` 未インストール環境でもエラーにならない
+
+デメリット:
+
+- シェル起動のたびに 1Password へのアクセスが発生する（1Password のセッションが切れていると都度サインインが必要）
+- オフライン時はキャッシュに依存する
+
+:::message
+`op` セッションの管理が煩雑な場合は、`eval $(op signin)` を `.workrc.fish` に入れておくと便利です。ただし自動実行されるため、シェル起動時に常にサインインを求められる可能性があります。
+:::
+
+### dotenvx の統合
+
+`dotenvx` は `.env` ファイルを非対称暗号（X25519）で暗号化し、暗号化ファイル `.env.enc` をリポジトリにコミットできるようにするツールです。当リポジトリの mise 設定ですでにインストール済みです。
+
+#### 暗号化フロー
+
+```bash
+# 1. .env ファイルを作成
+cat > ~/.env << 'EOF'
+GITHUB_TOKEN=ghp_xxxxxxxxxxxx
+SLACK_TOKEN=xoxb-xxxxxxxxxxxx
+EOF
+
+# 2. dotenvx で暗号化（.env.enc と DOTENV_PRIVATE_KEY が生成される）
+dotenvx encrypt -f ~/.env
+
+# 3. 生成された DOTENV_PRIVATE_KEY を安全な場所に保存しておく
+# → この鍵自体は .workrc.fish か 1Password 等で管理する
+```
+
+暗号化後の `.env.enc` はリポジトリにコミット可能な形式になります。
+
+#### fish shell での利用パターン
+
+```fish
+# ~/.workrc.fish
+if command -q dotenvx
+    eval (dotenvx get --env-file=~/.env.enc --all | string split0)
+end
+```
+
+または、`dotenvx run` を使ってコマンドを実行する方式:
+
+```fish
+# 特定のコマンドだけ環境変数を注入して実行
+dotenvx run --env-file=~/.env.enc -- node server.js
+```
+
+#### 復号キーの「鶏と卵」問題
+
+dotenvx の根本的な課題は、**復号キー（`DOTENV_PRIVATE_KEY`）自体をどこに置くか**という問題です。
+
+```
+.env.enc を復号するには → DOTENV_PRIVATE_KEY が必要
+DOTENV_PRIVATE_KEY を安全に管理するには → どこかに置く必要がある
+```
+
+結局、復号キー自体は `.workrc.fish` か別の安全な場所（1Password など）で管理することになります。
+
+```fish
+# ~/.workrc.fish（Git 管理外）
+set -gx DOTENV_PRIVATE_KEY "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+```
+
+この構造は age による暗号化と同じ「信頼の連鎖」です。dotenvx は「`.env` の内容を安全にリポジトリに含められる」というメリットはありますが、復号キー自体の管理問題は解消されません。
+
+#### .workrc.fish とのハイブリッド利用
+
+dotenvx が真に活きるのは、**チームでの共有**や**多数のシークレットの一元管理**が必要な場合です。個人の dotfiles 管理では、シンプルさを考えると `.workrc.fish` のみでも十分なケースが多いです。
+
+### 推奨アプローチ
+
+| 状況                                    | 推奨                                |
+| --------------------------------------- | ----------------------------------- |
+| 1Password を使用中                      | 1Password CLI（`op read`）          |
+| 1Password を使用していない / コスト重視 | dotenvx + .workrc.fish ハイブリッド |
+| シンプルさ最優先 / 個人利用のみ         | .workrc.fish のみ                   |
+
+**1Password ユーザーへ**: `op read` を使った fish 直接統合が最もシンプルで強力です。トークンを 1Password で一元管理でき、ローテーションも 1Password 上で完結します。chezmoi テンプレート統合（`onepasswordRead`）はファイルに値を書き出すため、むしろ使わない方がセキュリティ上は優れています。
+
+**1Password 非ユーザーへ**: 新マシン移行を楽にしたいなら dotenvx で `.env.enc` をリポジトリに含める方式が有効です。ただし `DOTENV_PRIVATE_KEY` は `.workrc.fish` で管理することになるため、新マシンでの作業は「`DOTENV_PRIVATE_KEY` を .workrc.fish に書く」という 1 ステップに集約されます。
+
 ## 参考文献
 
 [^1]: [age-encryption.org/v1 — age 公式仕様](https://age-encryption.org/v1) — 暗号化方式（X25519, ChaCha20-Poly1305）および scrypt recipient の仕様を定義

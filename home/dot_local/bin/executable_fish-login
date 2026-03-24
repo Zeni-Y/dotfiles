@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# mise 経由でインストールした fish のログインシェルラッパー
+#
+# 目的:
+#   mise shim は Unix のログインシェル規約（argv[0] に "-" プレフィックス）に非対応。
+#   このラッパーが代わりに規約を処理し、実際の fish バイナリをログインシェルとして起動する。
+#
+# 仕組み:
+#   SSH → exec("-fish-login") → bash が "-" を無視してスクリプト実行
+#   → mise which fish で実バイナリ取得 → exec -a "-fish" で fish をログインシェルとして起動
+
+FISH="$("$HOME/.local/bin/mise" which fish)"
+exec -a "-fish" "$FISH" "$@"
