@@ -297,18 +297,18 @@ function _check_chezmoi_update --on-event fish_prompt
     if test (math "$current_time - $last_check") -gt $check_interval
         echo $current_time >$last_check_file
 
-        # バックグラウンドで実行
-        fish -c "
-            if type -q chezmoi
-                chezmoi git -- fetch -q
-                set -l count (chezmoi git -- rev-list --count HEAD..origin/main 2>/dev/null)
-                if test \"\$count\" -gt 0
-                    echo \$count > $status_file
+        # バックグラウンドで実行（fish -c はフォークボムになるため sh -c を使用）
+        command sh -c '
+            if command -v chezmoi >/dev/null 2>&1; then
+                chezmoi git -- fetch -q 2>/dev/null
+                count=$(chezmoi git -- rev-list --count HEAD..origin/main 2>/dev/null)
+                if [ "$count" -gt 0 ] 2>/dev/null; then
+                    echo "$count" > "'"$status_file"'"
                 else
-                    rm -f $status_file
-                end
-            end
-        " &
+                    rm -f "'"$status_file"'"
+                fi
+            fi
+        ' &
         disown
     end
 end
@@ -320,7 +320,7 @@ end
 
 **`disown`**: バックグラウンドジョブを fish のジョブ管理から切り離します。fish セッションを終了してもバックグラウンドプロセスが継続し、終了時にジョブ完了の通知が出なくなります。
 
-`&|` ではなく `& disown` を使っているのは、`fish -c "..."` を一つのジョブとして起動した後で切り離すためです。直接 `& disown` を書くことでフォークボムのリスクも回避しています。
+**`command sh -c '...' &`**: バックグラウンド処理に `fish -c` ではなく `sh -c` を使っています。`fish -c` は `config.fish` を読み込むため、`conf.d/` や `functions/` から呼ぶとフォークボムになります（詳細は後述）。`sh -c` は POSIX sh を起動するため fish の設定ファイルを読み込まず安全です。
 
 ### starship との連携
 

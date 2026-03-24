@@ -123,9 +123,14 @@ when = "test -s ${XDG_CACHE_HOME:-$HOME/.cache}/starship-chezmoi/count"
 symbol = " dotfiles  ⇣"
 style = "bold red"
 format = "[$symbol$output]($style) "
+ignore_timeout = true
 ```
 
-未適用の更新が 3 件ある場合、プロンプトの右側に `dotfiles ⇣3` のように表示されます。通知の仕組み自体（バックグラウンドでの `git fetch` とキャッシュ管理）は [fish と fisher プラグイン管理](09-fish-and-fisher) の chezmoi-notify セクションで解説しています。
+未適用の更新が 3 件ある場合、プロンプトの右側に `dotfiles ⇣3` のように表示されます。
+
+**`ignore_timeout = true`**: starship のカスタムコマンドにはデフォルトで 500ms のタイムアウトがあります。bash など fish 以外のシェルではシェル起動オーバーヘッドにより `when` の判定がタイムアウトし、警告が表示されることがあります。`ignore_timeout = true` を設定すると、コマンドがタイムアウトしても警告を出さずプロンプトを即座に表示し、完了次第結果を反映します。
+
+通知の仕組み自体（バックグラウンドでの `git fetch` とキャッシュ管理）は [fish と fisher プラグイン管理](09-fish-and-fisher) の chezmoi-notify セクションで解説しています。
 
 ## p10k から starship への移行
 
