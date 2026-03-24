@@ -20,7 +20,7 @@ function _check_chezmoi_update --on-event fish_prompt
         # バックグラウンドで実行（fish -c はフォークボムになるため sh -c を使用）
         command sh -c '
             if command -v chezmoi >/dev/null 2>&1; then
-                chezmoi git -- fetch -q
+                chezmoi git -- fetch -q 2>/dev/null
                 count=$(chezmoi git -- rev-list --count HEAD..origin/main 2>/dev/null)
                 if [ "$count" -gt 0 ] 2>/dev/null; then
                     echo "$count" > "'"$status_file"'"
