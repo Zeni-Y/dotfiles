@@ -117,13 +117,13 @@ if ! shopt -oq posix; then
 fi
 
 . "$HOME/.local/bin/env"
-export PATH="$HOME/.local/bin:$PATH"
-export HF_HOME="/home/zenimoto/host/.cache/huggingface"
-. "$HOME/.cargo/env"
+# export PATH="$HOME/.local/bin:$PATH"
+# export HF_HOME="/home/zenimoto/host/.cache/huggingface"
+# . "$HOME/.cargo/env"
 gpu() {
     CUDA_VISIBLE_DEVICES="$1" uv run python "${@:2}"
 }
-export PATH=/usr/local/cuda/bin:$PATH
+# export PATH=/usr/local/cuda/bin:$PATH
 
 # Use fish shell as the interactive shell
 case $- in
