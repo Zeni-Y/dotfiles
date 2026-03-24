@@ -128,5 +128,9 @@ gpu() {
 # Use fish shell as the interactive shell
 # 研究室サーバーでsudoが使えず，ログインシェルがbashなので，ログイン時にfishを実行するようにする
 case $- in
-  *i*) exec fish ;;
+  *i*)
+    # mise 経由でインストールした fish を PATH に追加してから exec する
+    [ -x "$HOME/.local/bin/mise" ] && eval "$($HOME/.local/bin/mise activate bash)"
+    exec fish
+    ;;
 esac

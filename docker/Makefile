@@ -8,8 +8,8 @@
 #   make clean       - コンテナとイメージを削除
 #   make restart     - コンテナを再起動
 
-IMAGE_NAME := $(USER)_image
-CONTAINER_NAME := $(USER)_container
+IMAGE_NAME := $(USER)_working_image
+CONTAINER_NAME := $(USER)_working_container
 SSH_PORT := 2222
 
 .PHONY: build run gpu-test clean restart stop rm
