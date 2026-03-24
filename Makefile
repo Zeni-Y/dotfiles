@@ -33,6 +33,7 @@ docker-rebuild:
 .PHONY: init
 init:
 	chezmoi init --apply --verbose
+	exec ~/.local/bin/mise x -- fish
 
 .PHONY: update
 update:

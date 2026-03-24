@@ -247,6 +247,36 @@ chezmoi では `.chezmoiscripts/` 以下にスクリプトを配置して、`che
 {{ include "../install/common/mise.sh" }}
 ```
 
+:::message alert
+**`exec` でシェルを起動するとロックが解放されない**
+
+chezmoi のスクリプト内で `exec fish` のように別のシェルを **exec** すると、2 回目以降の `chezmoi apply` でタイムアウトエラーになります。
+
+```
+chezmoi: timeout obtaining persistent state lock, is another instance of chezmoi running?
+```
+
+原因は chezmoi の動作にあります。chezmoi はスクリプトをサブプロセスとして起動し、そのプロセスが終了するまで**ロックを保持したまま**待ち続けます。`exec fish` はサブプロセスを fish に置き換えるため、fish が起動している間ずっとロックが解放されません。ユーザーが fish を終了するまで chezmoi のロックが残り続け、その間に `chezmoi apply` を実行するとタイムアウトします。
+
+```
+chezmoi apply
+  ↓ スクリプトをサブプロセスとして起動（ロック取得）
+  ↓ exec fish → サブプロセスが fish に置き換わる
+  ↓ ロックを保持したまま fish が起動し続ける ← 問題
+  ↓ fish を終了するまでロックが解放されない
+```
+
+**解決策**: chezmoi スクリプト内では `exec <shell>` を使わない。セットアップ完了後にシェルを起動したい場合は、chezmoi の処理が完了した後（Makefile や entrypoint.sh など）で起動する。
+
+```bash
+# Makefile
+init:
+    chezmoi init --apply --verbose  # chezmoi が正常に終了してロック解放
+    exec ~/.local/bin/mise x -- fish  # その後に fish を起動
+```
+
+:::
+
 ## install/ ディレクトリと {{ include }} パターン
 
 このリポジトリの特徴的なパターンは、**インストールロジックを `install/` ディレクトリに分離**していることです。
