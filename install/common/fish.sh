@@ -26,12 +26,25 @@ function setup_login_shell() {
 
 function main() {
     # fisher プラグインのインストール/更新
-    # --no-config: config.fish の再読み込みによるフォークボムを防止
-    fish --no-config -c '
-        # fisher を URL から直接メモリに読み込み、fish_plugins から全プラグインをインストール
-        curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher update
+    #
+    # フォークボムについて:
+    #   `fish -c` のフォークボムは「fish 設定ファイル内で fish -c を呼ぶ」場合に発生する。
+    #   このスクリプトは bash スクリプトであり、bash → fish の呼び出しは再帰しないため安全。
+    #   （config.fish が fisher update を呼ぶことはないため）
+    #
+    # --no-config を使わない理由:
+    #   --no-config では fisher がインストール履歴を認識できず "conflicting files" エラーになる。
+    #   通常の fish として起動することで、fisher が既存ファイルを正しく管理できる。
+    fish -c '
+        # fisher が未インストールなら curl からインストール
+        if not functions -q fisher
+            curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
+            fisher install jorgebucaran/fisher
+        end
+
+        # fish_plugins に基づいて全プラグインをインストール/更新
+        fisher update
     '
-    # curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
     # setup_login_shell
 }
 
