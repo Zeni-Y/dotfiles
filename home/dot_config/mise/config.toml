@@ -50,6 +50,7 @@ bats = "latest"
 # AI コーディング
 "npm:@anthropic-ai/claude-code" = "latest"
 "npm:@openai/codex" = "latest"
+"npm:@github/copilot" = "latest"
 
 # LSP / 開発ツール (npm)
 "npm:bash-language-server" = "latest"

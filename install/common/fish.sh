@@ -28,17 +28,11 @@ function main() {
     # fisher プラグインのインストール/更新
     # --no-config: config.fish の再読み込みによるフォークボムを防止
     fish --no-config -c '
-        # 既存の fisher がある場合、全プラグインを削除して競合を回避
-        if test -f ~/.config/fish/functions/fisher.fish
-            source ~/.config/fish/functions/fisher.fish
-            fisher remove (fisher list)
-        end
         # fisher を URL から直接メモリに読み込み、fish_plugins から全プラグインをインストール
         curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
-        fisher update
     '
-
-    setup_login_shell
+    # curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
+    # setup_login_shell
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
