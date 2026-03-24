@@ -116,7 +116,7 @@ if ! shopt -oq posix; then
   fi
 fi
 
-. "$HOME/.local/bin/env"
+# . "$HOME/.local/bin/env"
 # export PATH="$HOME/.local/bin:$PATH"
 # export HF_HOME="/home/zenimoto/host/.cache/huggingface"
 # . "$HOME/.cargo/env"
@@ -126,6 +126,7 @@ gpu() {
 # export PATH=/usr/local/cuda/bin:$PATH
 
 # Use fish shell as the interactive shell
+# 研究室サーバーでsudoが使えず，ログインシェルがbashなので，ログイン時にfishを実行するようにする
 case $- in
   *i*) exec fish ;;
 esac
