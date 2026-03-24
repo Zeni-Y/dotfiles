@@ -29,7 +29,7 @@ function main() {
     # --no-config: config.fish の再読み込みによるフォークボムを防止
     fish --no-config -c '
         # fisher を URL から直接メモリに読み込み、fish_plugins から全プラグインをインストール
-        curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
+        curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher update
     '
     # curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
     # setup_login_shell

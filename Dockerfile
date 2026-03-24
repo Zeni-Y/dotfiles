@@ -15,7 +15,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         curl git sudo locales ca-certificates \
-        build-essential && \
+        build-essential openssh-client && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     locale-gen ja_JP.UTF-8
