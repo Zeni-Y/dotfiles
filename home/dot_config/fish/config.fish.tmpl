@@ -6,9 +6,7 @@ set -g fish_greeting
 #
 # Path settings
 #
-fish_add_path /usr/local/bin /usr/local/sbin
-fish_add_path $HOME/.local/bin
-fish_add_path $HOME/.local/bin/common
+fish_add_path /usr/local/bin /usr/local/sbin $HOME/.local/bin $HOME/.local/bin/common
 {{ if eq .system "client" -}}
 fish_add_path $HOME/.local/bin/client
 {{ else if eq .system "server" -}}
@@ -22,7 +20,6 @@ set -gx CLAUDE_CONFIG_DIR "$HOME/.config/claude"
 set -gx CODEX_HOME "$HOME/.config/codex"
 set -gx CLAUDE_MEM_DATA_DIR "$HOME/.config/claude-mem"
 set -gx LANG en_US.UTF-8
-set -gx GPG_TTY (tty)
 
 {{ if eq .system "server" -}}
 #
@@ -70,20 +67,6 @@ if test -x $HOME/.local/bin/mise
 end
 
 #
-# fzf（キャッシュ）
-# バイナリ更新時のみ再生成（--version 呼び出しを回避して高速化）
-#
-if type -q fzf
-    set -l _cache $_cache_dir/fzf_init.fish
-    if not test -f $_cache; or test (command -s fzf) -nt $_cache
-        mkdir -p $_cache_dir
-        fzf --fish >$_cache
-    end
-    source $_cache
-    set -gx FZF_DEFAULT_OPTS "--reverse"
-end
-
-#
 # 言語環境
 #
 
@@ -101,11 +84,11 @@ if type -q go
 end
 
 # Rust
-fish_add_path $HOME/.cargo/bin
+test -d $HOME/.cargo/bin && fish_add_path $HOME/.cargo/bin
 
 # Bun
 set -gx BUN_INSTALL "$HOME/.bun"
-fish_add_path $BUN_INSTALL/bin
+test -d $BUN_INSTALL/bin && fish_add_path $BUN_INSTALL/bin
 
 #
 # エイリアス

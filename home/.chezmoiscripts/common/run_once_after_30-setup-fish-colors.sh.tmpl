@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# fish テーマカラーをユニバーサル変数として事前設定（起動高速化）
+# fish 起動時の `fish_config theme choose default --no-override` は
+# fish_color_* 変数が未設定の場合に全色の設定処理（~8.7ms）を実行する。
+# 一度 `fish_config theme choose default` を実行してユニバーサル変数に保存すれば、
+# 以降の `--no-override` は設定済みを確認して即リターンする。
+if command -v fish >/dev/null 2>&1; then
+    fish -c 'fish_config theme choose default'
+fi
