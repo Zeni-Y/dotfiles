@@ -39,6 +39,7 @@ shfmt = "latest"
 # ファイル / ディレクトリ
 eza = "latest"
 fd = "latest"
+fzf = "latest"
 
 # Web / ドキュメント
 hugo-extended = "0.136.5"
