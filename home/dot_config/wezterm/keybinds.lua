@@ -11,7 +11,7 @@ M.keys = {
   {
     key = "w",
     mods = "LEADER",
-    action = act.ShowLauncherArgs({ flags = "WORKSPACES|DOMAINS" }),
+    action = act.ShowLauncherArgs({ flags = "WORKSPACES|LAUNCH_MENU_ITEMS" }),
   },
   -- Leader + W: 新規ワークスペースを名前付きで作成
   {
