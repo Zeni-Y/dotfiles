@@ -3,11 +3,6 @@ local act = wezterm.action
 
 local M = {}
 
--- SSH 接続先リスト（環境に合わせて編集）
-local ssh_hosts = {
-  -- { id = "user@hostname", label = "label" },
-}
-
 M.keys = {
   -- ============================================================
   -- ワークスペース
@@ -30,33 +25,6 @@ M.keys = {
         end
       end),
     }),
-  },
-  -- Leader + s: SSH 接続先を選んでワークスペースを作成
-  {
-    key = "s",
-    mods = "LEADER",
-    action = wezterm.action_callback(function(win, pane)
-      if #ssh_hosts == 0 then
-        wezterm.log_info("ssh_hosts が未設定です。keybinds.lua を編集してください。")
-        return
-      end
-      win:perform_action(
-        act.InputSelector({
-          action = wezterm.action_callback(function(w, p, id, label)
-            if label then
-              local _, _, window = wezterm.mux.spawn_window({
-                workspace = label,
-                args = { "ssh", id },
-              })
-              window:gui_window():focus()
-            end
-          end),
-          title = "SSH 接続先を選択",
-          choices = ssh_hosts,
-        }),
-        pane
-      )
-    end),
   },
 
   -- ============================================================
