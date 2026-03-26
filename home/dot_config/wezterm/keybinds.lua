@@ -21,7 +21,7 @@ M.keys = {
       description = "ワークスペース名を入力",
       action = wezterm.action_callback(function(win, pane, line)
         if line then
-          wezterm.mux.spawn_window({ workspace = line })
+          win:perform_action(act.SwitchToWorkspace({ name = line }), pane)
         end
       end),
     }),
@@ -71,7 +71,7 @@ M.keys = {
     mods = "LEADER",
     action = wezterm.action_callback(function(win, pane)
       local resurrect = wezterm.plugin.require("https://github.com/MLFlexer/resurrect.wezterm")
-      resurrect.save_state(resurrect.workspace_state.get_workspace_state())
+      resurrect.state_manager.save_state(resurrect.workspace_state.get_workspace_state())
     end),
   },
   -- Leader + R: 保存済みセッションを復元
@@ -80,11 +80,14 @@ M.keys = {
     mods = "LEADER",
     action = wezterm.action_callback(function(win, pane)
       local resurrect = wezterm.plugin.require("https://github.com/MLFlexer/resurrect.wezterm")
-      resurrect.fuzzy_load(win, pane, function(id, label)
+      resurrect.fuzzy_loader.fuzzy_load(win, pane, function(id, label)
         local type = string.match(id, "^([^/]+)")
         if type == "workspace" then
-          local state = resurrect.load_state(id)
-          resurrect.workspace_state.restore_workspace(state, { relative_cwd = true })
+          local state = resurrect.state_manager.load_state(id, "workspace")
+          resurrect.workspace_state.restore_workspace(state, {
+            window = win,
+            relative_cwd = true,
+          })
         end
       end)
     end),
