@@ -22,6 +22,9 @@ config.hide_tab_bar_if_only_one_tab = false
 -- === スクロール ===
 config.scrollback_lines = 10000
 
+-- === SSH domains（~/.ssh/config から自動生成）===
+config.ssh_domains = wezterm.default_ssh_domains()
+
 -- === キーバインド ===
 -- LEADER: Ctrl+w（押しやすく tmux の Ctrl+t と競合しない）
 config.leader = { key = "w", mods = "CTRL", timeout_milliseconds = 1500 }
@@ -62,18 +65,29 @@ wezterm.on("format-tab-title", function(tab, tabs, panes, cfg, hover, max_width)
   }
 end)
 
--- === Leader アクティブ表示 ===
+-- === 右ステータスバー（Workspace名 + Leader表示）===
 wezterm.on("update-right-status", function(window, pane)
-  local leader = ""
+  local parts = {}
+
+  -- Workspace名
+  local workspace = window:active_workspace()
+  table.insert(parts, wezterm.format({
+    { Foreground = { Color = "#a6e3a1" } }, -- Catppuccin Mocha green
+    { Background = { Color = "#313244" } },
+    { Text = "  " .. workspace .. "  " },
+  }))
+
+  -- LEADER アクティブ表示
   if window:leader_is_active() then
-    leader = wezterm.format({
+    table.insert(parts, wezterm.format({
       { Attribute = { Intensity = "Bold" } },
       { Foreground = { Color = "#f38ba8" } }, -- Catppuccin Mocha red
       { Background = { Color = "#313244" } },
       { Text = "  LEADER  " },
-    })
+    }))
   end
-  window:set_right_status(leader)
+
+  window:set_right_status(table.concat(parts, ""))
 end)
 
 return config
