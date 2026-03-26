@@ -271,16 +271,59 @@ WezTerm
 
 ### SSH 接続をワークスペースで管理
 
-キーバインドから SSH ワークスペースを一発で開く設定例:
+#### ~/.ssh/config から自動生成（推奨）
+
+`wezterm.default_ssh_domains()` を使うと、`~/.ssh/config` に書かれた `Host` エントリを自動で SSH domain として登録できます:
+
+```lua
+-- wezterm.lua
+config.ssh_domains = wezterm.default_ssh_domains()
+```
+
+これで `Leader + w` のランチャーに SSH 接続先が自動的に表示されます。接続先を追加したいときは `~/.ssh/config` を編集するだけで済み、設定の二重管理が不要になります。
+
+:::message alert
+**Windows での注意: IdentityAgent の設定が必要**
+
+WezTerm は独自の Rust 製 SSH 実装を使っており、システムの `ssh` コマンドを経由しません。そのため SSH agent のソケットパスを自動検出できず、デフォルト設定では以下のエラーが発生します:
+
+```
+ForwardAgent is set to yes, but IdentityAgent is not set
+```
+
+Windows の `~/.ssh/config` に `IdentityAgent` を追記して解決します:
+
+```
+Host *
+    IdentityAgent \\.\pipe\openssh-ssh-agent
+```
+
+named pipe が存在するか確認するには PowerShell で:
+
+```powershell
+Get-ChildItem \\.\pipe\ | Where-Object Name -like "*ssh*"
+# openssh-ssh-agent が表示されれば OK
+```
+
+OpenSSH エージェントが停止している場合は起動します:
+
+```powershell
+Start-Service ssh-agent
+Set-Service -Name ssh-agent -StartupType Automatic
+```
+
+:::
+
+#### 手動でホスト一覧を定義する方法
+
+`~/.ssh/config` を使わず、Lua で接続先を固定したい場合は `InputSelector` で fuzzy finder を作れます:
 
 ```lua
 -- keybinds.lua に追記
 { key = "s", mods = "LEADER", action = wezterm.action_callback(function(win, pane)
-    -- 接続先を fuzzy finder で選ぶ
     win:perform_action(act.InputSelector({
         action = wezterm.action_callback(function(win, pane, id, label)
             if label then
-                -- 接続先ごとにワークスペースを作成
                 local _, _, window = wezterm.mux.spawn_window({
                     workspace = label,
                     args = { "ssh", id },
@@ -292,7 +335,6 @@ WezTerm
         choices = {
             { id = "dev.example.com",  label = "dev-server" },
             { id = "prod.example.com", label = "prod-server" },
-            { id = "192.168.1.100",    label = "local-vm" },
         },
     }), pane)
 end)},
@@ -325,13 +367,46 @@ end)},
 SSH config (`~/.ssh/config`) でホスト名のエイリアスを設定しておくと、`args = { "ssh", "dev" }` のように短く書けます。
 :::
 
-### fuzzy finder でワークスペースを切り替える
+### fuzzy finder でワークスペース・SSH を切り替える
 
 ```lua
-{ key = "w", mods = "LEADER", action = act.ShowLauncherArgs({ flags = "WORKSPACES" }) },
+{ key = "w", mods = "LEADER", action = act.ShowLauncherArgs({ flags = "WORKSPACES|DOMAINS" }) },
 ```
 
-`Leader + w` を押すと、現在のワークスペース一覧がファジー検索できる UI で表示されます。
+`Leader + w` を押すと、ワークスペース一覧と SSH domains（`~/.ssh/config` から自動生成）が一緒にファジー検索できる UI で表示されます。
+
+### 右ステータスバーにワークスペース名を表示
+
+現在のワークスペース名を常時表示しておくと、どの接続先にいるか一目でわかります。`update-right-status` イベントで実装します:
+
+```lua
+-- wezterm.lua
+wezterm.on("update-right-status", function(window, pane)
+  local parts = {}
+
+  -- ワークスペース名（緑）
+  local workspace = window:active_workspace()
+  table.insert(parts, wezterm.format({
+    { Foreground = { Color = "#a6e3a1" } }, -- Catppuccin Mocha green
+    { Background = { Color = "#313244" } },
+    { Text = "  " .. workspace .. "  " },
+  }))
+
+  -- LEADER アクティブ表示（赤）
+  if window:leader_is_active() then
+    table.insert(parts, wezterm.format({
+      { Attribute = { Intensity = "Bold" } },
+      { Foreground = { Color = "#f38ba8" } }, -- Catppuccin Mocha red
+      { Background = { Color = "#313244" } },
+      { Text = "  LEADER  " },
+    }))
+  end
+
+  window:set_right_status(table.concat(parts, ""))
+end)
+```
+
+タブバーの右端に ` default ` のようにワークスペース名が表示され、LEADER を押すと隣に ` LEADER ` が現れます。
 
 ## 再起動後の復元（resurrect plugin）
 

@@ -1,6 +1,5 @@
 local wezterm = require("wezterm")
 local keybinds = require("keybinds")
-local ssh_hosts = require("ssh_hosts")
 
 local config = wezterm.config_builder()
 
@@ -23,14 +22,8 @@ config.hide_tab_bar_if_only_one_tab = false
 -- === スクロール ===
 config.scrollback_lines = 10000
 
--- === SSH launch menu（システムの ssh コマンドを使用）===
-config.launch_menu = {}
-for _, host in ipairs(ssh_hosts) do
-  table.insert(config.launch_menu, {
-    label = "SSH: " .. host.label,
-    args = { "ssh", host.host },
-  })
-end
+-- === SSH domains（~/.ssh/config から自動生成）===
+config.ssh_domains = wezterm.default_ssh_domains()
 
 -- === キーバインド ===
 -- LEADER: Ctrl+w（押しやすく tmux の Ctrl+t と競合しない）
