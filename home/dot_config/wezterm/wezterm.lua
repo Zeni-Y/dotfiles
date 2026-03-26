@@ -64,10 +64,11 @@ end)
 
 -- === resurrect plugin（セッション自動保存）===
 local resurrect = wezterm.plugin.require("https://github.com/MLFlexer/resurrect.wezterm")
-resurrect.periodic_save({
+resurrect.state_manager.periodic_save({
   interval_seconds = 15,
   save_workspaces = true,
   save_windows = true,
+  save_tabs = true,
 })
 
 return config
