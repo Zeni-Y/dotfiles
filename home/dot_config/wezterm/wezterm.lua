@@ -23,8 +23,8 @@ config.hide_tab_bar_if_only_one_tab = false
 config.scrollback_lines = 10000
 
 -- === キーバインド ===
--- LEADER: Ctrl+Shift+Space（tmux の Ctrl+t プレフィックスと競合しない）
-config.leader = { key = "Space", mods = "CTRL|SHIFT", timeout_milliseconds = 2000 }
+-- LEADER: Ctrl+w（押しやすく tmux の Ctrl+t と競合しない）
+config.leader = { key = "w", mods = "CTRL", timeout_milliseconds = 1500 }
 config.keys = keybinds.keys
 
 -- === カスタムタブバー（三角形デザイン）===
@@ -60,6 +60,20 @@ wezterm.on("format-tab-title", function(tab, tabs, panes, cfg, hover, max_width)
     { Foreground = { Color = bg } },
     { Text = SOLID_RIGHT_ARROW },
   }
+end)
+
+-- === Leader アクティブ表示 ===
+wezterm.on("update-right-status", function(window, pane)
+  local leader = ""
+  if window:leader_is_active() then
+    leader = wezterm.format({
+      { Attribute = { Intensity = "Bold" } },
+      { Foreground = { Color = "#f38ba8" } }, -- Catppuccin Mocha red
+      { Background = { Color = "#313244" } },
+      { Text = "  LEADER  " },
+    })
+  end
+  window:set_right_status(leader)
 end)
 
 return config
