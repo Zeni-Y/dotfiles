@@ -6,12 +6,12 @@ title: "WezTerm で作るリッチなターミナル環境"
 
 [ターミナル・シェル・エディタの基礎知識](./02-terminal-shell-editor) のチャプターでターミナルエミュレータの概要を紹介しました。この章では、筆者が乗り換えた **WezTerm** を掘り下げて解説します。
 
-対象環境は **Windows ネイティブ（PowerShell）** から SSH 経由でリモート Linux サーバーに接続し、そこで fish shell + Zellij + Neovim を使う構成です。WSL2 は使いません。
+対象環境は **Windows ネイティブ（PowerShell）** から SSH 経由でリモート Linux サーバーに接続し、そこで fish shell + tmux + Neovim を使う構成です。WSL2 は使いません。
 
 ```
 [Windows] WezTerm (PowerShell)
     └─ SSH ──→ [リモート Linux サーバー]
-                   └─ Zellij (セッション管理)
+                   └─ tmux (セッション管理)
                         └─ Neovim + LazyVim (編集)
                         └─ lazygit (Git 操作)
                         └─ yazi (ファイル管理)
@@ -27,7 +27,7 @@ title: "WezTerm で作るリッチなターミナル環境"
 | 設定言語               | GUI/JSON | JSON             | TOML      | **Lua**          |
 | ワークスペース機能     | ❌       | ❌               | ❌        | **✅**           |
 | Windows ネイティブ対応 | ✅       | ✅               | ✅        | ✅               |
-| Zellij との相性        | 普通     | 普通             | 普通      | **良い**         |
+| tmux との相性          | 普通     | 普通             | 普通      | **良い**         |
 | プラグインシステム     | ✅       | 限定的           | ❌        | **✅（Lua）**    |
 | resurrect（状態復元）  | ❌       | ❌               | ❌        | **✅（plugin）** |
 | True Color / Nerd Font | ✅       | ✅               | ✅        | ✅               |
@@ -374,34 +374,34 @@ end)},
 
 保存データは `~/.local/share/wezterm/resurrect/` に JSON 形式で格納されます。
 
-## Zellij との衝突を避けるキーバインド設計
+## tmux との衝突を避けるキーバインド設計
 
 ### 衝突が起きる原因
 
-Zellij は `Ctrl+p`, `Ctrl+t`, `Ctrl+n`, `Ctrl+o`, `Ctrl+s` をモード切替に使います。WezTerm のデフォルトキーバインドと重複すると、SSH 先の Zellij にキーが届かない問題が発生します。
+tmux のプレフィックスキーは `Ctrl+t` です。WezTerm がこのキーを横取りしてしまうと、SSH 先の tmux にキーが届かない問題が発生します。
 
 ### 解決策: LEADER キーにまとめる
 
-WezTerm の操作を `LEADER` キー（`Ctrl+Shift+Space`）でまとめることで、`Ctrl` 単体のショートカットはすべて Zellij に委ねられます。
+WezTerm の操作を `LEADER` キー（`Ctrl+Shift+Space`）でまとめることで、`Ctrl+t` は完全に tmux に委ねられます。
 
 ```lua
--- LEADER キーの定義
+-- LEADER キーの定義（tmux の Ctrl+t と競合しない）
 config.leader = { key = "Space", mods = "CTRL|SHIFT", timeout_milliseconds = 2000 }
 ```
 
-`Ctrl+Shift+Space` は Zellij では使わないキーなので、安全に LEADER として使えます。
+`Ctrl+Shift+Space` は tmux では使わないキーなので、安全に LEADER として使えます。
 
 ### キーバインド対応表
 
-| 操作               | WezTerm ショートカット | Zellij との関係                   |
+| 操作               | WezTerm ショートカット | tmux との関係                     |
 | ------------------ | ---------------------- | --------------------------------- |
 | ワークスペース切替 | `Leader + w`           | 競合なし                          |
 | 新規ワークスペース | `Leader + W`           | 競合なし                          |
 | SSH 接続           | `Leader + s`           | 競合なし                          |
-| 新規タブ           | `Leader + c`           | Zellij の `Ctrl+t` とは別レイヤー |
+| 新規タブ           | `Leader + c`           | tmux の `Ctrl+t c` とは別レイヤー |
 | タブ切替（番号）   | `Leader + 1-5`         | 競合なし                          |
-| コピーモード       | `Leader + [`           | 競合なし                          |
-| コマンドパレット   | `Leader + p`           | Zellij の `Ctrl+p` とは別レイヤー |
+| コピーモード       | `Leader + [`           | tmux の `Ctrl+t [` とは別レイヤー |
+| コマンドパレット   | `Leader + p`           | 競合なし                          |
 | フォントサイズ拡大 | `Ctrl+Shift++`         | 競合なし                          |
 | フォントサイズ縮小 | `Ctrl+Shift+-`         | 競合なし                          |
 | 全画面切替         | `F11`                  | 競合なし                          |
@@ -409,7 +409,7 @@ config.leader = { key = "Space", mods = "CTRL|SHIFT", timeout_milliseconds = 200
 | セッション復元     | `Leader + R`           | 競合なし                          |
 
 :::message
-Zellij が動いている間、`Ctrl+p` などのキーは WezTerm ではなく Zellij が受け取ります。WezTerm 側では `Ctrl+Shift+*` か `Leader + *` のみ使うようにすると混乱が起きません。
+SSH 先で tmux が動いている間、`Ctrl+t` は WezTerm ではなく tmux のプレフィックスとして機能します。WezTerm 側では `Ctrl+Shift+*` か `Leader + *` のみ使うようにすると混乱が起きません。
 :::
 
 ## よく使うキーボードショートカット一覧
@@ -525,78 +525,82 @@ LazyVim で Python 開発を始めるには、`:LazyExtras` から `lang.python`
 → :Lazy sync
 ```
 
-## Zellij レイアウトテンプレート（開発環境一発展開）
+## tmux でのセッション管理（開発環境一発展開）
 
 ### 4 ペイン構成のレイアウト
 
-以下の構成を KDL テンプレートとして定義します:
+tmux では fish 関数を使って開発環境を一発展開できます:
 
 ```
 ┌───────────────────────────────────────────────┐
-│ yazi (ファイルツリー) │  Neovim (編集)           │
-│  25%                  │  50%                    │
-├───────────────────────┤                         │
-│ Claude Code           ├─────────────────────────│
-│  25% (下半分)          │ lazygit (Git UI)         │
-│                        │  25% (下半分)            │
+│ Neovim（左: 60%）     │ ビルド/テスト（右上）   │
+│                       │ cargo watch -x test    │
+│                       ├────────────────────────│
+│                       │ lazygit（右下）          │
 └───────────────────────────────────────────────┘
 ```
 
-```kdl
-// ~/.config/zellij/layouts/dev.kdl
-layout {
-    tab name="dev" focus=true {
-        pane split_direction="vertical" {
-            // 左カラム（25%）
-            pane split_direction="horizontal" size="25%" {
-                pane command="yazi" {
-                    size "50%"
-                }
-                pane {
-                    size "50%"
-                    // Claude Code などのコマンドを起動
-                    // command "claude"
-                }
-            }
-            // 中央カラム（50%）
-            pane command="nvim" {
-                size "50%"
-                args "."
-            }
-            // 右カラム（25%）
-            pane split_direction="horizontal" size="25%" {
-                pane {
-                    size "50%"
-                    // 空のシェル（サーバー起動など用）
-                }
-                pane command="lazygit" {
-                    size "50%"
-                }
-            }
-        }
-    }
-}
+### fish 関数による一発展開
+
+```fish
+# ~/.config/fish/functions/dev.fish
+# dev: 開発用の tmux セッションを一発展開
+function dev
+    set name (test -n "$argv[1]" && echo $argv[1] || basename (pwd))
+
+    # セッションが既存なら接続
+    if tmux has-session -t "$name" 2>/dev/null
+        tmux attach-session -t "$name"
+        return
+    end
+
+    # 新規セッションを作成（デタッチ状態で）
+    tmux new-session -d -s "$name" -c (pwd)
+
+    # ウィンドウ 1: 開発（左右分割）
+    tmux rename-window -t "$name:1" "dev"
+    tmux split-window -h -t "$name:1" -c (pwd)
+    tmux resize-pane -t "$name:1.1" -x "60%"
+
+    # 右ペインをさらに上下に分割
+    tmux split-window -v -t "$name:1.2" -c (pwd)
+
+    # ウィンドウ 2: git
+    tmux new-window -t "$name" -n "git" -c (pwd)
+    tmux send-keys -t "$name:2" "lazygit" Enter
+
+    # ウィンドウ 1 の左ペインで Neovim を起動
+    tmux send-keys -t "$name:1.1" "nvim ." Enter
+
+    # ウィンドウ 1 に戻ってアタッチ
+    tmux select-window -t "$name:1"
+    tmux attach-session -t "$name"
+end
 ```
 
-### レイアウトの使い方
+### セッションの使い方
 
 ```bash
-# レイアウトを指定してセッションを開始
-$ zellij --layout dev
+# 開発環境を一発展開（カレントディレクトリ名がセッション名になる）
+$ cd ~/projects/myapp
+$ dev
 
-# セッション名も付ける（プロジェクト名を指定すると管理しやすい）
-$ zellij -s myproject --layout dev
+# セッション名を明示する場合
+$ dev myapp
+
+# セッションが既存なら自動的にアタッチ
+$ dev myapp
 ```
 
 ### chezmoi での管理
 
 ```
-home/dot_config/zellij/
-  layouts/
-    dev.kdl    # 開発用レイアウト
+home/dot_config/fish/
+  functions/
+    dev.fish    # 開発用セッション展開関数
 ```
 
-`chezmoi add ~/.config/zellij/layouts/dev.kdl` でリポジトリに追加できます。
+`chezmoi add ~/.config/fish/functions/dev.fish` でリポジトリに追加できます。
 
 ## chezmoi での WezTerm 設定管理
 
@@ -643,13 +647,15 @@ WezTerm を導入した構成全体を振り返ります:
 ├── フォント: FiraCode Nerd Font
 ├── カラースキーム: Catppuccin Mocha
 ├── 半透明背景
-├── LEADER = Ctrl+Shift+Space（Zellij と競合なし）
+├── LEADER = Ctrl+Shift+Space（tmux の Ctrl+t と競合なし）
 ├── ワークスペース: SSH 接続先・Docker コンテナごとに分離
 └── resurrect plugin: 状態を自動保存
 
 [SSH 先 Linux サーバー]
-├── Zellij（セッション管理・画面分割）
-│   └── dev.kdl レイアウト（yazi/Neovim/lazygit）
+├── tmux（セッション管理・画面分割）
+│   ├── プレフィックス: Ctrl+t
+│   ├── catppuccin テーマ
+│   └── dev 関数で開発環境を一発展開
 ├── Neovim + LazyVim（Python 開発）
 │   └── OSC52 でクリップボード統合
 └── fish + chezmoi dotfiles
@@ -659,11 +665,11 @@ WezTerm を導入した構成全体を振り返ります:
 
 1. WezTerm を起動 → `Leader + s` で SSH 接続先を選択
 2. 接続先ごとのワークスペースが自動作成
-3. SSH 先で `zellij --layout dev` を実行
-4. 4 ペイン構成（yazi・Neovim・シェル・lazygit）が一発展開
+3. SSH 先で `dev` コマンドを実行
+4. Neovim・ビルドウィンドウ・lazygit が一発展開
 5. `Leader + w` で別のワークスペース（別の接続先）に切り替え
 
-Zellij の Ctrl キーバインドと WezTerm の LEADER キーを明確に分離することで、ショートカットの競合なしに両者をフル活用できます。
+tmux の `Ctrl+t` プレフィックスと WezTerm の `Ctrl+Shift+Space` LEADER を明確に分離することで、ショートカットの競合なしに両者をフル活用できます。
 
 ## 参考リンク
 
@@ -671,5 +677,5 @@ Zellij の Ctrl キーバインドと WezTerm の LEADER キーを明確に分�
 - [WezTerm GitHub リポジトリ](https://github.com/wez/wezterm) — ソースコード・Issues
 - [resurrect.wezterm](https://github.com/MLFlexer/resurrect.wezterm) — セッション復元プラグイン
 - [Catppuccin for WezTerm](https://github.com/catppuccin/wezterm) — Catppuccin カラースキームの WezTerm 向け設定
-- [Zellij ドキュメント: Layouts](https://zellij.dev/documentation/creating-a-layout) — KDL レイアウト定義の詳細
+- [tmux Wiki](https://github.com/tmux/tmux/wiki) — tmux 公式ドキュメント
 - [LazyVim ドキュメント](https://www.lazyvim.org/) — LazyVim の設定・Extras 一覧

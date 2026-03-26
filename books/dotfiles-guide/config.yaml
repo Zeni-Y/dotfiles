@@ -19,7 +19,7 @@ chapters:
   - 12-modern-cli-tools
   - 13-fzf-and-search
   - 14-zed-editor
-  - 15-zellij
+  - 15-tmux
   - 16-development-workflow
   - 17-setup-script
   - 18-comparison-with-others

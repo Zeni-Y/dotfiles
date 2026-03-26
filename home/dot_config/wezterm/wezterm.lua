@@ -16,14 +16,14 @@ config.window_decorations = "RESIZE"
 
 -- === タブバー ===
 config.use_fancy_tab_bar = false
-config.tab_bar_at_bottom = true
-config.hide_tab_bar_if_only_one_tab = true
+config.tab_bar_at_bottom = false
+config.hide_tab_bar_if_only_one_tab = false
 
 -- === スクロール ===
 config.scrollback_lines = 10000
 
 -- === キーバインド ===
--- LEADER: Ctrl+Shift+Space（Zellij のキーと競合しない）
+-- LEADER: Ctrl+Shift+Space（tmux の Ctrl+t プレフィックスと競合しない）
 config.leader = { key = "Space", mods = "CTRL|SHIFT", timeout_milliseconds = 2000 }
 config.keys = keybinds.keys
 
@@ -61,14 +61,5 @@ wezterm.on("format-tab-title", function(tab, tabs, panes, cfg, hover, max_width)
     { Text = SOLID_RIGHT_ARROW },
   }
 end)
-
--- === resurrect plugin（セッション自動保存）===
-local resurrect = wezterm.plugin.require("https://github.com/MLFlexer/resurrect.wezterm")
-resurrect.state_manager.periodic_save({
-  interval_seconds = 15,
-  save_workspaces = true,
-  save_windows = true,
-  save_tabs = true,
-})
 
 return config
