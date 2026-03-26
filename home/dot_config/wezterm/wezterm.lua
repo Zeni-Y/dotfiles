@@ -22,8 +22,11 @@ config.hide_tab_bar_if_only_one_tab = false
 -- === スクロール ===
 config.scrollback_lines = 10000
 
--- === SSH domains（~/.ssh/config から自動生成）===
-config.ssh_domains = wezterm.default_ssh_domains()
+-- === SSH launch menu（システムの ssh.exe を使用）===
+-- NOTE: wezterm.default_ssh_domains() は libssh-rs 経由のため
+--       Windows SSH agent（named pipe）と互換性がない。
+--       システムの ssh.exe を呼ぶ launch_menu 方式を使用する。
+config.launch_menu = require("ssh_hosts")
 
 -- === キーバインド ===
 -- LEADER: Ctrl+w（押しやすく tmux の Ctrl+t と競合しない）

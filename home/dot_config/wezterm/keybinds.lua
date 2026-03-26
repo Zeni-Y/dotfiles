@@ -11,7 +11,7 @@ M.keys = {
   {
     key = "w",
     mods = "LEADER",
-    action = act.ShowLauncherArgs({ flags = "WORKSPACES|DOMAINS" }),
+    action = act.ShowLauncherArgs({ flags = "WORKSPACES|LAUNCH_MENU_ITEMS" }),
   },
   -- Leader + W: 新規ワークスペースを名前付きで作成
   {
@@ -51,6 +51,8 @@ M.keys = {
       end),
     }),
   },
+  -- Leader + x: 現在のタブを閉じる
+  { key = "x", mods = "LEADER", action = act.CloseCurrentTab({ confirm = false }) },
 
   -- ============================================================
   -- コピー・検索
