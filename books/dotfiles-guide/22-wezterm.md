@@ -173,6 +173,24 @@ Nerd Font は Neovim のアイコン表示や starship のプロンプトに必�
 - **JetBrainsMono Nerd Font** — 視認性重視
 - **Hack Nerd Font** — シンプルで読みやすい
 
+### Windows へのインストール手順
+
+1. zip を展開し、`.ttf` ファイルを全選択
+2. 右クリック → **「すべてのユーザーのためにインストール」** を選択
+
+:::message
+「インストール」（ユーザー向け）でも動作しますが、WezTerm が管理者権限で動く場合に備えて「すべてのユーザー」を推奨します。
+:::
+
+zip の中には Regular・Bold・Italic など多数のバリアントが含まれます。最低限以下の 2 ファイルをインストールすれば動作します:
+
+| ファイル名                     | 用途   |
+| ------------------------------ | ------ |
+| `FiraCodeNerdFont-Regular.ttf` | 通常体 |
+| `FiraCodeNerdFont-Bold.ttf`    | 太字   |
+
+`Mono` サフィックス付き（`FiraCodeNerdFontMono-*.ttf`）は文字幅が狭いバリアントです。WezTerm では通常の `FiraCodeNerdFont-*.ttf` を使う方が見た目が整います。
+
 インストール後、WezTerm を再起動するとフォントが認識されます。
 
 ### カラースキーム
@@ -326,7 +344,7 @@ WezTerm はプラグインを Lua から直接読み込めます。`resurrect.we
 local resurrect = wezterm.plugin.require("https://github.com/MLFlexer/resurrect.wezterm")
 
 -- 15 秒ごとに自動保存
-resurrect.periodic_save({ interval_seconds = 15, save_workspaces = true, save_windows = true })
+resurrect.state_manager.periodic_save({ interval_seconds = 15, save_workspaces = true, save_windows = true, save_tabs = true })
 
 -- イベントハンドラ: セッション保存・復元のショートカット
 wezterm.on("gui-startup", function(cmd)
