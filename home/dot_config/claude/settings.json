@@ -1,73 +1,74 @@
 {
-    "model": "claude-sonnet-4.6",
-    "env": {
-        "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
-        "DISABLE_PROMPT_CACHING": "1",
-        "DISABLE_INSTALLATION_CHECKS": "1"
-    },
-    "permissions": {
-        "deny": [
-            "Bash(sudo:*)",
-            "Bash(rm -rf:*)",
-            "Read(.env.*)",
-            "Read(id_rsa*)",
-            "Read(id_ed25519*)",
-            "Write(.env*)"
-        ],
-        "defaultMode": "plan"
-    },
-    "hooks": {
-        "PreToolUse": [
-            {
-                "matcher": "Bash",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "~/.config/claude/hooks/enforce-uv.sh"
-                    }
-                ]
-            }
-        ],
-        "PostToolUse": [
-            {
-                "matcher": "Write|Edit|MultiEdit",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": "jq -r '.tool_input.file_path | select(endswith(\".py\"))' | xargs -r uvx ruff format"
-                    },
-                    {
-                        "type": "command",
-                        "command": "jq -r '.tool_input.file_path | select(endswith(\".py\"))' | xargs -r uvx ruff check --fix"
-                    },
-                    {
-                        "type": "command",
-                        "command": "jq -r '.tool_input.file_path | select(endswith(\".py\"))' | xargs -r uvx mypy"
-                    },
-                    {
-                        "type": "command",
-                        "command": "jq -r '.tool_input.file_path | select(endswith(\".md\"))' | xargs -r npx prettier@2 --write"
-                    }
-                ]
-            }
+  "env": {
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "DISABLE_PROMPT_CACHING": "1",
+    "DISABLE_INSTALLATION_CHECKS": "1"
+  },
+  "permissions": {
+    "deny": [
+      "Bash(sudo:*)",
+      "Bash(rm -rf:*)",
+      "Read(.env.*)",
+      "Read(id_rsa*)",
+      "Read(id_ed25519*)",
+      "Write(.env*)"
+    ],
+    "defaultMode": "plan"
+  },
+  "model": "sonnet",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.config/claude/hooks/enforce-uv.sh"
+          }
         ]
-    },
-    "statusLine": {
-        "type": "command",
-        "command": "npx -y ccstatusline@latest"
-    },
-    "enabledPlugins": {
-        "pyright-lsp@claude-plugins-official": true,
-        "claude-mem@thedotmack": true
-    },
-    "alwaysThinkingEnabled": true,
-    "plansDirectory": "./plans",
-    "extraKnownMarketplaces": {
-        "thedotmack": {
-            "source": {
-                "source": "github",
-                "repo": "thedotmack/claude-mem"
-            }
-        }
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path | select(endswith(\".py\"))' | xargs -r uvx ruff format"
+          },
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path | select(endswith(\".py\"))' | xargs -r uvx ruff check --fix"
+          },
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path | select(endswith(\".py\"))' | xargs -r uvx mypy"
+          },
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path | select(endswith(\".md\"))' | xargs -r npx prettier@2 --write"
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "npx -y ccstatusline@latest"
+  },
+  "enabledPlugins": {
+    "pyright-lsp@claude-plugins-official": true,
+    "claude-mem@thedotmack": true
+  },
+  "extraKnownMarketplaces": {
+    "thedotmack": {
+      "source": {
+        "source": "github",
+        "repo": "thedotmack/claude-mem"
+      }
     }
+  },
+  "alwaysThinkingEnabled": true,
+  "plansDirectory": "./plans",
+  "effortLevel": "medium"
 }
