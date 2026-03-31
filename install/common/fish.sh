@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# fisher プラグインマネージャのインストール
+# fish のインストールと fisher プラグインマネージャのセットアップ
 
 set -Eeuo pipefail
 
@@ -8,8 +8,41 @@ if [ "${DOTFILES_DEBUG:-}" ]; then
     set -x
 fi
 
-# mise でインストールした fish を PATH に通す
-eval "$(~/.local/bin/mise activate bash)"
+function install_fish() {
+    if command -v fish &>/dev/null; then
+        echo "fish はすでにインストール済みです: $(command -v fish)"
+        return 0
+    fi
+
+    if [ "$(uname)" != "Linux" ] || ! command -v apt-get &>/dev/null; then
+        echo "apt-get が見つかりません。fish を手動でインストールしてください"
+        return 0
+    fi
+
+    # sudo が存在しない環境ではスキップ
+    if ! command -v sudo &>/dev/null; then
+        echo "sudo が見つからないため、fish のインストールをスキップします"
+        return 0
+    fi
+
+    # passwordless sudo が使えない場合は対話的に確認
+    if ! sudo -n true 2>/dev/null; then
+        echo "fish のインストールには sudo が必要です。"
+        read -r -p "sudo を使って fish をインストールしますか？ [y/N] " answer
+        case "$answer" in
+            [yY] | [yY][eE][sS]) ;;
+            *)
+                echo "fish のインストールをスキップします"
+                return 0
+                ;;
+        esac
+    fi
+
+    echo "fish を PPA からインストールします..."
+    sudo apt-add-repository -y ppa:fish-shell/release-4
+    sudo apt-get update -q
+    sudo apt-get install -y fish
+}
 
 function setup_login_shell() {
     # sudo が存在しない環境ではスキップ
@@ -32,18 +65,20 @@ function setup_login_shell() {
     fi
 
     local fish_path
-    fish_path="$HOME/.local/bin/fish-login"  # mise shim の代わりにラッパーを使用
+    fish_path="/usr/bin/fish"
 
     # /etc/shells に未登録なら追加
     if ! grep -qxF "$fish_path" /etc/shells; then
         echo "$fish_path" | sudo tee -a /etc/shells >/dev/null
     fi
 
-    # ログインシェルを fish ラッパーに変更
+    # ログインシェルを fish に変更
     sudo chsh -s "$fish_path" "$USER"
 }
 
 function main() {
+    install_fish
+
     # fisher プラグインのインストール/更新
     #
     # フォークボムについて:

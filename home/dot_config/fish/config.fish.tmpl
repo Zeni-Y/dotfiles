@@ -44,20 +44,6 @@ set -gx TRANSFORMERS_CACHE "$HF_HOME/hub"
 set -l _cache_dir ~/.cache/fish
 
 #
-# starship プロンプト（キャッシュ）
-# バイナリ更新時のみ再生成（--print-full-init で展開済みコードをキャッシュ）
-# starship init fish は薄いラッパーで毎回プロセス起動するため、展開後をキャッシュする
-#
-if type -q starship
-    set -l _cache $_cache_dir/starship_init.fish
-    if not test -f $_cache; or test (command -s starship) -nt $_cache
-        mkdir -p $_cache_dir
-        starship init fish --print-full-init >$_cache
-    end
-    source $_cache
-end
-
-#
 # mise ランタイムバージョン管理（shims モード）
 # activate 方式の代わりに shims PATH を追加することで起動を高速化
 # トレードオフ: cd 時の自動バージョン切替なし（mise reshim が必要）
