@@ -182,6 +182,85 @@ shims モードでは `cd` 時にバージョンが自動で切り替わりま�
 筆者の環境では、複数バージョンを頻繁に切り替えるケースが少ないため shims モードを採用しています。プロジェクトごとにバージョンを厳密に管理したい場合は activate 方式の方が安全です。
 :::
 
+## 落とし穴: mise が fish 自体を管理する場合
+
+mise は非常に便利なツールですが、**fish 自体を mise で管理する**と、shims モードを使っていても起動が大幅に遅くなる落とし穴があります。
+
+### 何が起きるか
+
+mise の shim バイナリは、管理対象のツール（ここでは fish）を起動するとき、`-C`（`--init-command`）フラグを使って mise 環境をシェルに注入します。
+
+```
+# shim が実際に実行するコマンド（概略）
+fish -C "set -gx GOROOT ...
+fish_add_path -gm ~/.local/share/mise/installs/go/1.26.0/bin
+fish_add_path -gm ~/.local/share/mise/installs/node/24.14.0/bin
+fish_add_path -gm ~/.local/share/mise/installs/starship/1.24.2
+...（管理ツール数 × 1 行）"
+```
+
+mise が管理するツールの数だけ `fish_add_path` が呼ばれます。`fish_add_path` は内部で `__fish_reconstruct_path` を呼び出し PATH 変数を再構築するため、呼び出しのたびにコストがかかります。ツールが 29 個なら **O(n²) の PATH 操作が 29 回**発生します。
+
+```
+# 計測結果（ツール 29 個の場合）
+mise shim 経由の fish 起動: ~500ms
+直接バイナリの fish 起動:   ~50ms
+差分: ~450ms
+```
+
+### 計測の落とし穴
+
+この問題は「fish の中から `time fish -c exit` で計測する」と顕在化しますが、見落としやすい罠があります。
+
+```fish
+# fish シェル内で実行すると「fish」は shim に解決される
+time fish -c exit  # → ~500ms（shim 経由）
+
+# bash から直接バイナリを指定すると本来の速度
+bash -c 'time /usr/bin/fish -c exit'  # → ~50ms
+```
+
+**ターミナルの実際の起動は直接バイナリ経由のため速い**のですが、ツールやスクリプトが `fish -c` を呼ぶたびに 500ms のオーバーヘッドが発生し続けます。
+
+また、プロセスリストを見ると shim が何をしているかが一目瞭然です。
+
+```bash
+ps aux | grep fish
+# → fish -C "set -gx CARGO_HOME ... fish_add_path -gm .../go/bin
+#           fish_add_path -gm .../node/bin fish_add_path -gm ... (×29)"
+```
+
+### 解決策: fish はシステムパッケージで管理する
+
+mise の強みは「複数バージョンの切り替え」にありますが、fish はシェル自体なので複数バージョンを使い分けることはほぼありません。システムパッケージで管理するのが適切です。
+
+```bash
+# Ubuntu: PPA から最新版をインストール
+sudo apt-add-repository -y ppa:fish-shell/release-4
+sudo apt-get update && sudo apt-get install -y fish
+
+# mise の管理対象から外す（mise/config.toml）
+# "github:fish-shell/fish-shell" = "latest"  ← この行を削除
+```
+
+```fish
+# ログインシェルを /usr/bin/fish に変更
+sudo chsh -s /usr/bin/fish $USER
+```
+
+これにより、fish 起動時に shim の `-C` 注入が一切なくなります。
+
+### 影響を受けるケース
+
+| 状況                                      | shim 経由か            | 影響                        |
+| ----------------------------------------- | ---------------------- | --------------------------- |
+| ターミナルを開く（fish がログインシェル） | 直接バイナリ           | なし                        |
+| fish 内で `fish -c` を呼ぶ                | shim 経由              | **~450ms のオーバーヘッド** |
+| bash スクリプトから `fish -c` を呼ぶ      | shim 経由（PATH 次第） | **~450ms のオーバーヘッド** |
+| `chezmoi apply` 内での fisher 実行        | shim 経由              | **~450ms のオーバーヘッド** |
+
+`fish -c` を呼ぶ頻度が低ければ実害は少ないですが、fish をシステムパッケージで管理する方がシンプルで根本的な解決策です。
+
 ## ボトルネックの特定方法
 
 ### profile-startup の出力をソートして分析
