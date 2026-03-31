@@ -10,22 +10,21 @@ title: "リファレンス"
 
 ### ソースファイルと配置先の対応
 
-| ソースファイル                                    | 配置先                                                                    | 説明                            |
-| ------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------- |
-| `home/dot_config/fish/config.fish.tmpl`           | `~/.config/fish/config.fish`                                              | fish shell 設定（テンプレート） |
-| `home/dot_config/fish/fish_plugins`               | `~/.config/fish/fish_plugins`                                             | fisher プラグインリスト         |
-| `home/dot_config/fish/conf.d/chezmoi-notify.fish` | `~/.config/fish/conf.d/chezmoi-notify.fish`                               | dotfiles 更新通知プラグイン     |
-| `home/dot_vimrc`                                  | `~/.vimrc`                                                                | Vim 基本設定                    |
-| `home/.chezmoi.yaml.tmpl`                         | `~/.config/chezmoi/chezmoi.yaml`                                          | chezmoi 設定                    |
-| `home/.chezmoiignore`                             | —                                                                         | chezmoi 管理対象の除外設定      |
-| `home/.chezmoiexternal.yaml.tmpl`                 | —                                                                         | 外部依存管理（Nerd Font 等）    |
-| `home/dot_config/git/config.tmpl`                 | `~/.config/git/config`                                                    | Git 設定（テンプレート）        |
-| `home/dot_config/git/ignore`                      | `~/.config/git/ignore`                                                    | グローバル gitignore            |
-| `home/dot_config/starship.toml`                   | `~/.config/starship.toml`                                                 | starship プロンプト設定         |
-| `home/dot_config/mise/config.toml`                | `~/.config/mise/config.toml`                                              | ランタイム設定                  |
-| `home/dot_config/gwq/config.toml`                 | `~/.config/gwq/config.toml`                                               | gwq 設定                        |
-| `home/dot_config/zed/settings.json`               | `~/.config/zed/settings.json`                                             | Zed エディタ設定                |
-| `home/dot_config/zed/keymap.json`                 | `~/.config/zed/keymap.json` (WSL: `%APPDATA%\Zed\keymap.json` にもコピー) | Zed キーバインド設定            |
+| ソースファイル                          | 配置先                                                                    | 説明                            |
+| --------------------------------------- | ------------------------------------------------------------------------- | ------------------------------- |
+| `home/dot_config/fish/config.fish.tmpl` | `~/.config/fish/config.fish`                                              | fish shell 設定（テンプレート） |
+| `home/dot_config/fish/fish_plugins`     | `~/.config/fish/fish_plugins`                                             | fisher プラグインリスト         |
+| `home/dot_vimrc`                        | `~/.vimrc`                                                                | Vim 基本設定                    |
+| `home/.chezmoi.yaml.tmpl`               | `~/.config/chezmoi/chezmoi.yaml`                                          | chezmoi 設定                    |
+| `home/.chezmoiignore`                   | —                                                                         | chezmoi 管理対象の除外設定      |
+| `home/.chezmoiexternal.yaml.tmpl`       | —                                                                         | 外部依存管理（Nerd Font 等）    |
+| `home/dot_config/git/config.tmpl`       | `~/.config/git/config`                                                    | Git 設定（テンプレート）        |
+| `home/dot_config/git/ignore`            | `~/.config/git/ignore`                                                    | グローバル gitignore            |
+| `home/dot_config/starship.toml`         | `~/.config/starship.toml`                                                 | starship プロンプト設定         |
+| `home/dot_config/mise/config.toml`      | `~/.config/mise/config.toml`                                              | ランタイム設定                  |
+| `home/dot_config/gwq/config.toml`       | `~/.config/gwq/config.toml`                                               | gwq 設定                        |
+| `home/dot_config/zed/settings.json`     | `~/.config/zed/settings.json`                                             | Zed エディタ設定                |
+| `home/dot_config/zed/keymap.json`       | `~/.config/zed/keymap.json` (WSL: `%APPDATA%\Zed\keymap.json` にもコピー) | Zed キーバインド設定            |
 
 ### カスタムコマンド
 

@@ -104,7 +104,7 @@ books/               # Zenn Book
 ### fish shell 構成
 
 - `config.fish.tmpl` — メイン設定（PATH, 環境変数, エイリアス, プラグイン初期化）
-- `conf.d/` — 自動読み込み設定（chezmoi-notify 等）
+- `conf.d/` — 自動読み込み設定
 - `functions/` — カスタムコマンド（dev, cdgwq, cdw, fgc 等）
 - `fish_plugins` — fisher で管理するプラグインリスト
 

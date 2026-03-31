@@ -1,0 +1,176 @@
+#!/usr/bin/env bash
+# fish shell 起動プロファイリングツール（セクション別 wall time 計測）
+# config.fish の各セクション（# コメントブロック）ごとの実際の実行時間を表示する
+
+set -euo pipefail
+
+CONF="$HOME/.config/fish/config.fish"
+TOP_N=20
+
+show_usage() {
+  cat <<'USAGE'
+Usage: fish-startup-sections [OPTIONS] [N]
+
+fish shell の config.fish を各セクション単位で wall time 計測する。
+awk で動的にインストルメントした config を fish --no-config で実行し、
+セクションごとの ms を表示する。
+
+Arguments:
+  N          Top N Slowest Commands の表示件数 (デフォルト: 20)
+
+Options:
+  -h, --help ヘルプを表示
+USAGE
+}
+
+# 引数パース
+for arg in "$@"; do
+  case "$arg" in
+    -h|--help)
+      show_usage
+      exit 0
+      ;;
+    *)
+      if [[ "$arg" =~ ^[0-9]+$ ]]; then
+        TOP_N="$arg"
+      else
+        echo "Error: 不明な引数 '$arg'" >&2
+        show_usage >&2
+        exit 1
+      fi
+      ;;
+  esac
+done
+
+if [[ ! -f "$CONF" ]]; then
+  echo "Error: config.fish が見つかりません: $CONF" >&2
+  exit 1
+fi
+
+# 一時ファイル作成
+tmpfish=$(mktemp /tmp/fish-section-profile.XXXXXX.fish)
+tmpprof=$(mktemp /tmp/fish-section-startup.XXXXXX)
+trap 'rm -f "$tmpfish" "$tmpprof"' EXIT
+
+# ── タイミングヘルパーを一時ファイル先頭に挿入 ──────────────────────────
+cat >> "$tmpfish" << 'FISH_HEADER'
+# PATH pre-setup (--no-config のため明示的に設定)
+set -gx PATH $HOME/.local/bin $HOME/.local/share/mise/shims \
+             $HOME/.cargo/bin $HOME/.go/bin $HOME/.bun/bin \
+             /usr/local/bin /usr/bin /bin
+
+# タイミング計測変数
+set -g __t_start (date +%s%3N)
+set -g __t_prev $__t_start
+set -g __t_labels
+set -g __t_elapsed_list
+
+# セクション境界で呼ぶ関数: 引数 = セクションタイトル
+function __section_timing
+    set -l now (date +%s%3N)
+    set -l elapsed (math $now - $__t_prev)
+    set -ga __t_elapsed_list $elapsed
+    set -ga __t_labels $argv[1]
+    set -g __t_prev $now
+end
+FISH_HEADER
+
+# ── awk で config.fish をインストルメント ──────────────────────────────
+# セクションヘッダーのパターン（複数行コメントにも対応）:
+#   ^#$
+#   ^# タイトル$    ← ここでタイトルを取得 (state=2)
+#   ^# サブコメント$ ← state=2 のまま維持（追加コメント行は無視）
+#   ^#$             ← セクション終了 → pending としてマーク
+#   <コード行>      ← ここで __section_timing を挿入
+awk '
+BEGIN { state = 0; title = ""; pending = 0; pending_title = "" }
+
+/^#$/ {
+    if (state == 2) {
+        pending_title = title
+        pending = 1
+    }
+    state = 1
+    print
+    next
+}
+
+/^# / {
+    if (state == 1) {
+        title = substr($0, 3)
+        state = 2
+    }
+    # state==2 の追加コメント行はタイトルを維持したまま継続
+    # state==0 はそのまま出力
+    print
+    next
+}
+
+{
+    # セクション境界が確定していたら __section_timing を挿入
+    if (pending) {
+        gsub(/"/, "\\\"", pending_title)
+        print "__section_timing \"" pending_title "\""
+        pending = 0
+    }
+    state = 0
+    print
+}
+' "$CONF" >> "$tmpfish"
+
+# ── セクション合計表示コードをファイル末尾に追加 ──────────────────────
+cat >> "$tmpfish" << 'FISH_FOOTER'
+
+# 最終セクション終了タイミング記録
+__section_timing "(end)"
+
+set -l now (date +%s%3N)
+set -l total_ms (math $now - $__t_start)
+
+printf "\n=== Fish Shell Section Timing ===\n\n"
+printf "%-42s %s\n" "Section" "Time (ms)"
+printf "%-42s %s\n" (string repeat -n 42 -) "---------"
+
+set -l sum 0
+for i in (seq (count $__t_labels))
+    if test "$__t_labels[$i]" = "(end)"
+        break
+    end
+    printf "%-42s %dms\n" $__t_labels[$i] $__t_elapsed_list[$i]
+    set sum (math $sum + $__t_elapsed_list[$i])
+end
+
+printf "%-42s %s\n" (string repeat -n 42 -) "---------"
+printf "%-42s %dms\n\n" "TOTAL (section sum)" $sum
+printf "* real time (wall): %dms — 差分 %dms は fish プロセス起動・I/O オーバーヘッド\n" \
+    $total_ms (math $total_ms - $sum)
+FISH_FOOTER
+
+# ── 計測実行 ─────────────────────────────────────────────────────────
+echo "=== Fish Shell Startup Time ==="
+echo ""
+
+# セクション別 wall time 計測（--no-config でインストルメント版のみ実行）
+{ time fish --no-config -C "source $tmpfish" -c exit ; } 2>&1
+
+echo ""
+
+# Top N プロファイル（通常起動で --profile-startup を使用）
+echo "=== Top $TOP_N Slowest Commands (profile) ==="
+echo ""
+fish --profile-startup "$tmpprof" -c exit 2>/dev/null || true
+
+if [[ -s "$tmpprof" ]]; then
+  { tail -n +2 "$tmpprof" \
+    | sort -t$'\t' -k1 -nr \
+    | head -n "$TOP_N" \
+    | awk -F'\t' 'BEGIN {
+        printf "%-12s %-12s %s\n", "Time (us)", "Sum (us)", "Command"
+        printf "%-12s %-12s %s\n", "----------", "----------", "-------"
+      }
+      {
+        printf "%-12s %-12s %s\n", $1, $2, $3
+      }'; } || true
+else
+  echo "(プロファイル出力なし)"
+fi

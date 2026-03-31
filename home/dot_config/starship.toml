@@ -1,18 +1,6 @@
-right_format = """
-${custom.chezmoi}
-"""
-
 [python]
 python_binary = 'python'
 
-[custom.chezmoi]
-command = "cat ${XDG_CACHE_HOME:-$HOME/.cache}/starship-chezmoi/count"
-when = "test -s ${XDG_CACHE_HOME:-$HOME/.cache}/starship-chezmoi/count"
-symbol = " dotfiles  ⇣"
-style = "bold red"
-format = "[$symbol$output]($style) "
-ignore_timeout = true
-
 # Git リポジトリ内でのみ Git 情報を表示
-[git_branch]
-only_attached = true
+#  [git_branch]
+# only_attached = true

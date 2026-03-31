@@ -101,6 +101,19 @@ alias ls "eza --long --group --header --binary --time-style=long-iso --icons"
 alias ll "eza -la --long --group --header --binary --time-style=long-iso --icons"
 
 #
+# zoxide ディレクトリジャンプ（キャッシュ）
+# バイナリ更新時のみ再生成
+#
+if type -q zoxide
+    set -l _cache $_cache_dir/zoxide_init.fish
+    if not test -f $_cache; or test (command -s zoxide) -nt $_cache
+        mkdir -p $_cache_dir
+        zoxide init fish >$_cache
+    end
+    source $_cache
+end
+
+#
 # プライベート設定
 #
 if test -f $HOME/.workrc.fish

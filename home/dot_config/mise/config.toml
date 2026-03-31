@@ -40,6 +40,7 @@ shfmt = "latest"
 eza = "latest"
 fd = "latest"
 fzf = "latest"
+zoxide = "latest"
 
 # Web / ドキュメント
 hugo-extended = "0.136.5"

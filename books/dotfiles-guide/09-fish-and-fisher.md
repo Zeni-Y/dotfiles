@@ -239,7 +239,7 @@ alias ll "eza -la --long --group --header --binary --time-style=long-iso --icons
 
 fish は `~/.config/fish/conf.d/` に置いた `.fish` ファイルを起動時に自動読み込みします。`config.fish` に書かなくても、ファイルをディレクトリに置くだけで有効になります。
 
-このリポジトリでは `conf.d/` に `chezmoi-notify.fish` を配置しています。`chezmoi apply` 時に chezmoi がファイルを `~/.config/fish/conf.d/` に配置するため、手動での設定は不要です。
+chezmoi でファイルを `~/.config/fish/conf.d/` に配置すると、手動での設定なしに有効になります。
 
 ## functions/ ディレクトリ
 
@@ -260,71 +260,6 @@ fish は `~/.config/fish/functions/` に置いた `.fish` ファイルを**オ�
 ### dev.fish の例
 
 `dev` 関数は ghq で管理しているリポジトリを fzf でインタラクティブに選択し、移動します。tmux セッション内では、移動先のリポジトリ名にセッション名をリネームします。日常的なリポジトリ間の移動を効率化するために最もよく使うカスタム関数です。
-
-## chezmoi-notify — dotfiles 更新通知
-
-### 概要
-
-`chezmoi-notify.fish` は、dotfiles リポジトリのリモートに未適用の更新がないかをバックグラウンドで定期チェックし、starship プロンプトに通知を表示するカスタム関数です。
-
-### 仕組み
-
-```
-[fish_prompt イベント] → 1時間経過? → [バックグラウンドで git fetch（disown）]
-                                       → 差分あり → キャッシュファイルに件数を書き込み
-                                       → 差分なし → キャッシュファイルを削除
-
-[starship] → キャッシュファイルを読み取り → プロンプト右側に表示
-```
-
-### コード
-
-```fish
-function _check_chezmoi_update --on-event fish_prompt
-    set -l check_interval 3600
-    set -l cache_dir (set -q XDG_CACHE_HOME; and echo $XDG_CACHE_HOME; or echo $HOME/.cache)/starship-chezmoi
-    set -l status_file $cache_dir/count
-    set -l last_check_file $cache_dir/last_check
-
-    test -d $cache_dir; or mkdir -p $cache_dir
-
-    set -l current_time (date +%s)
-    set -l last_check 0
-    if test -f $last_check_file
-        set last_check (cat $last_check_file)
-    end
-
-    if test (math "$current_time - $last_check") -gt $check_interval
-        echo $current_time >$last_check_file
-
-        # バックグラウンドで実行（fish -c はフォークボムになるため sh -c を使用）
-        command sh -c '
-            if command -v chezmoi >/dev/null 2>&1; then
-                chezmoi git -- fetch -q 2>/dev/null
-                count=$(chezmoi git -- rev-list --count HEAD..origin/main 2>/dev/null)
-                if [ "$count" -gt 0 ] 2>/dev/null; then
-                    echo "$count" > "'"$status_file"'"
-                else
-                    rm -f "'"$status_file"'"
-                fi
-            fi
-        ' &
-        disown
-    end
-end
-```
-
-### fish での実装ポイント
-
-**`--on-event fish_prompt`**: fish のイベントシステムを使い、プロンプトが表示されるたびに関数を呼び出します。zsh での `add-zsh-hook precmd` に相当します。
-
-**`disown`**: バックグラウンドジョブを fish のジョブ管理から切り離します。fish セッションを終了してもバックグラウンドプロセスが継続し、終了時にジョブ完了の通知が出なくなります。
-
-**`command sh -c '...' &`**: バックグラウンド処理に `fish -c` ではなく `sh -c` を使っています。`fish -c` は `config.fish` を読み込むため、`conf.d/` や `functions/` から呼ぶとフォークボムになります（詳細は後述）。`sh -c` は POSIX sh を起動するため fish の設定ファイルを読み込まず安全です。
-
-### starship との連携
-
-未適用の更新がある場合、starship のカスタムコマンドモジュールがキャッシュファイルを読み取り、プロンプトに `dotfiles ⇣3` のように表示します。starship の設定詳細については [starship — クロスシェル対応のモダンプロンプト](10-starship) を参照してください。
 
 ## fish -c フォークボムに注意
 

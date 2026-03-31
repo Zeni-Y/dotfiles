@@ -93,10 +93,6 @@ starship の初期化スクリプトはバージョンが変わらない限り�
 設定ファイルは `~/.config/starship.toml` です。このリポジトリでは最小限のカスタマイズだけ行っています。
 
 ```toml
-right_format = """
-${custom.chezmoi}
-"""
-
 [python]
 python_binary = 'python'
 
@@ -104,33 +100,12 @@ python_binary = 'python'
 only_attached = true
 ```
 
-starship のデフォルト設定は十分に実用的なので、カスタマイズは少なくて済みます。ここでは以下の 3 点だけ変更しています:
+starship のデフォルト設定は十分に実用的なので、カスタマイズは少なくて済みます。ここでは以下の 2 点だけ変更しています:
 
-| 設定                       | 内容                                          |
-| -------------------------- | --------------------------------------------- |
-| `right_format`             | 右プロンプトに chezmoi 更新通知を表示（後述） |
-| `python_binary`            | Python バージョン検出に `python` を使用       |
-| `git_branch.only_attached` | detached HEAD 状態では Git ブランチを非表示   |
-
-### chezmoi 更新通知との連携
-
-starship の [カスタムコマンドモジュール](https://starship.rs/config/#custom-commands) を使って、dotfiles リポジトリに未適用の更新がある場合にプロンプト右側に通知を表示しています。
-
-```toml
-[custom.chezmoi]
-command = "cat ${XDG_CACHE_HOME:-$HOME/.cache}/starship-chezmoi/count"
-when = "test -s ${XDG_CACHE_HOME:-$HOME/.cache}/starship-chezmoi/count"
-symbol = " dotfiles  ⇣"
-style = "bold red"
-format = "[$symbol$output]($style) "
-ignore_timeout = true
-```
-
-未適用の更新が 3 件ある場合、プロンプトの右側に `dotfiles ⇣3` のように表示されます。
-
-**`ignore_timeout = true`**: starship のカスタムコマンドにはデフォルトで 500ms のタイムアウトがあります。bash など fish 以外のシェルではシェル起動オーバーヘッドにより `when` の判定がタイムアウトし、警告が表示されることがあります。`ignore_timeout = true` を設定すると、コマンドがタイムアウトしても警告を出さずプロンプトを即座に表示し、完了次第結果を反映します。
-
-通知の仕組み自体（バックグラウンドでの `git fetch` とキャッシュ管理）は [fish と fisher プラグイン管理](09-fish-and-fisher) の chezmoi-notify セクションで解説しています。
+| 設定                       | 内容                                        |
+| -------------------------- | ------------------------------------------- |
+| `python_binary`            | Python バージョン検出に `python` を使用     |
+| `git_branch.only_attached` | detached HEAD 状態では Git ブランチを非表示 |
 
 ## p10k から starship への移行
 
