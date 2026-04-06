@@ -33,4 +33,4 @@ RUN groupadd --gid $USER_GID $USERNAME && \
 USER $USERNAME
 WORKDIR /home/$USERNAME
 
-ENTRYPOINT sudo service ssh start && exec bash
+ENTRYPOINT ["bash", "-c", "sudo service ssh start && exec bash"]

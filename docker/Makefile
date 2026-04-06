@@ -23,7 +23,7 @@ build:
 
 run:
 	docker run --gpus all -it --name "$(CONTAINER_NAME)" \
-		--network host \
+		--network zenimoto \
 		--ipc=host \
 		--shm-size 16G \
 		-v "$(HOME):/home/$(USER)/host" \
