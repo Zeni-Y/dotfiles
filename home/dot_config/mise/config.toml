@@ -13,6 +13,7 @@ uv = "latest"
 starship = "latest"
 yazi = "latest"
 zellij = "latest"
+neovim = "latest"
 
 # Git
 chezmoi = "latest"
