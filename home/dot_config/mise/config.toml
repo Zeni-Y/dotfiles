@@ -12,12 +12,14 @@ uv = "latest"
 # シェル / ターミナル
 starship = "latest"
 yazi = "latest"
+zellij = "latest"
 
 # Git
 chezmoi = "latest"
 gh = "latest"
 ghq = "latest"
 "github:d-kuro/gwq" = "latest"
+lazygit = "latest"
 
 # クラウド / インフラ
 aws-cli = "latest"

@@ -73,7 +73,7 @@ function setup_login_shell() {
     fi
 
     # ログインシェルを fish に変更
-    sudo chsh -s "$fish_path" "$USER"
+    sudo chsh -s "$fish_path" "$(id -un)"
 }
 
 function main() {
