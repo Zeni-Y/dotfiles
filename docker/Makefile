@@ -22,6 +22,7 @@ build:
 		./ -t "$(IMAGE_NAME)"
 
 run:
+	docker network inspect zenimoto >/dev/null 2>&1 || docker network create zenimoto
 	docker run --gpus all -it --name "$(CONTAINER_NAME)" \
 		--network zenimoto \
 		--ipc=host \

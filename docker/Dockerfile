@@ -11,7 +11,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        curl git sudo locales ca-certificates openssh-server \
+        curl git sudo locales ca-certificates openssh-server software-properties-common \
         build-essential libssl-dev zlib1g-dev libbz2-dev \
         libreadline-dev libsqlite3-dev wget llvm \
         libncurses5-dev xz-utils tk-dev libxml2-dev \
