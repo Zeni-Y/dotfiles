@@ -72,7 +72,8 @@ title: "リファレンス"
 | `.chezmoiroot` | ソースルートを `home/` に設定 |
 | `.gitignore`   | Git 除外設定                  |
 | `README.md`    | リポジトリドキュメント        |
-| `CLAUDE.md`    | 設計方針ドキュメント          |
+| `AGENTS.md`    | 共通のエージェント方針        |
+| `CLAUDE.md`    | Claude 用の薄いラッパー       |
 
 ## chezmoi コマンドチートシート
 

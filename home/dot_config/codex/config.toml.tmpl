@@ -1,0 +1,12 @@
+model = "gpt-5.4"
+model_reasoning_effort = "medium"
+project_doc_fallback_filenames = ["CLAUDE.md"]
+project_doc_max_bytes = 65536
+
+[projects."/home/zenimoto/.local/share/chezmoi"]
+trust_level = "trusted"
+
+{{ include ".chezmoitemplates/ai/codex/mcp-servers.toml" }}
+
+[notice.model_migrations]
+"gpt-5.3-codex" = "gpt-5.4"

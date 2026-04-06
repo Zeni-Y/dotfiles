@@ -6,14 +6,16 @@ title: "Claude Code の設定管理"
 
 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) は Anthropic が提供する CLI ベースの AI コーディングアシスタントです。ターミナル上で対話しながら、ファイルの読み書き・コマンド実行・Git 操作など幅広いタスクをこなしてくれます。
 
-Claude Code の設定は `~/.claude/` ディレクトリに保存されます。dotfiles と同じように chezmoi で管理すれば、新しいマシンでも一瞬で自分好みの Claude Code 環境を再現できます。
+Claude Code の設定は `~/.config/claude/` ディレクトリに保存されます。dotfiles と同じように chezmoi で管理すれば、新しいマシンでも一瞬で自分好みの Claude Code 環境を再現できます。
+
+この repo では instruction 本文を `AGENTS.md` に集約し、`CLAUDE.md` はそれを import する薄いラッパーとして扱います。skills も `home/.chezmoitemplates/ai/skills/` を正本にして、Claude/Codex の両方へ展開します。
 
 ## 設定ディレクトリの構成
 
 Claude Code の設定は以下の構造です。
 
 ```
-~/.claude/
+~/.config/claude/
 ├── settings.json          # メイン設定（権限、フック、プラグイン）
 ├── hooks/                 # ツール実行前後に走るスクリプト
 │   └── enforce-uv.sh
@@ -29,10 +31,10 @@ Claude Code の設定は以下の構造です。
     └── high-impact-journal-publishing/
 ```
 
-chezmoi では `home/dot_claude/` に配置することで `~/.claude/` に展開されます。
+chezmoi では `home/dot_config/claude/` に配置することで `~/.config/claude/` に展開されます。
 
 :::message
-`~/.claude/` をシンボリックリンクにして別の場所（例: `~/.config/claude/`）を参照するパターンもありますが、Claude Code にシンボリックリンク関連のバグが複数報告されており[^1][^2]、直接配置が安全です。
+`~/.config/claude/` をシンボリックリンクにして別の場所（例: `~/.local/share/claude-config/`）を参照するパターンもありますが、Claude Code にシンボリックリンク関連のバグが複数報告されており[^1][^2]、直接配置が安全です。
 :::
 
 ## settings.json — メイン設定
@@ -132,7 +134,7 @@ Hooks は Claude Code がツールを使う前後に自動実行されるスク�
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/enforce-uv.sh"
+            "command": "~/.config/claude/hooks/enforce-uv.sh"
           }
         ]
       }
@@ -196,7 +198,7 @@ Claude Code がコードを書くたびに自動でフォーマット・リン�
 
 ## Rules — ファイルパターン別ルール
 
-Rules はファイルのパターンに応じて Claude Code の振る舞いを変えるルールです。`~/.claude/rules/` に Markdown ファイルとして配置します。
+Rules はファイルのパターンに応じて Claude Code の振る舞いを変えるルールです。`~/.config/claude/rules/` に Markdown ファイルとして配置します。
 
 ### python.md — Python ルール
 
@@ -267,7 +269,7 @@ skills/convert-to-transformers/
 
 ## Commands — カスタムコマンド
 
-Commands は Claude Code の会話内で `/commit` のように呼び出せるカスタムコマンドです。`~/.claude/commands/` に Markdown で定義します。
+Commands は Claude Code の会話内で `/commit` のように呼び出せるカスタムコマンドです。`~/.config/claude/commands/` に Markdown で定義します。
 
 ### commit.md
 
@@ -282,7 +284,7 @@ Conventional Commits 形式でコミットメッセージを自動生成する�
 
 ## claude-mem — メモリプラグイン
 
-[claude-mem](https://github.com/thedotmack/claude-mem) は Claude Code の会話を自動的に観察・要約してメモリとして蓄積するサードパーティプラグインです。設定は `~/.claude-mem/settings.json` に保存します。
+[claude-mem](https://github.com/thedotmack/claude-mem) は Claude Code の会話を自動的に観察・要約してメモリとして蓄積するサードパーティプラグインです。設定は `~/.config/claude-mem/settings.json` に保存します。
 
 ```json
 {
@@ -302,7 +304,7 @@ Conventional Commits 形式でコミットメッセージを自動生成する�
 観察タイプとして `bugfix`, `feature`, `refactor`, `discovery`, `decision`, `change` を自動分類し、コンセプト（`how-it-works`, `problem-solution`, `gotcha` 等）でタグ付けしてくれます。
 
 :::message
-Claude Code 本体にも auto memory 機能（`~/.claude/projects/*/memory/`）があります。claude-mem はより細かい粒度で自動追跡する補完的な位置づけです。追加の API コストが発生する点には注意してください。
+Claude Code 本体にも auto memory 機能（`~/.config/claude/projects/*/memory/`）があります。claude-mem はより細かい粒度で自動追跡する補完的な位置づけです。追加の API コストが発生する点には注意してください。
 :::
 
 ## ccstatusline — ステータスライン
@@ -359,7 +361,7 @@ chezmoi では以下の構造で配置します。
 
 ```
 home/
-├── dot_claude/                                # → ~/.claude/
+├── dot_config/claude/                                # → ~/.config/claude/
 │   ├── settings.json
 │   ├── hooks/
 │   │   └── executable_enforce-uv.sh           # executable_ で実行権限付与
@@ -379,13 +381,13 @@ home/
 │           └── references/
 ├── dot_ccstatusline/                          # → ~/.ccstatusline/
 │   └── settings.json
-└── dot_claude-mem/                            # → ~/.claude-mem/
+└── dot_config/claude-mem/                            # → ~/.config/claude-mem/
     └── settings.json
 ```
 
 ポイント:
 
-- `dot_claude/` → `~/.claude/` に展開される（chezmoi の `dot_` prefix ルール）
+- `dot_config/claude/` → `~/.config/claude/` に展開される（chezmoi の `dot_` prefix ルール）
 - `executable_enforce-uv.sh` → `enforce-uv.sh` として実行権限付きで配置される
 - シンボリックリンクは使わず直接配置。シンプルで確実
 
@@ -401,8 +403,8 @@ home/
 
 | やりたいこと     | 方法                                            |
 | ---------------- | ----------------------------------------------- |
-| ルールを追加する | `home/dot_claude/rules/` に Markdown を追加     |
-| スキルを追加する | `home/dot_claude/skills/<name>/SKILL.md` を作成 |
+| ルールを追加する | `home/dot_config/claude/rules/` に Markdown を追加     |
+| スキルを追加する | `home/dot_config/claude/skills/<name>/SKILL.md` を作成 |
 | Hooks を変更する | `settings.json` の `hooks` セクションを編集     |
 | 権限を変更する   | `settings.json` の `permissions.deny` を編集    |
 | 設定を反映する   | `chezmoi apply`                                 |

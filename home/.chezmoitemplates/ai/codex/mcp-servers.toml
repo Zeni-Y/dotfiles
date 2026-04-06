@@ -1,0 +1,9 @@
+# Shared MCP definitions for Codex.
+#
+# Add user-wide servers here when needed:
+#
+# [mcp_servers.example]
+# command = "npx"
+# args = ["-y", "@example/mcp-server"]
+#
+# Keep secrets out of this file. Prefer env/env_vars or machine-local overrides.
