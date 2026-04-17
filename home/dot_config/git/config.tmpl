@@ -4,7 +4,7 @@
 [gpg]
 	format = ssh
 [gpg "ssh"]
-	defaultKeyCommand = ssh-add -L
+	defaultKeyCommand = sh -c 'ssh-add -L 2>/dev/null || cat ~/.ssh/id_ed25519.pub 2>/dev/null'
 [commit]
 	gpgsign = true
 [tag]

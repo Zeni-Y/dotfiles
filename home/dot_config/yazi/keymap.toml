@@ -1,0 +1,11 @@
+# l: ディレクトリ → インライン展開、ファイル → 開く
+[[manager.prepend_keymap]]
+on  = "l"
+run = "plugin expand-or-open"
+desc = "ディレクトリ展開 or ファイルを開く"
+
+# h: 展開済みディレクトリ → 折りたたむ、それ以外 → 親へ移動
+[[manager.prepend_keymap]]
+on  = "h"
+run = "collapse"
+desc = "ディレクトリ折りたたみ or 親へ移動"

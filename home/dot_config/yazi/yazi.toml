@@ -1,0 +1,16 @@
+[manager]
+# 中央パネルのみ表示（VSCodeファイルツリー風）
+ratio = [0, 1, 0]
+
+[opener]
+edit = [
+  { run = 'tmux split-window -h nvim "$@"', desc = "Open in nvim (tmux split)" },
+]
+
+[open]
+rules = [
+  { name = "*/", use = "edit" },
+  { mime = "text/*", use = "edit" },
+  { mime = "application/json", use = "edit" },
+  { mime = "inode/x-empty", use = "edit" },
+]

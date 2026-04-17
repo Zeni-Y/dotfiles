@@ -14,6 +14,7 @@ starship = "latest"
 yazi = "latest"
 zellij = "latest"
 neovim = "latest"
+ripgrep = "latest"
 
 # Git
 chezmoi = "latest"
@@ -52,7 +53,7 @@ hugo-extended = "0.136.5"
 bats = "latest"
 
 # AI コーディング
-"npm:@anthropic-ai/claude-code" = "latest"
+"npm:@anthropic-ai/claude-code" = "2.1.98"
 "npm:@openai/codex" = "latest"
 "npm:@github/copilot" = "latest"
 
