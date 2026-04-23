@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# set -Eeuo pipefail
+set -Eeuo pipefail
 
 if [ "${DOTFILES_DEBUG:-}" ]; then
     set -x
@@ -19,6 +19,8 @@ function install_mise() {
 }
 
 function run_mise_install() {
+    # config.toml を信頼済みにしておかないとインタラクティブプロンプトが出る
+    mise trust --yes "${HOME}/.config/mise/config.toml"
     # npm パッケージは Node.js が必要なため、config.toml を参照せず直接インストール
     mise use --global node@lts
     mise install
