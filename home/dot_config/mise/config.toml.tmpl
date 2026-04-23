@@ -42,13 +42,7 @@ shfmt = "latest"
 
 # ファイル / ディレクトリ
 eza = "latest"
-# fd: darwin/amd64 向けバイナリは GitHub Releases に存在しないため Homebrew 経由で取得
-# それ以外は ubi (GitHub Releases) 経由
-{{ if and (eq .chezmoi.os "darwin") (eq .chezmoi.arch "amd64") -}}
-"brew:fd" = "latest"
-{{ else -}}
-"ubi:sharkdp/fd" = "latest"
-{{ end -}}
+fd = "latest"
 fzf = "latest"
 zoxide = "latest"
 
