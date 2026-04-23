@@ -1,0 +1,4 @@
+{{- /* Intel Mac 向け: mise が対応していない darwin/amd64 ツールを Homebrew でインストール */ -}}
+{{ if and (eq .chezmoi.os "darwin") (eq .chezmoi.arch "amd64") -}}
+{{ include "../install/macos/brew-packages.sh" }}
+{{- end }}
