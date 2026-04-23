@@ -12,6 +12,17 @@ function install_tmux() {
 
     echo "tmux をインストール中..."
 
+    # chezmoiscript は別プロセスで実行されるため、事前スクリプトで brew をインストールしても
+    # PATH に反映されていない。macOS では代表的な場所を順に探して shellenv を読み込む。
+    if [ "$(uname)" = "Darwin" ] && ! command -v brew > /dev/null 2>&1; then
+        for brew_bin in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+            if [ -x "${brew_bin}" ]; then
+                eval "$(${brew_bin} shellenv)"
+                break
+            fi
+        done
+    fi
+
     if command -v apt-get > /dev/null 2>&1; then
         sudo apt-get install -y tmux
     elif command -v brew > /dev/null 2>&1; then

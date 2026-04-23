@@ -1,0 +1,4 @@
+{{- /* macOS でのみ Homebrew をインストールする */ -}}
+{{ if eq .chezmoi.os "darwin" -}}
+{{ include "../install/common/brew.sh" }}
+{{- end }}
