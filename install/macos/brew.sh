@@ -62,9 +62,19 @@ function install_brew() {
     fi
 
     echo "Homebrew をインストールします..."
-    # NONINTERACTIVE=1: 公式インストーラが sudo パスワード以外のプロンプトを出さない
-    NONINTERACTIVE=1 /bin/bash -c \
-        "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    # 公式インストーラは内部で sudo を呼ぶ。実行アカウントが Administrator である必要がある。
+    # CI (Docker 等): NONINTERACTIVE=1 で完全非対話実行（passwordless sudo 前提）。
+    # 通常セットアップ: NONINTERACTIVE を付けず、sudo パスワードを対話的に入力してもらう。
+    #   NONINTERACTIVE=1 を付けると sudo -n でチェックされるため、事前キャッシュがないと
+    #   "Need sudo access on macOS" で失敗する（fresh Mac の初回 run では不適切）。
+    if [ -n "${CI:-}" ]; then
+        NONINTERACTIVE=1 /bin/bash -c \
+            "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    else
+        echo "※ 途中で RETURN キーの確認と sudo パスワード入力が求められます"
+        /bin/bash -c \
+            "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    fi
 
     # インストール直後は PATH に brew が無いため shellenv を反映
     eval "$(${prefix}/bin/brew shellenv)"
