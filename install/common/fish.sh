@@ -8,13 +8,8 @@ if [ "${DOTFILES_DEBUG:-}" ]; then
     set -x
 fi
 
-function install_fish() {
-    if command -v fish &>/dev/null; then
-        echo "fish はすでにインストール済みです: $(command -v fish)"
-        return 0
-    fi
-
-    if [ "$(uname)" != "Linux" ] || ! command -v apt-get &>/dev/null; then
+function install_fish_linux() {
+    if ! command -v apt-get &>/dev/null; then
         echo "apt-get が見つかりません。fish を手動でインストールしてください"
         return 0
     fi
@@ -44,8 +39,57 @@ function install_fish() {
     sudo apt-get install -y fish
 }
 
+function install_fish_darwin() {
+    # chezmoiscript は別プロセスで実行されるため、事前スクリプトで brew をインストールしても
+    # PATH に反映されていない。代表的な場所を順に探して shellenv を読み込む。
+    if ! command -v brew &>/dev/null; then
+        for brew_bin in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+            if [ -x "${brew_bin}" ]; then
+                eval "$(${brew_bin} shellenv)"
+                break
+            fi
+        done
+    fi
+
+    if ! command -v brew &>/dev/null; then
+        echo "brew が見つかりません。Homebrew を先にインストールしてください"
+        return 1
+    fi
+
+    echo "fish を Homebrew からインストールします..."
+    brew install fish
+}
+
+function install_fish() {
+    if command -v fish &>/dev/null; then
+        echo "fish はすでにインストール済みです: $(command -v fish)"
+        return 0
+    fi
+
+    case "$(uname)" in
+        Linux)
+            install_fish_linux
+            ;;
+        Darwin)
+            install_fish_darwin
+            ;;
+        *)
+            echo "サポート外の OS です。fish を手動でインストールしてください"
+            return 0
+            ;;
+    esac
+}
+
 function setup_login_shell() {
-    # sudo が存在しない環境ではスキップ
+    # fish の実パスを動的に取得（Linux: /usr/bin/fish, macOS: /opt/homebrew/bin/fish など）
+    local fish_path
+    fish_path="$(command -v fish || true)"
+    if [ -z "${fish_path}" ]; then
+        echo "fish が見つからないため、ログインシェルの設定をスキップします"
+        return 0
+    fi
+
+    # /etc/shells への追記と chsh は sudo が必要
     if ! command -v sudo &>/dev/null; then
         echo "sudo が見つからないため、ログインシェルの設定をスキップします"
         return 0
@@ -64,12 +108,21 @@ function setup_login_shell() {
         esac
     fi
 
-    local fish_path
-    fish_path="/usr/bin/fish"
-
     # /etc/shells に未登録なら追加
     if ! grep -qxF "$fish_path" /etc/shells; then
         echo "$fish_path" | sudo tee -a /etc/shells >/dev/null
+    fi
+
+    # 既にログインシェルが fish なら chsh は不要（Mac の DirectoryService などで無駄な書き換えを避ける）
+    local current_shell
+    current_shell="$(dscl . -read "/Users/$(id -un)" UserShell 2>/dev/null | awk '{print $2}')"
+    if [ -z "${current_shell}" ]; then
+        # Linux 系: /etc/passwd を参照
+        current_shell="$(getent passwd "$(id -un)" | cut -d: -f7 || true)"
+    fi
+    if [ "${current_shell}" = "${fish_path}" ]; then
+        echo "ログインシェルは既に fish です: ${fish_path}"
+        return 0
     fi
 
     # ログインシェルを fish に変更
@@ -89,6 +142,11 @@ function main() {
     # --no-config を使わない理由:
     #   --no-config では fisher がインストール履歴を認識できず "conflicting files" エラーになる。
     #   通常の fish として起動することで、fisher が既存ファイルを正しく管理できる。
+    if ! command -v fish &>/dev/null; then
+        echo "fish が見つからないため、fisher のセットアップをスキップします"
+        return 0
+    fi
+
     fish -c '
         # fisher が未インストールなら curl からインストール
         if not functions -q fisher

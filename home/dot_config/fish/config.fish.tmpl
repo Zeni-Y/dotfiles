@@ -7,6 +7,18 @@ set -g fish_greeting
 # Path settings
 #
 fish_add_path /usr/local/bin /usr/local/sbin $HOME/.local/bin $HOME/.local/bin/common
+{{ if eq .chezmoi.os "darwin" -}}
+# Homebrew (Apple Silicon は /opt/homebrew, Intel は /usr/local)
+{{ if eq .chezmoi.arch "arm64" -}}
+if test -x /opt/homebrew/bin/brew
+    /opt/homebrew/bin/brew shellenv fish | source
+end
+{{ else -}}
+if test -x /usr/local/bin/brew
+    /usr/local/bin/brew shellenv fish | source
+end
+{{ end -}}
+{{ end -}}
 {{ if eq .system "client" -}}
 fish_add_path $HOME/.local/bin/client
 {{ else if eq .system "server" -}}

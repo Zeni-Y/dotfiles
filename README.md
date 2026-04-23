@@ -27,6 +27,22 @@ chezmoi のインストールから dotfiles の取得・適用まで、この�
 - **Email address** — git 等で使用するメールアドレス
 - **System** — `client` (デスクトップ) or `server` (macOS は自動で `client`)
 
+### macOS での初回セットアップ
+
+初期化直後の Mac でも上記ワンライナーだけでセットアップが完了する。内部で以下が自動実行される:
+
+1. **Xcode Command Line Tools** — git や cc が入っていなければ GUI インストーラを起動
+2. **Homebrew** — `/opt/homebrew` (Apple Silicon) または `/usr/local` (Intel) にインストール
+3. **fish** — `brew install fish` でインストールし、`/etc/shells` 登録とログインシェル変更
+4. **tmux** — `brew install tmux` と TPM (Tmux Plugin Manager) のセットアップ
+5. **mise** — ランタイム/ツール一式を `dot_config/mise/config.toml` に従ってインストール
+
+macOS では以下の挙動が Linux と異なる:
+
+- Git の認証ヘルパは `osxkeychain` を利用（Linux は `credentialStore = cache`）
+- Nerd Fonts は `~/Library/Fonts` に配置（Linux は `~/.local/share/fonts`）
+- `system` プロンプトは自動で `client` になる（macOS で server 運用は想定していない）
+
 ## chezmoi を使った dotfiles 管理のライフサイクル
 
 ### 1. ファイルを管理対象に追加する
@@ -145,7 +161,8 @@ home/                     # chezmoi source directory
 │   ├── chezmoiignore.d/  # ignore ルールの分割
 │   └── chezmoiexternal.d/ # external ルールの分割
 ├── .chezmoiscripts/      # apply 時に実行されるスクリプト
-│   └── common/           # 全 OS 共通 (mise, fish, zed-keymap)
+│   ├── common/           # 全 OS 共通 (mise, fish, tmux, zed-keymap)
+│   └── macos/            # macOS 専用 (brew)
 ├── dot_vimrc             # → ~/.vimrc
 └── dot_config/
     ├── git/
@@ -163,7 +180,8 @@ home/                     # chezmoi source directory
 ├── dot_local/bin/common/ # ユーティリティスクリプト
 │   └── fish-time        # fish 起動プロファイリングツール
 install/                  # インストールスクリプト群
-└── common/               # mise, fish, zed-keymap, done
+├── common/               # 全 OS 共通 (mise, fish, tmux, zed-keymap, done)
+└── macos/                # macOS 専用 (brew)
 books/                    # Zenn Book
 └── dotfiles-guide/       # chezmoi dotfiles 解説 Book
 ```

@@ -6,4 +6,9 @@
 {{   else if eq .system "server" -}}
 {{     template "chezmoiignore.d/ubuntu/server" . }}
 {{   end -}}
+{{ else if eq .chezmoi.os "darwin" -}}
+{{   template "chezmoiignore.d/darwin/common" . }}
+{{   if eq .system "client" -}}
+{{     template "chezmoiignore.d/darwin/client" . }}
+{{   end -}}
 {{ end -}}
