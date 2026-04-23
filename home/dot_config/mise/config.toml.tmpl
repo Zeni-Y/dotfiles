@@ -40,7 +40,10 @@ shfmt = "latest"
 
 # ファイル / ディレクトリ
 eza = "latest"
-fd = "latest"
+# fd: aqua は darwin/amd64 非対応のため Intel Mac は brew で別途インストール
+{{ if not (and (eq .chezmoi.os "darwin") (eq .chezmoi.arch "amd64")) -}}
+"ubi:sharkdp/fd" = "latest"
+{{ end -}}
 fzf = "latest"
 zoxide = "latest"
 
