@@ -37,6 +37,9 @@ chezmoi のインストールから dotfiles の取得・適用まで、この�
 4. **tmux** — `brew install tmux` と TPM (Tmux Plugin Manager) のセットアップ
 5. **mise** — ランタイム/ツール一式を `dot_config/mise/config.toml` に従ってインストール
 
+> **注意**: 実行アカウントは **Administrator (管理者)** である必要がある。Homebrew と `chsh` / `/etc/shells` 更新の際に sudo パスワードの入力を求められる。
+> 非管理者アカウントで `Need sudo access on macOS` エラーが出た場合は、システム設定 > ユーザとグループ で対象ユーザを「管理者」に変更してから再実行する。
+
 macOS では以下の挙動が Linux と異なる:
 
 - Git の認証ヘルパは `osxkeychain` を利用（Linux は `credentialStore = cache`）
