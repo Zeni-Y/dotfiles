@@ -161,7 +161,8 @@ home/                     # chezmoi source directory
 │   ├── chezmoiignore.d/  # ignore ルールの分割
 │   └── chezmoiexternal.d/ # external ルールの分割
 ├── .chezmoiscripts/      # apply 時に実行されるスクリプト
-│   └── common/           # 全 OS 共通 (brew (darwin only), mise, fish, tmux, zed-keymap)
+│   ├── common/           # 全 OS 共通 (mise, fish, tmux, zed-keymap)
+│   └── macos/            # macOS 専用 (brew)
 ├── dot_vimrc             # → ~/.vimrc
 └── dot_config/
     ├── git/
@@ -179,7 +180,8 @@ home/                     # chezmoi source directory
 ├── dot_local/bin/common/ # ユーティリティスクリプト
 │   └── fish-time        # fish 起動プロファイリングツール
 install/                  # インストールスクリプト群
-└── common/               # brew (darwin), mise, fish, tmux, zed-keymap, done
+├── common/               # 全 OS 共通 (mise, fish, tmux, zed-keymap, done)
+└── macos/                # macOS 専用 (brew)
 books/                    # Zenn Book
 └── dotfiles-guide/       # chezmoi dotfiles 解説 Book
 ```
