@@ -31,6 +31,7 @@ run:
 		-v "$(HOME)/.cache:/home/$(USER)/.cache" \
 		-w "/home/$(USER)" \
 		-p "$(SSH_PORT):22" \
+		-e GITHUB_TOKEN \
 		"$(IMAGE_NAME)"
 
 gpu-test:
