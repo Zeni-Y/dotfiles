@@ -114,12 +114,21 @@ function setup_login_shell() {
     fi
 
     # 既にログインシェルが fish なら chsh は不要（Mac の DirectoryService などで無駄な書き換えを避ける）
-    local current_shell
-    current_shell="$(dscl . -read "/Users/$(id -un)" UserShell 2>/dev/null | awk '{print $2}')"
-    if [ -z "${current_shell}" ]; then
-        # Linux 系: /etc/passwd を参照
-        current_shell="$(getent passwd "$(id -un)" | cut -d: -f7 || true)"
-    fi
+    # dscl は macOS 専用、getent は Linux/glibc 系専用なので OS で分岐する
+    # （pipefail 有効下で存在しないコマンドが exit 127 を返すとスクリプト全体が落ちるため）
+    local current_shell=""
+    case "$(uname)" in
+        Darwin)
+            if command -v dscl &>/dev/null; then
+                current_shell="$(dscl . -read "/Users/$(id -un)" UserShell 2>/dev/null | awk '{print $2}' || true)"
+            fi
+            ;;
+        Linux)
+            if command -v getent &>/dev/null; then
+                current_shell="$(getent passwd "$(id -un)" | cut -d: -f7 || true)"
+            fi
+            ;;
+    esac
     if [ "${current_shell}" = "${fish_path}" ]; then
         echo "ログインシェルは既に fish です: ${fish_path}"
         return 0

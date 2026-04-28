@@ -12,10 +12,11 @@ ENV CI=true
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # 必要最小限のパッケージ（mise, sheldon 等は chezmoi apply で導入される）
+# gnupg は mise が node などのダウンロード署名を検証するのに必要
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         curl git sudo locales ca-certificates \
-        build-essential openssh-client && \
+        build-essential openssh-client gnupg && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     locale-gen ja_JP.UTF-8
